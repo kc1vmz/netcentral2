@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf-token" th:content="${_csrf.token}"><meta name="csrf-header" th:content="${_csrf.headerName}">
+<title th:text="${snapshot.net.callsign + ' | Net Central'}"></title>
+<link rel="stylesheet" th:href="@{/css/application.css}"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/leaflet.css}">
+<script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script defer th:src="@{/js/monitor-layout.js}"></script><script defer th:src="@{/js/net-participants.js}"></script><script defer th:src="@{/js/net-monitor.js}"></script>
+</head><body><header th:replace="~{fragments/account :: header}"></header>
+<main id="net-monitor" class="monitor" th:attr="data-net-id=${snapshot.net.id}">
+<section class="panel" id="net-details">
+<div class="monitor-section-heading"><h1>Net Details</h1><div class="monitor-section-actions" data-management th:if="${snapshot.canManage && snapshot.net.endTime == null}">
+<a class="button-link" th:href="@{/nets/{id}/edit(id=${snapshot.net.id})}">Edit</a><button type="button" id="close-net">Secure</button>
+</div></div>
+<label>Selected net <select id="net-selection"><option th:each="n : ${netChoices}" th:value="${n.id}" th:selected="${n.id == snapshot.net.id}" th:text="|${n.callsign} — ${n.name}${n.endTime == null ? '' : ' (archived)'}|"></option></select></label>
+<dl class="resource-facts"><dt>Callsign</dt><dd id="net-callsign" th:text="${snapshot.net.callsign}"></dd><dt>Name</dt><dd id="net-name" th:text="${snapshot.net.name}"></dd><dt>Description</dt><dd id="net-description" th:text="${snapshot.net.description}"></dd><dt>Net type</dt><dd id="net-open" th:text="${snapshot.net.open ? 'Open' : 'Closed'}"></dd><dt id="net-planned-end-label" th:hidden="${snapshot.plannedEndTime == null}">Scheduled end</dt><dd id="net-planned-end" th:hidden="${snapshot.plannedEndTime == null}" th:attr="data-time=${snapshot.plannedEndTime}"></dd></dl>
+<p><span id="net-state" th:text="${snapshot.net.endTime == null ? 'Active' : 'Archived'}"></span> · <span id="live-status" role="status">Connecting live view…</span></p>
+<p id="action-status" role="status" aria-live="polite"></p>
+</section>
+<div class="monitor-grid"><section class="panel"><h2>Participant map</h2><div id="net-map" aria-label="Participant locations"></div>
+<p>Markers show checked-in stations with a recent position. Checkout removes a marker.</p></section>
+<section class="panel"><h2>Participants</h2><div class="table-scroll"><table><thead><tr><th>Callsign</th><th>Status</th><th>Status color</th><th>Last heard</th><th>State</th></tr></thead><tbody id="participants"></tbody></table></div></section></div>
+<section class="panel" data-management th:if="${snapshot.canManage && snapshot.net.endTime == null}">
+<h2>Net control</h2><form id="check-in" class="account-form"><h3>Check in Station</h3><label>Callsign <input name="callsign" required maxlength="9"></label><button>Check in</button></form>
+<form id="participant-edit" class="account-form"><h3>Participant details</h3>
+<p>Update tactical information about a participant.</p>
+<label>Callsign <input name="callsign" readonly required></label><input type="hidden" name="version">
+<label>Status <input name="status" maxlength="200"></label><label>Voice frequency <input name="voiceFrequency" maxlength="40"></label>
+<label>Tactical callsign <input name="tacticalCallsign" maxlength="30"></label><button>Save participant</button></form>
+<form id="participant-equipment" class="account-form"><h3>Participant equipment</h3><p>Change station-specific equipment information for participant.</p>
+<label>Callsign <input name="callsign" readonly required></label>
+<label>Transmit power (watts) <input name="X" type="number" min="0" max="100000" step="any"></label>
+<label>Electrical power <select name="E"><option>UNKNOWN</option><option>BATTERY</option><option>COMMERCIAL</option><option>GENERATOR</option><option>NONE</option><option>SOLAR</option></select></label>
+<label>Backup power <select name="B"><option>UNKNOWN</option><option>BATTERY</option><option>COMMERCIAL</option><option>GENERATOR</option><option>NONE</option><option>SOLAR</option></select></label>
+<label>Radio style <select name="Y"><option>UNKNOWN</option><option>APPLIANCE</option><option>BASE</option><option>HANDHELD</option><option>INTERNET</option><option>MOBILE</option><option>OTHER</option></select></label><button>Save equipment</button></form>
+<form id="send-message" class="account-form"><h3>Send message</h3>
+<label>Recipient <input name="recipient" value="Net" required maxlength="9" list="recipient-list"><datalist id="recipient-list"></datalist></label>
+<p>Use Net for all checked-in participants, or enter one participant callsign.</p>
+<label>Message <input name="message" required maxlength="67"></label><label class="check"><input type="checkbox" name="acknowledgementRequested" checked> Request APRS acknowledgment</label><button>Send message</button></form>
+<form id="ask-question" class="account-form"><h3>Ask a question</h3><label>Question <input name="question" required maxlength="500"></label><button>Ask participants</button></form>
+<form id="answer-question" class="account-form"><h3>Record an answer</h3><label>Question number <input name="number" type="number" min="1" required></label><label>Participant callsign <input name="callsign" required maxlength="9"></label><label>Answer <input name="answer" required maxlength="500"></label><button>Save answer</button></form>
+<form id="invite-stations" class="account-form"><h3>Invite stations</h3><label>Callsigns <input name="callsigns" required placeholder="N1ABC N2ABC"></label><button>Invite</button></form>
+</section>
+<section class="panel"><h2>Messages</h2><p>Live view shows the latest 200 entries.</p><div class="table-scroll"><table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th><th>Delivery</th></tr></thead><tbody id="messages"></tbody></table></div></section>
+<section class="panel"><h2>Questions</h2><div id="questions"></div></section>
+<section id="archive-downloads" class="panel" th:hidden="${snapshot.net.endTime == null}"><h2>Archive exports</h2>
+<a th:href="@{/api/v1/completedNets/{id}/participationReports(id=${snapshot.net.id})}">Generate ICS 309 Report</a> ·
+<a th:href="@{/api/v1/completedNets/{id}/messageReports(id=${snapshot.net.id})}">Generate Message Report</a> ·
+<a th:href="@{/api/v1/completedNets/{id}/messages(id=${snapshot.net.id})}">Complete message history (JSON)</a> · <a th:href="@{/api/v1/completedNets/{id}/questionAnswerReports(id=${snapshot.net.id})}">Generate Q&amp;A Report</a></section>
+<dialog id="participant-message-dialog" aria-labelledby="participant-message-title" th:if="${snapshot.canManage && snapshot.net.endTime == null}">
+<h2 id="participant-message-title">Send Message</h2><form id="participant-message" class="account-form">
+<label>From <input name="sender" readonly></label><label>To <input name="recipient" readonly required></label>
+<label>Message <input name="message" required maxlength="67"></label>
+<label class="check"><input type="checkbox" name="acknowledgementRequested" checked> Request APRS acknowledgment</label>
+<div class="dialog-actions"><button type="submit">Send Message</button><button type="button" id="participant-message-cancel" data-dialog-cancel>Cancel</button></div>
+</form></dialog>
+</main></body></html>
+

@@ -1,0 +1,15 @@
+<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><body>  <form th:action="@{/communications/routes}" method="post" class="account-form" th:fragment="form(route)">
+    <input type="hidden" name="owner" th:value="${route.owner}">
+    <input type="hidden" name="version" th:value="${route.version}">
+    <label>Send through <select name="mode">
+      <option value="ALL" th:selected="${route.mode == 'ALL'}">All eligible instances</option>
+      <option value="SELECTED" th:selected="${route.mode == 'SELECTED'}">Selected instances only</option>
+    </select></label>
+    <fieldset th:hidden="${route.owner == 'DEFAULT' && route.mode != 'SELECTED'}"><legend>Selected instances</legend>
+      <label class="check" th:each="item : ${instances}">
+        <input type="checkbox" name="instanceIds" th:value="${item.configuration.id}" th:checked="${route.instanceIds.contains(item.configuration.id)}">
+        <span th:text="${item.configuration.name}"></span>
+      </label>
+    </fieldset>
+    <div class="dialog-actions"><button type="submit" th:text="${route.owner == 'DEFAULT' ? 'Update' : 'Save selection'}">Update</button><button th:if="${route.owner == 'DEFAULT'}" type="button" id="default-route-cancel" data-dialog-cancel>Cancel</button></div>
+  </form></body></html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APRS Explorer | Net Central</title>
+<link rel="stylesheet" th:href="@{/css/application.css}"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/leaflet.css}">
+<script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script type="module" th:src="@{/js/explorer.mjs}"></script>
+</head><body><header th:replace="~{fragments/account :: header}"></header><main class="workspace" id="explorer">
+<div class="page-heading"><div><h1>APRS Explorer</h1><p class="intro">Information about APRS stations, infrastructure and objects.</p></div><span id="live-status" role="status">Connectingâ€¦</span></div>
+<div class="toolbar"><label>Resource type <select id="resource-type"><option value="ALL">All resources</option><option value="BBS">Bulletin boards</option><option value="CALLSIGN">Callsigns</option><option value="DSTAR">D-Star</option><option value="DIGIPEATER">Digipeaters</option><option value="EOC">Emergency operations centers</option><option value="IGATE">iGates</option><option value="IGNORED">Ignored</option><option value="MEDICAL">Medical Facilities</option><option value="MMDVM">MMDVM</option><option value="OBJECT">Objects</option><option value="REPEATER">Repeaters</option><option value="RESOURCE">Resources</option><option value="SHELTER">Shelters</option><option value="STATION">Stations</option><option value="TRACKED">Tracked stations</option><option value="WEATHER">Weather stations</option><option value="WINLINK_GATEWAY">Winlink gateways</option></select></label>
+<label>Find <input id="resource-filter" type="search" placeholder="Callsign, name or status"></label><a class="button-link" th:href="@{/objects/new}">Create object</a></div>
+<p id="resource-limit" role="status" hidden></p>
+<div class="explorer-grid" id="explorer-panes"><section class="panel map-panel"><h2>Resource map</h2><div id="resource-map" aria-label="Resource locations"></div><p id="map-count"></p><p id="callsign-map-unavailable" hidden>No map available.</p></section>
+<div class="pane-column"><section class="panel"><h2>Resources <span id="resource-count"></span></h2><div class="table-scroll resource-list"><table><thead><tr><th>Callsign/name</th><th>Type</th><th>Status</th><th>Last heard</th></tr></thead><tbody id="resource-rows"></tbody></table></div><p id="empty-resources">Waiting for observationsâ€¦</p></section>
+<section class="panel" id="resource-details"><h2>Resource details</h2><p>Select a row or map marker.</p></section></div></div>
+<dialog id="stop-ignoring-dialog" class="account-dialog"><h2 id="resource-action-title">Confirm change</h2><p id="stop-ignoring-description"></p><p id="stop-ignoring-error" role="alert"></p><div class="account-actions"><button id="stop-ignoring-apply" type="button">Stop ignoring</button><button id="stop-ignoring-cancel" type="button">Cancel</button></div></dialog>
+<noscript><p>This live view requires browser JavaScript.</p></noscript>
+</main></body></html>
+
+

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configure net | Net Central</title><link rel="icon" th:href="@{/favicon.ico}"><link rel="stylesheet" th:href="@{/css/application.css}"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/leaflet.css}"><script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script type="module" th:src="@{/js/net-position.mjs}"></script></head>
+<body><header th:replace="~{fragments/account :: header}"></header><main>
+<h1 th:text="${net == null ? 'Create a net' : 'Edit net'}"></h1>
+<form th:action="@{/nets/save}" method="post" class="panel account-form">
+<input type="hidden" name="id" th:value="${net?.id}">
+<input type="hidden" name="version" th:value="${net?.version ?: -1}">
+<input type="hidden" name="routingVersion" th:value="${snapshot?.routing?.version ?: -1}">
+<label>Net callsign <input name="callsign" required maxlength="9" th:value="${net?.callsign}" th:readonly="${net != null}" placeholder="NET001"></label>
+<label>Name <input name="name" required maxlength="120" th:value="${net?.name}"></label>
+<label>Description <textarea name="description" maxlength="1000" th:text="${net?.description}"></textarea></label>
+<label>Voice frequency <input name="voiceFrequency" maxlength="40" th:value="${net?.voiceFrequency}"></label>
+<label class="check"><input type="checkbox" name="open" value="true" th:checked="${net == null || net.open}"> Open APRS check-in</label>
+<p>When unchecked, only expected or invited callsign roots may check in.</p>
+<label>Expected callsigns <textarea name="expectedParticipants" placeholder="N0CALL N1ABC" th:text="${snapshot == null ? '' : #strings.listJoin(#lists.toList(snapshot.expectedParticipants), ' ')}"></textarea></label>
+<label>Welcome message sent at check-in <input name="checkinMessage" maxlength="67" th:value="${options.path('checkinMessage').asText('')}"></label>
+<fieldset><legend>APRS symbol</legend><input type="hidden" name="symbolTableId" maxlength="1" th:value="${options.path('symbolTableId').asText('/')}"><input type="hidden" name="symbolTableCode" maxlength="1" th:value="${options.path('symbolTableCode').asText('n')}"><div data-symbol-picker></div></fieldset>
+
+<fieldset><legend>Net location</legend>
+<div class="dialog-actions" role="group" aria-label="Location entry method"><button type="button" id="location-manual" aria-pressed="true">Manual entry</button><button type="button" id="location-map" aria-pressed="false">Use map</button></div>
+<div id="location-coordinates"><label>Latitude <input id="net-lat" name="lat" type="number" step="any" min="-90" max="90" required th:value="${options.path('lat').asText('')}"></label>
+<label>Longitude <input id="net-lon" name="lon" type="number" step="any" min="-180" max="180" required th:value="${options.path('lon').asText('')}"></label>
+</div>
+<div id="location-map-panel" hidden><p>Click the map to select the net location. The marker can be dragged.</p><p id="location-summary" role="status">Select a location on the map.</p>
+<div id="net-position-map" style="height:320px" aria-label="Select net location" th:attr="data-tile-url=${mapSettings.tileUrl},data-attribution=${mapSettings.attribution}"></div>
+</div></fieldset>
+<label>Announce start and stop by bulletin <select name="announce"><option value="false" th:selected="${!options.path('announce').asBoolean(net == null)}">No</option><option value="true" th:selected="${options.path('announce').asBoolean(net == null)}">Yes</option></select></label>
+<label>Remind participants to check out <select name="checkinReminder"><option value="false" th:selected="${!options.path('checkinReminder').asBoolean(net == null)}">No</option><option value="true" th:selected="${options.path('checkinReminder').asBoolean(net == null)}">Yes</option></select></label>
+<label>Question reminder <select name="questionReminder"><option value="false" th:selected="${!options.path('questionReminder').asBoolean()}">No</option><option value="true" th:selected="${options.path('questionReminder').asBoolean()}">Yes</option></select></label>
+<label>Participant invite allowed <select name="participantInviteAllowed"><option value="false" th:selected="${!options.path('participantInviteAllowed').asBoolean()}">No</option><option value="true" th:selected="${options.path('participantInviteAllowed').asBoolean()}">Yes</option></select></label>
+<label>Communications <select name="communicationMode">
+<option value="SELECTED" th:selected="${snapshot != null && snapshot.routing.mode == 'SELECTED'}">Selected instances</option>
+<option value="ALL" th:selected="${snapshot == null || snapshot.routing.mode == 'ALL'}">All eligible instances, including future ones</option>
+</select></label>
+<fieldset id="net-selected-instances" th:hidden="${snapshot == null || snapshot.routing.mode != 'SELECTED'}"><legend>Selected instances</legend>
+<label class="check" th:each="item : ${instances}"><input type="checkbox" name="communicationInstanceIds" th:value="${item.id}"
+ th:checked="${snapshot != null && snapshot.routing.instanceIds.contains(item.id)}"><span th:text="|${item.name} (${item.type})|"></span></label>
+<p th:if="${instances.isEmpty()}">An administrator must configure communication instances first. An empty selection transmits nowhere.</p>
+</fieldset>
+<div class="dialog-actions"><button type="submit" th:text="${net == null ? 'Create net' : 'Save net'}">Create net</button><button type="button" id="net-cancel" data-dialog-cancel>Cancel</button></div>
+</form><dialog id="net-cancel-dialog" aria-labelledby="net-cancel-title"><h2 id="net-cancel-title">Cancel net changes?</h2><p th:text="${net == null ? 'Discard your unsaved changes and return to the nets page?' : 'Discard your unsaved changes and return to this net?'}"></p><div class="dialog-actions"><button type="button" id="net-cancel-confirm" th:attr="data-return-url=${net == null ? '/nets' : '/nets/' + net.id}">Discard changes</button><button type="button" id="net-cancel-back" data-dialog-cancel>Keep editing</button></div></dialog></main><script defer th:src="@{/js/aprs-symbol-picker.js}"></script></body></html>

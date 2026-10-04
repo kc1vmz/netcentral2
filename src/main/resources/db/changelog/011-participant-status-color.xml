@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+<changeSet id="011-participant-status-color" author="netcentral"><sql>
+ALTER TABLE net_participant ADD status_color VARCHAR(6) DEFAULT 'GREEN' NOT NULL;
+UPDATE net_participant SET status_color='RED' WHERE ended_at IS NOT NULL;
+ALTER TABLE net_participant ADD CONSTRAINT participant_status_color CHECK (status_color IN ('RED','YELLOW','GREEN'));
+</sql></changeSet></databaseChangeLog>

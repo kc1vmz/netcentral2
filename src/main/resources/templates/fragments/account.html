@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Net Central'">Net Central</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+</head>
+<body>
+<header th:fragment="header" class="site-header" th:attr="data-system-administrator=${systemAdministrator}">
+    <a class="brand" th:href="@{/}">Net Central</a>
+    <button type="button" id="navigation-toggle" aria-controls="main-navigation" aria-expanded="false">Menu</button>
+    <nav aria-label="Main navigation" id="main-navigation">
+        <a th:href="@{/home}"><i class="fa-solid fa-home" aria-hidden="true"></i><span>Home</span></a>
+        <a th:if="${signedIn}" th:href="@{/dashboard}"><i class="fa-solid fa-tachometer" aria-hidden="true"></i><span>Dashboard</span></a>
+
+        <a th:unless="${signedIn}" th:href="@{/login}"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i><span>Login</span></a>
+        <a th:unless="${signedIn}" th:href="@{/register}"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Register</span></a>
+        <a th:if="${signedIn}" th:href="@{/nets}"><i class="fa-solid fa-heartbeat" aria-hidden="true"></i><span>Net Monitor</span></a>
+
+        <a th:if="${signedIn}" th:href="@{/archives}"><i class="fa-solid fa-calendar" aria-hidden="true"></i><span>Archives</span></a><hr class="menu-separator" th:if="${signedIn}">
+        <a th:if="${signedIn}" th:href="@{/explorer}"><i class="fa-solid fa-folder" aria-hidden="true"></i><span>Explorer</span></a> <a th:if="${signedIn}" th:href="@{/tools}"><i class="fa-solid fa-wrench" aria-hidden="true"></i><span>Tools</span></a><hr class="menu-separator" th:if="${signedIn}">
+        <a th:if="${signedIn}" th:href="@{/communications}"><i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i><span>Communications</span></a>
+        <a th:if="${signedIn}" th:href="@{/setup/operations}"><i class="fa-solid fa-cog" aria-hidden="true"></i><span>Settings</span></a>
+        <a th:if="${signedIn}" th:href="@{/help}"><i class="fa-solid fa-circle-question" aria-hidden="true"></i><span>Help</span></a>
+        <a th:if="${signedIn}" th:href="@{/profile}"><i class="fa-solid fa-user" aria-hidden="true"></i><span>My account</span></a>
+        <form th:if="${signedIn}" th:action="@{/logout}" method="post" class="inline" id="logout-form">
+            <button type="submit" class="menu-action"><i class="fa-solid fa-right-to-bracket fa-rotate-180" aria-hidden="true"></i><span>Logout</span></button>
+        </form>
+        <hr class="menu-separator" th:if="${signedIn}">
+        <button th:if="${signedIn}" type="button" id="pause-live" aria-pressed="false">Pause updates</button>
+    </nav>
+    <dialog th:if="${signedIn}" id="logout-confirm" aria-labelledby="logout-confirm-title"><h2 id="logout-confirm-title">Confirm Logout</h2><p>Are you sure you want to log out?</p><div class="dialog-actions"><button type="button" id="logout-cancel">Cancel</button><button type="button" id="logout-apply">Logout</button></div></dialog>
+    <script defer th:src="@{/js/ui-shell.js}"></script>
+</header>
+</body>
+</html>
+
+

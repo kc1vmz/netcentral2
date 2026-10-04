@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Station')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header><main>
+<h1 th:text="${station.id}"></h1>
+<section class="panel"><h2>General Information</h2><dl class="resource-facts">
+<th:block th:each="field : ${stationDetails.fields()}" th:if="${field.key != 'lat' and field.key != 'lon'}"><dt data-field-label th:text="${field.key}"></dt><dd th:attr="data-field=${field.key},data-value=${field.value.toString()}" th:text="${field.value.asText(field.value.toString())}"></dd></th:block>
+<th:block th:if="${stationDetails.has('lon') or stationDetails.has('lat')}"><dt>Location</dt><dd th:text="|${stationDetails.path('lon').asText('Unknown')}, ${stationDetails.path('lat').asText('Unknown')}|"></dd></th:block>
+<dt>Ignored</dt><dd th:text="${ignored ? 'Yes' : 'No'}"></dd></dl></section>
+<section class="panel" id="latest-weather"><h2>Current Weather</h2>
+<p th:if="${weather.isEmpty()}">No weather reports.</p>
+<div class="current-weather" th:if="${!weather.isEmpty()}" th:with="r=${weather[0]}">
+<div><h3>Temperature</h3><p class="weather-temperature"><span th:text="${r.data.path('temperature').asText('Unknown')}"></span> °F</p><p><time th:if="${r.data.hasNonNull('ldtime')}" th:datetime="${r.data.path('ldtime').asText()}" th:text="${r.data.path('ldtime').asText()}"></time><span th:unless="${r.data.hasNonNull('ldtime')}">Unknown</span></p></div>
+<div><h3>Atmosphere</h3><p>Humidity: <span th:text="${r.data.path('humidity').asText('Unknown')}"></span> %</p><p>Pressure: <span th:text="${r.data.path('barometricPressure').isNumber() ? r.data.path('barometricPressure').asDouble() / 10 : 'Unknown'}"></span> mb</p>
+<p>Wind: <span th:text="${r.data.path('windSpeed').asText('Unknown')}"></span> MPH <span th:text="${r.data.path('windDirection').asText('Unknown')}"></span> degrees</p><p>Gust: <span th:text="${r.data.path('gust').asText('Unknown')}"></span> MPH</p></div>
+<div><h3>Precipitation</h3><p>Last hour: <span th:text="${r.data.path('rainfallLast1Hr').asText('Unknown')}"></span> inches/100</p><p>Last day: <span th:text="${r.data.path('rainfallLast24Hr').asText('Unknown')}"></span> inches/100</p><p>Since 00:00: <span th:text="${r.data.path('rainfallSinceMidnight').asText('Unknown')}"></span> inches/100</p><p>Snow: <span th:text="${r.data.path('snowfallLast24Hr').asText('Unknown')}"></span> inches/100</p></div></div></section>
+<section class="panel" id="previous-weather"><h2>Previous weather reports</h2>
+<p th:if="${weather.size() &lt; 2}">No previous weather reports.</p>
+<div th:if="${weather.size() &gt; 1}" style="overflow-x:auto"><table><thead><tr><th>ldTime (local time)</th><th>Temperature (°F)</th><th>Humidity (%)</th><th>Barometric pressure (hPa)</th><th>Wind speed (mph)</th><th>Wind direction (°)</th></tr></thead><tbody><tr th:each="r, row : ${weather}" th:if="${!row.first}"><td><time th:if="${r.data.hasNonNull('ldtime')}" th:datetime="${r.data.path('ldtime').asText()}" th:text="${r.data.path('ldtime').asText()}"></time><span th:unless="${r.data.hasNonNull('ldtime')}">Unknown</span></td><td th:text="${r.data.path('temperature').asText('Unknown')}"></td><td th:text="${r.data.path('humidity').asText('Unknown')}"></td><td th:text="${r.data.path('barometricPressure').isNumber() ? r.data.path('barometricPressure').asDouble() / 10 : 'Unknown'}"></td><td th:text="${r.data.path('windSpeed').asText('Unknown')}"></td><td th:text="${r.data.path('windDirection').asText('Unknown')}"></td></tr></tbody></table></div></section>
+<section th:replace="~{fragments/object-security :: security}"></section>
+<script type="module" th:src="@{/js/station-details.mjs}"></script>
+</main></body></html>

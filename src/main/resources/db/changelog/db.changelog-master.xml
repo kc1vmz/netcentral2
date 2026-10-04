@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <include file="001-foundation.xml" relativeToChangelogFile="true"/>
+    <include file="002-local-accounts.xml" relativeToChangelogFile="true"/>
+    <include file="003-communications.xml" relativeToChangelogFile="true"/>
+    <include file="004-net-workflow.xml" relativeToChangelogFile="true"/>
+    <include file="005-schedules.xml" relativeToChangelogFile="true"/>
+    <include file="006-operations.xml" relativeToChangelogFile="true"/>
+    <include file="007-classification-defaults.xml" relativeToChangelogFile="true"/>
+    <include file="008-gateway-status-classification.xml" relativeToChangelogFile="true"/>
+    <include file="009-federation.xml" relativeToChangelogFile="true"/>
+    <include file="010-identity-resolver.xml" relativeToChangelogFile="true"/>
+    <include file="011-participant-status-color.xml" relativeToChangelogFile="true"/>
+    <include file="012-net-manager-location.xml" relativeToChangelogFile="true"/>
+    <include file="013-position-ambiguity.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>
+

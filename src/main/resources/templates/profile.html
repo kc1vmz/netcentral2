@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('My account')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header>
+<main><h1 th:text="${editingOther} ? 'Edit local account' : 'My account'">My account</h1>
+    <p>Role: <strong th:text="${account.role}"></strong></p>
+    <form th:action="@{${accountAction}}" method="post" class="panel account-form">
+        <label>Username <input name="emailAddress" th:value="${account.emailAddress}" required maxlength="254" autocomplete="username"></label>
+        <label>Callsign <input name="callsign" th:value="${account.callsign?.callsign}" maxlength="20"></label>
+        <label>First name <input name="firstName" th:value="${account.firstName}" maxlength="100" autocomplete="given-name"></label>
+        <label>Last name <input name="lastName" th:value="${account.lastName}" maxlength="100" autocomplete="family-name"></label>
+        <label th:unless="${editingOther}">Current password (required to change password) <input name="currentPassword" type="password" autocomplete="current-password"></label>
+        <label>New password (leave blank to keep it) <input name="password" type="password" minlength="8" autocomplete="new-password"></label>
+        <button type="submit">Save  </button>
+    </form>
+    <details class="panel" th:unless="${editingOther}"><summary>Delete my account</summary>
+        <p>This permanently removes your local login. The last system administrator cannot be deleted.</p>
+        <form th:action="@{/profile/delete}" method="post"><button type="submit">Permanently delete my account</button></form>
+    </details>
+</main></body></html>

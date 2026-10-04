@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Object')}"></head><body><header th:replace="~{fragments/account :: header}"></header><main>
+<section class="panel"><div class="monitor-section-heading"><h1>Object Details</h1><div class="account-actions" th:if="${canManage}">
+<a class="button-link" th:href="@{/objects/{id}/edit(id=${object.id})}">Edit</a>
+<form th:if="${object.data.path('alive').asBoolean()}" th:action="@{/objects/{id}/withdraw(id=${object.id})}" method="post" data-object-confirm="Withdraw and delete object?" th:attr="data-confirm-message=${object.data.path('configuredNetManager').asBoolean() ? 'Withdraw and delete ' + object.id + ' and its associated data? This also disables Net Manager.' : 'Withdraw and delete ' + object.id + ' and its associated data?'}">
+<input type="hidden" name="version" th:value="${object.version}"><button>Withdraw object</button></form></div></div>
+<dl class="resource-facts"><dt>Callsign</dt><dd th:text="${object.id}"></dd><dt>Location</dt><dd th:text="|${object.data.path('lon').asText('Unknown')}, ${object.data.path('lat').asText('Unknown')}|"></dd>
+<dt th:if="${object.data.path('approximate').asBoolean()}">Position precision</dt><dd th:if="${object.data.path('approximate').asBoolean()}">Approximate</dd><dt>Status</dt><dd th:text="${object.data.path('alive').asBoolean() ? 'Active' : 'Withdrawn'}"></dd>
+<dt>Symbol</dt><dd th:text="${symbol.isEmpty() ? symbolDescription : symbolDescription + ' (' + symbol + ')'}"></dd>
+<dt>Comment</dt><dd th:text="${object.data.path('comment').asText()}"></dd></dl></section>
+<section class="panel" th:if="${object.kind == 'OBJECT' && object.data.path('type').asText() == 'RESOURCE'}">
+<div class="monitor-section-heading"><h2>Resource values</h2><button type="button" id="add-resource-value" th:if="${canManage}">Add</button></div>
+<p th:if="${object.data.path('keyValues').isEmpty()}">No resource values.</p>
+<div class="resource-value-row" th:each="entry : ${object.data.path('keyValues').fields()}"><span><strong th:text="${entry.key}"></strong>: <span th:text="${entry.value.asText()}"></span></span>
+<form th:if="${canManage}" th:action="@{/objects/{id}/values(id=${object.id})}" method="post" data-object-confirm="Remove resource value?" th:attr="data-confirm-message=|Remove ${entry.key}: ${entry.value.asText()}?|"><input type="hidden" name="version" th:value="${object.version}"><input type="hidden" name="key" th:value="${entry.key}"><input type="hidden" name="remove" value="true"><button>Remove</button></form></div>
+<dialog id="resource-value-dialog" th:if="${canManage}"><h2>Add resource value</h2><form th:action="@{/objects/{id}/values(id=${object.id})}" method="post" class="account-form" data-object-confirm="Add resource value?" data-confirm-message="Add this resource value? An existing value with the same name will be replaced."><input type="hidden" name="version" th:value="${object.version}"><label>Name <input name="key" required maxlength="80"></label><label>Value <input name="value" maxlength="1000"></label><div class="dialog-actions"><button>Add</button><button type="button" id="cancel-resource-value">Cancel</button></div></form></dialog></section>
+<th:block th:if="${object.data.path('type').asText() == 'EOC'}">
+<section class="panel" th:each="group : ${eocGroups}">
+<div class="monitor-section-heading"><h2 th:text="${group.title}"></h2><button type="button" th:if="${canManage}" th:attr="data-eoc-open=|eoc-${group.kind}|">Update</button></div>
+<p th:if="${group.history.isEmpty()}">No information reported yet.</p>
+<dl class="resource-facts" th:unless="${group.history.isEmpty()}">
+<th:block th:each="field : ${group.fields}"><dt th:text="${#strings.capitalize(field.label)}"></dt><dd th:text="${field.name == 'status' ? mobilizationStatuses[group.latest.path('status').asInt()] : field.name == 'level' &amp;&amp; group.latest.path('level').asInt() == 0 ? 'Unknown' : group.latest.path(field.name).asText()}"></dd></th:block>
+<dt>Reported</dt><dd><time data-eoc-time th:text="${group.latest.path('lastReportedTime').asText(group.history[0].recordedAt.toString())}"></time></dd></dl>
+<dialog th:if="${canManage}" th:id="|eoc-${group.kind}|"><h2 th:text="|Update ${#strings.toLowerCase(group.title)}|"></h2>
+<form class="account-form" method="post" th:action="@{/objects/{id}/reports/{kind}(id=${object.id},kind=${group.kind})}" data-eoc-form="true" data-object-confirm="Confirm update" th:attr="data-confirm-message=|Update ${#strings.toLowerCase(group.title)} for ${object.id}?|">
+<label th:each="field : ${group.fields}"><span th:text="${#strings.capitalize(field.label)}"></span>
+<select th:if="${field.name == 'status'}" name="status"><option th:each="status, iter : ${mobilizationStatuses}" th:value="${iter.index}" th:text="${status}" th:selected="${group.latest.path('status').asInt() == iter.index}"></option></select>
+<select th:if="${field.name == 'level'}" name="level"><option th:each="level : ${#numbers.sequence(0,5)}" th:value="${level}" th:text="${level == 0 ? 'Unknown' : level}" th:selected="${group.latest.path('level').asInt() == level}"></option></select>
+<input th:if="${field.type == 'text'}" th:name="${field.name}" th:value="${group.latest.path(field.name).asText()}" th:maxlength="${group.kind == 'contacts' ? 25 : 30}" title="Use printable ASCII characters without colons.">
+</label><div class="dialog-actions"><button type="submit">Update</button><button type="button" data-eoc-cancel>Cancel</button></div></form></dialog>
+</section>
+<section class="panel" th:each="group : ${eocGroups}"><h2 th:text="|${group.title} history|"></h2><p th:if="${group.history.isEmpty()}">No history available.</p>
+<div th:unless="${group.history.isEmpty()}" style="overflow:auto;max-height:24rem"><table><thead><tr><th>Reported</th><th th:each="field : ${group.fields}" th:text="${#strings.capitalize(field.label)}"></th></tr></thead><tbody>
+<tr th:each="report : ${group.history}"><td><time data-eoc-time th:text="${report.data.path('lastReportedTime').asText(report.recordedAt.toString())}"></time></td><td th:each="field : ${group.fields}" th:text="${field.name == 'status' ? mobilizationStatuses[report.data.path('status').asInt()] : field.name == 'level' &amp;&amp; report.data.path('level').asInt() == 0 ? 'Unknown' : report.data.path(field.name).asText()}"></td></tr>
+</tbody></table></div></section></th:block>
+<th:block th:if="${object.data.path('type').asText() == 'SHELTER'}">
+<section class="panel" th:each="group : ${shelterGroups}"><h2 th:text="${group.title}"></h2>
+<div th:each="row, iter : ${group.latest}"><div class="monitor-section-heading"><h3 th:text="${row.title}"></h3><button type="button" th:if="${canManage}" th:attr="data-eoc-open=|shelter-${group.kind}-${iter.index}|">Update</button></div>
+<p th:if="${row.reported.isEmpty()}">No information reported yet.</p><dl class="resource-facts" th:unless="${row.reported.isEmpty()}"><th:block th:each="field : ${group.fields}"><dt th:text="${field.label}"></dt><dd th:text="${row.display[field.name]}"></dd></th:block><dt>Reported</dt><dd><time data-eoc-time th:text="${row.reported}"></time></dd></dl>
+<dialog th:if="${canManage}" th:id="|shelter-${group.kind}-${iter.index}|"><h2 th:text="|Update ${group.title}: ${row.title}|"></h2>
+<form class="account-form" method="post" th:action="@{/objects/{id}/reports/{kind}(id=${object.id},kind=${group.kind})}" data-eoc-form="true" data-object-confirm="Confirm update" th:attr="data-confirm-message=|Update ${group.title} for ${object.id}?|">
+<label th:each="field : ${group.fields}"><span th:text="${field.label}"></span>
+<select th:unless="${field.choices.isEmpty()}" th:name="${field.name}"><option th:each="choice, choiceIndex : ${field.choices}" th:value="${choiceIndex.index}" th:text="${choice}" th:selected="${row.values[field.name] == choiceIndex.index.toString()}"></option></select>
+<input th:if="${field.choices.isEmpty()}" th:type="${field.type}" th:name="${field.name}" th:value="${row.values[field.name]}" th:required="${field.type == 'number'}" th:min="${field.type == 'number' ? 0 : null}" th:max="${field.type == 'number' ? 99999 : null}" th:maxlength="${field.type == 'text' ? 40 : null}">
+</label><div class="dialog-actions"><button type="submit">Update</button><button type="button" data-eoc-cancel>Cancel</button></div></form></dialog></div></section>
+<section class="panel" th:each="history : ${shelterHistories}"><h2 th:text="${history.title}"></h2><div th:each="group : ${history.groups}"><h3 th:text="${group.title}"></h3><p th:if="${group.history.isEmpty()}">No history available.</p><div th:unless="${group.history.isEmpty()}" style="overflow:auto;max-height:24rem"><table><thead><tr><th>Reported</th><th th:each="field : ${group.fields}" th:text="${field.label}"></th></tr></thead><tbody><tr th:each="row : ${group.history}"><td><time data-eoc-time th:text="${row.reported}"></time></td><td th:each="field : ${group.fields}" th:text="${row.display[field.name]}"></td></tr></tbody></table></div></div></section>
+</th:block>
+<section class="panel" th:if="${object.data.path('type').asText() == 'MEDICAL' || object.data.path('type').asText() == 'NETMGR'}"><h2>Reports</h2><p th:if="${canManage}"><a th:each="kind : ${ {'status','census','workers','operationalFoods','operationalMateriels','contacts','mobilizations'} }" th:href="@{/objects/{id}/reports/{kind}/new(id=${object.id},kind=${kind})}" th:text="|${kind} · |"></a></p><p><a th:href="@{/api/v1/shelterReports/{id}/report.pdf(id=${object.id})}">Download report PDF</a></p>
+<details th:each="r : ${reports}"><summary th:text="|${r.recordedAt} · ${r.kind}|"></summary><dl th:each="entry : ${r.data.fields()}"><dt th:text="${entry.key}"></dt><dd th:text="${entry.value.asText(entry.value.toString())}"></dd></dl></details></section>
+<section th:replace="~{fragments/object-security :: security}"></section>
+<dialog id="object-action-confirm"><h2 id="object-action-title"></h2><p id="object-action-message"></p><div class="dialog-actions"><button type="button" id="object-action-apply">Confirm</button><button type="button" id="object-action-cancel">Cancel</button></div></dialog>
+</main><script defer th:src="@{/js/object-details.js}"></script></body></html>

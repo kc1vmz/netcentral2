@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="001-foundation" author="kc1vmz">
+        <createTable tableName="application_settings">
+            <column name="setting_key" type="VARCHAR(120)">
+                <constraints primaryKey="true" primaryKeyName="pk_application_settings" nullable="false"/>
+            </column>
+            <column name="setting_value" type="VARCHAR(4096)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <insert tableName="application_settings">
+            <column name="setting_key" value="application.name"/>
+            <column name="setting_value" value="Net Central"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

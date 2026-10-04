@@ -1,0 +1,9 @@
+/target/
+/data/
+*.log
+*.mv.db
+*.trace.db
+.idea/
+*.iml
+/docs/
+/build_results/

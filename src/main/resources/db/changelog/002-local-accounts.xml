@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="002-local-accounts" author="kc1vmz">
+        <createTable tableName="account_lock">
+            <column name="id" type="INT"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="bootstrapped" type="BOOLEAN" defaultValueBoolean="false"><constraints nullable="false"/></column>
+        </createTable>
+        <insert tableName="account_lock"><column name="id" valueNumeric="1"/></insert>
+        <createTable tableName="local_account">
+            <column name="id" type="VARCHAR(36)"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="username" type="VARCHAR(254)"><constraints nullable="false" unique="true" uniqueConstraintName="uq_account_username"/></column>
+            <column name="password_hash" type="VARCHAR(100)"><constraints nullable="false"/></column>
+            <column name="role" type="VARCHAR(16)"><constraints nullable="false"/></column>
+            <column name="callsign" type="VARCHAR(20)"/>
+            <column name="first_name" type="VARCHAR(100)"/>
+            <column name="last_name" type="VARCHAR(100)"/>
+            <column name="credential_version" type="BIGINT" defaultValueNumeric="0"><constraints nullable="false"/></column>
+        </createTable>
+        <sql>ALTER TABLE local_account ADD CONSTRAINT ck_account_role CHECK (role IN ('USER', 'ADMIN', 'SYSADMIN'))</sql>
+    </changeSet>
+</databaseChangeLog>

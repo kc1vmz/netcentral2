@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="commands"><p>Send commands to the net callsign once you have checked in.</p>
+    <dl>
+        <dt><b>CI / CO</b></dt>
+        <dd>Check in / check out.</dd>
+        <dt><b>STG / STY / STR</b></dt><dd>Set your status color to green, yellow, or red. Participant lists show (G), (Y), or (R).</dd>
+        <dt><b>T name</b></dt>
+        <dd>Set tactical callsign.</dd>
+        <dt><b>F frequency</b></dt>
+        <dd>Set voice frequency monitoring.</dd>
+        <dt><b>X watts</b></dt>
+        <dd>Set transmit power.</dd>
+        <dt><b>E (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR)</b></dt>
+        <dd>Set primary electrical power type.</dd>
+        <dt><b>B (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR)</b></dt>
+        <dd>Set backup electrical power type.</dd>
+        <dt><b>Y (APPLIANCE, BASE, HANDHELD, INTERNET, MOBILE, OTHER)</b></dt>
+        <dd>Set radio style</dd>
+        <p></p>
+        <dt>These commands can be combined into a single message.</dt>
+        <p></p>
+        <dt><b>S text</b></dt>
+        <dd>Set status.</dd>
+        <dt><b>M text</b></dt>
+        <dd>Send message to all active participants.</dd>
+        <dt><b>MC text</b></dt>
+        <dd>Send message to Net Central console only.</dd>
+        <p></p>
+        <dt><b>L</b></dt>
+        <dd>List participants.</dd>
+        <dt><b>P callsign</b></dt>
+        <dd>Ping a participant.</dd>
+        <dt><b>I</b></dt>
+        <dd>Get information about net.</dd>
+        <dt><b>H</b></dt>
+        <dd>Help and supported commands.</dd>
+
+        <dt><b>R count</b></dt>
+        <dd>Replay last (count) number of messages.</dd>
+        <dt><b>Q text</b></dt>
+        <dd>Ask a question of all net participants.</dd>
+        <dt><b>QL</b></dt>
+        <dd>List your unanswered questions.</dd>
+        <dt><b>QR number</b></dt>
+        <dd>Get answers to question by question number.</dd>
+        <dt><b>A number text</b></dt>
+        <dd>Answer a question by number.</dd>
+
+        <dt><b>INV callsign</b></dt>
+        <dd>Invite station to a net.</dd>
+        <dt><b>NCI</b></dt>
+        <dd>Toggle net participation notification.</dd>
+    </dl>
+</div>
+<div th:fragment="manager"><p>Send these commands to the enabled Net Manager callsign.</p><dl>
+<dt><b>L</b></dt><dd>List nets.</dd><dt><b>C callsign</b></dt><dd>Create an open net.</dd><dt><b>CP callsign</b></dt><dd>Create a closed-admission net.</dd><dt><b>S callsign</b></dt><dd>Secure a net created by that exact station.</dd><dt><b>H</b></dt><dd>Get help.</dd></dl></div>
+<div th:fragment="priority"><p>Send commands to the priority object (nets, EOC, shelter) callsign.</p>
+    <dl>
+        <dt><b>?INFO</b></dt>
+        <dd>Net - Net information and participants.</dd>
+        <dd>Priority Object - name, comment and supported directed query commands.</dd>
+        <dt><b>?CMD</b></dt>
+        <dd>List of valid directed query commands.</dd>
+        <dt><b>?APRSO</b></dt>
+        <dd>Object information.</dd>
+        <dt><b>?APRSP</b></dt>
+        <dd>Object position.</dd>
+        <dt><b>?NCOT</b></dt>
+        <dd>Object type.</dd>
+        <dt><b>?NCNTI</b></dt>
+        <dd>Net - Net information.</dd>
+        <dt><b>?NCNTP</b></dt>
+        <dd>Net - Net participants.</dd>
+
+        <dt><b>?NCPI</b></dt>
+        <dd>Priority Object - name, comment.</dd>
+        <dt><b>?NCPES</b></dt>
+        <dd>Priority Object / EOC - EOC status.</dd>
+        <dt><b>?NCPEM</b></dt>
+        <dd>Priority Object / EOC - EOC mobilization report.</dd>
+
+        <dt><b>?NCPSS</b></dt>
+        <dd>Priority Object / Shelter - shelter status.</dd>
+        <dt><b>?NCPSC</b></dt>
+        <dd>Priority Object / Shelter - shelter census.</dd>
+        <dt><b>?NCPSF</b></dt>
+        <dd>Priority Object / Shelter - shelter food reports.</dd>
+        <dt><b>?NCPSM</b></dt>
+        <dd>Priority Object / Shelter - shelter materiel reports.</dd>
+        <dt><b>?NCPSW</b></dt>
+        <dd>Priority Object / Shelter - shelter worker census reports.</dd>
+    </dl>
+</div>
+<div th:fragment="resources"><p>Send commands to the general resource object callsign.</p>
+    <dl>
+        <dt><b>R</b></dt>
+        <dd>Request resource values.</dd>
+        <dt><b>key=value</b></dt>
+        <dd>Set a resource value when authorized.</dd>
+        <dt><b>?INFO</b></dt>
+        <dd>Name, comment and supported directed query commands.</dd>
+        <dt><b>?CMD</b></dt>
+        <dd>List of valid directed query commands.</dd>
+        <dt><b>?APRSO</b></dt>
+        <dd>Object information.</dd>
+        <dt><b>?APRSP</b></dt>
+        <dd>Object position.</dd>
+        <dt><b>?APRSS</b></dt>
+        <dd>Object status.</dd>
+        <dt><b>?NCGRI</b></dt>
+        <dd>Name, comment.</dd>
+        <dt><b>?NCGRV</b></dt>
+        <dd>token=value pairs stored for object.</dd>
+    </dl>
+</div>
+
+
+<div th:fragment="generic"><p>Send commands to the generic APRS object callsign.</p>
+    <dl>
+        <dt><b>?INFO</b></dt>
+        <dd>Name, comment and supported directed query commands.</dd>
+        <dt><b>?CMD</b></dt>
+        <dd>Object information.</dd>
+        <dt><b>?APRSP</b></dt>
+        <dd>Object position.</dd>
+        <dt><b>?NCOT</b></dt>
+        <dd>Object type.</dd>
+        <dt><b>?NCPI</b></dt>
+        <dd>Return name, comment.</dd>
+    </dl>
+</div>
+</body></html>

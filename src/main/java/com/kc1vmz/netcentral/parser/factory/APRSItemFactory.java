@@ -1,0 +1,113 @@
+package com.kc1vmz.netcentral.parser.factory;
+
+/*
+    Net Central
+    Copyright (c) 2025, 2026 John Rokicki KC1VMZ
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
+    http://www.kc1vmz.com
+*/
+
+import java.util.Arrays;
+
+import org.slf4j.LoggerFactory;
+
+import com.kc1vmz.netcentral.aprsobject.object.APRSItem;
+import com.kc1vmz.netcentral.aprsobject.utils.CompressedDataFormatUtils;
+import com.kc1vmz.netcentral.parser.exception.ParserException;
+import com.kc1vmz.netcentral.parser.util.PacketIdentity;
+import com.kc1vmz.netcentral.parser.util.StringUtils;
+import com.kc1vmz.netcentral.parser.util.Stripper;
+
+import org.slf4j.Logger;
+
+public class APRSItemFactory {
+    private static final Logger logger = LoggerFactory.getLogger(APRSItemFactory.class);
+
+
+    public static APRSItem parse(byte [] header, byte [] data) throws ParserException {
+        logger.debug("Parsing APRSItem object");
+        APRSItem ret = new APRSItem();
+
+        String callsignFrom = PacketIdentity.getCallsignFrom(header);
+        callsignFrom = Stripper.stripWhitespace(callsignFrom);
+
+        ret.setHeader(header);
+        ret.setData(data);
+        ret.setDti(data[0]);
+
+        int len = 0;
+        String callsign = "";
+        int fixedStart = 1 + len;
+        boolean found = false;
+        for (; fixedStart < 11; fixedStart++) {  // starting at 1, up to 9 characters for callsign
+            if (data[fixedStart] == '!') {
+                found = true;
+                ret.setAlive(true);
+                break;
+            }
+            if (data[fixedStart] == '_') {
+                found = true;
+                ret.setAlive(false);
+                break;
+            }
+            callsign += (char) (data[fixedStart]);
+        }
+
+        if (!found) {
+            throw new ParserException(String.format("Packet from %s does not properly describe alive or dead", ret.getCallsignTo()));
+        }
+        ret.setCallsignTo(callsign);  // might not be the same as the header callsign
+        ret.setCallsignFrom(callsignFrom);  // might not be the same as the header callsign
+        fixedStart++; // skip up/down
+        if ((data[fixedStart] == '/') || (data[fixedStart] == '\\')) {
+            // compressed data format
+            byte [] compressedData = Arrays.copyOfRange(data, fixedStart, fixedStart+13); // expecting /YYYYXXXX$csT
+            String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitude(compressedData), "NS");
+            ret.setLat(lat);
+            String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitude(compressedData), "EW");
+            ret.setLon(lon);
+
+            byte [] comment = Arrays.copyOfRange(data, fixedStart+13, data.length);
+            ret.setComment(new String(comment));
+            ret.setSymbolTableId(StringUtils.stringify(data[fixedStart]));
+            ret.setSymbolTableCode(StringUtils.stringify(data[fixedStart+9]));
+        } else {
+            // regular format
+            byte [] lat = Arrays.copyOfRange(data, fixedStart, fixedStart+8);  // take 8 characters
+            ret.setLat(new String(lat));
+            ret.setSymbolTableId(StringUtils.stringify(data[fixedStart+8]));
+            byte [] lon = Arrays.copyOfRange(data, fixedStart+9, fixedStart+18);  // take 9 characters after the separator
+
+            int messageStart = fixedStart+19;
+            if ((lon[8] != 'E') && (lon[8] != 'W')) {
+                lon = Arrays.copyOfRange(data, fixedStart+9, fixedStart+17);  // bad lon - take only 8
+                String prependZero = "0"+new String(lon);
+                lon = prependZero.getBytes();
+                messageStart--;
+                ret.setSymbolTableCode(StringUtils.stringify(data[fixedStart+17]));
+            } else {
+                ret.setSymbolTableCode(StringUtils.stringify(data[fixedStart+18]));
+            }
+            ret.setLon(new String(lon));
+
+            byte [] comment = Arrays.copyOfRange(data, messageStart, data.length);
+            ret.setComment(new String(comment));
+        }
+
+        return ret;
+    }
+}
+

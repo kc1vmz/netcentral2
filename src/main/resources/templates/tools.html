@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Tools')}"></head><body><header th:replace="~{fragments/account :: header}"></header><main>
+<h1>Tools</h1><p class="intro">Net Central provides a set of integrated APRS tools that you can use independently from nets.</p><nav class="setup-tabs" aria-label="Tools"><a href="/tools?section=winlink" th:attr="aria-current=${section == 'winlink' ? 'page' : null}">Winlink</a><a href="/tools?section=nts" th:attr="aria-current=${section == 'nts' ? 'page' : null}">NTS</a><a href="/tools?section=packet-logging" th:attr="aria-current=${section == 'packet-logging' ? 'page' : null}">Packet logging</a></nav><p th:if="${result != null}" th:text="${result.status}"></p><p th:if="${section == 'winlink'}">Send a simple email message through Winlink via APRS .</p>
+<section class="panel" th:if="${section == 'winlink'}"><h2>Winlink</h2><form th:action="@{/tools/winlink}" method="post" class="account-form"><label>Callsign <input name="callsign" required></label><label>Winlink password <input name="password" type="password" required autocomplete="off"></label><label>Recipient <input name="recipient" required></label><label>Subject <input name="subject"></label><label>Message <textarea name="message" required maxlength="2000"></textarea></label><button>Send via Winlink</button></form></section>
+<section class="panel" th:if="${section == 'nts'}"><h2>NTS Radiogram</h2>
+<form th:action="@{/tools/nts}" method="post" class="account-form nts-radiogram">
+<div class="nts-preamble" role="group" aria-label="Radiogram routing information">
+<label>Number<input name="number"></label>
+<label>Precedence<input name="precedence"></label>
+<label>HX<input name="hx"></label>
+<label>Station of origin<input name="callsignOrigin"></label>
+<label>Place of origin<input name="locationOrigin"></label>
+<label>Check<input name="check"></label>
+<label>Time filed<input name="timeFiled"></label>
+<label>Date filed<input name="dateFiled"></label>
+</div>
+<div class="nts-recipient" role="group" aria-label="Recipient">
+<label>To<input name="name"></label>
+<label>Street address<input name="address"></label>
+<label>City, State<input name="cityState"></label>
+<label>Phone number<input name="phoneNumber"></label>
+<label>Email address<input name="emailAddress"></label>
+</div>
+<div class="nts-message" role="group" aria-labelledby="nts-message-heading">
+<h3 id="nts-message-heading">Message</h3><p id="nts-message-help">Enter one word per message field, up to 25. Check must equal the number of words.</p>
+<div class="nts-words"><label th:each="n : ${#numbers.sequence(1,25)}"><span th:text="|Word ${n}|"></span><input th:name="|message${n}|" maxlength="30" aria-describedby="nts-message-help"></label></div>
+</div>
+<div class="nts-signature" role="group" aria-label="Signature and operator note">
+<label>Signature<input name="signature"></label>
+<label>Operator note<input name="operatorNote"></label>
+</div>
+<button>Send radiogram</button></form></section>
+<section class="panel" th:if="${section == 'packet-logging'}"><h2>Packet logging</h2><p th:unless="${canManage}">Packet logging requires administrator access.</p><th:block th:if="${canManage}"><p th:if="${param.saved}">Packet logging settings saved.</p><form th:action="@{/tools/packet-logging}" method="post" class="account-form"><label>Packet logging enabled<select name="rawPacketLogging"><option value="false" th:selected="${settings['rawPacketLogging'] == 'false'}">No</option><option value="true" th:selected="${settings['rawPacketLogging'] == 'true'}">Yes</option></select></label><button>Save</button></form><p>Packets are retained according to the packet retention and limit configured in Settings / Timers.</p><a th:href="@{/api/v1/tools/rawPackets}">Download raw packets</a><p>The download includes up to 1,000 retained packets, oldest first.</p></th:block></section></main></body></html>

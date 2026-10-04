@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${applicationName}">Net Central</title>
+    <link rel="stylesheet" th:href="@{/css/application.css}">
+    <script defer th:src="@{/js/application.js}"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header th:replace="~{fragments/account :: header}"></header>
+<main id="main">
+    <h1 th:text="${applicationName}">Net Central</h1>
+    <p class="intro">Coordinate nets, track participants, and share operational information.</p>
+    <section class="panel" aria-labelledby="status-heading">
+        <h2 id="status-heading">Run a net from check-in through archive.</h2>
+        <p>Create a net, monitor participants and positions live, exchange messages, and export completed net reports.</p>
+        <p><a th:href="@{/dashboard}">Open live dashboard</a> · <a th:href="@{/nets}">Manage and monitor Nets</a> · <a th:href="@{/explorer}">APRS Explorer</a></p>
+        <p><a th:href="@{/communications}">Manage communications</a> (administrator access required).</p>
+    </section>
+    <details class="panel radio-command-section"><summary><h2 id="radio-commands-heading">Net radio commands</h2></summary>
+        <div th:replace="~{fragments/radio-commands :: commands}"></div>
+    </details>
+<details class="panel radio-command-section"><summary><h2>Net Manager radio commands</h2></summary><div th:replace="~{fragments/radio-commands :: manager}"></div></details>
+<details class="panel radio-command-section"><summary><h2>Priority object radio commands</h2></summary><div th:replace="~{fragments/radio-commands :: priority}"></div></details>
+<details class="panel radio-command-section"><summary><h2>General resource object radio commands</h2></summary><div th:replace="~{fragments/radio-commands :: resources}"></div></details>
+<details class="panel radio-command-section"><summary><h2>Generic APRS object commands (sourced by Net Central)</h2></summary><div th:replace="~{fragments/radio-commands :: generic}"></div></details>
+</main>
+</body>
+</html>

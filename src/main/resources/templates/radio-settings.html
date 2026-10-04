@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <head th:replace="~{fragments/account :: head(${title})}"></head>
+    <body>
+        <header th:replace="~{fragments/account :: header}"></header>
+        <main>
+            <h1 th:text="${title}"></h1>
+            
+            
+            <p class="intro" th:if="${section == 'ignored'}">Manage which stations are ignored by Net Central.</p>
+            <p class="intro" th:if="${section == 'classification'}">Automatically classify stations heard based on these rules.</p>
+            <p class="intro" th:if="${section == 'access'}">Manage what stations can update object information.</p>
+            
+
+            <section class="panel" th:if="${section == 'ignored'}">
+                <div class="section-actions"><button type="button" id="ignore-add">Add ignored station</button></div>
+                <ul class="classification-list"><li th:each="i : ${ignores}"><span th:text="${i.id}"></span><form th:action="@{/setup/radio/ignore}" method="post" data-ignore-operation><input type="hidden" name="callsign" th:value="${i.id}"><input type="hidden" name="remove" value="true"><button type="submit">Remove</button></form></li></ul>
+                <p th:if="${ignores.isEmpty()}">No ignored stations.</p>
+                <dialog id="ignore-editor" aria-labelledby="ignore-editor-title"><h2 id="ignore-editor-title">Add ignored station</h2><form th:action="@{/setup/radio/ignore}" method="post" class="account-form" data-ignore-operation><label>Callsign or root <input name="callsign" required maxlength="9"></label><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="submit">Add station</button></div></form></dialog>
+                <dialog id="ignore-confirm" aria-labelledby="ignore-confirm-title"><h2 id="ignore-confirm-title">Confirm ignored station change</h2><p id="ignore-summary"></p><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="button" id="ignore-apply">Confirm</button></div></dialog>
+                <script defer th:src="@{/js/admin-dialogs.js}"></script>
+            </section>
+
+            <section class="panel" th:if="${section == 'classification'}" id="classification-panel">
+                <div class="section-actions"><button type="button" id="classification-add">Add classification rule</button></div>
+                <div class="classification-scroll" tabindex="0" role="region" aria-label="Classification rules"><ul id="classification-list" class="classification-list"><li th:each="r : ${rules}" th:attr="data-id=${r.id},data-version=${r.version},data-sort=${r.data.path('value').asText()}"><span th:text="|${r.data.path('ruleTarget').asText()} ${r.data.path('ruleType').asText()} ${r.data.path('value').asText()} → ${r.data.path('trackedStationType').asText()}|"></span><button type="button" data-remove-rule>Remove rule</button></li></ul><p id="classification-empty" th:hidden="${!rules.isEmpty()}">No classification rules.</p></div>
+                <dialog id="classification-editor" aria-labelledby="classification-editor-title"><h2 id="classification-editor-title">Add classification rule</h2><form id="classification-form" class="account-form"><label>Match field <select name="ruleTarget"><option>CALLSIGN</option><option>STATUS</option><option>COMMENT</option><option>SYMBOL</option></select></label><label>Match type <select name="ruleType"><option>CONTAINS</option><option>EQUALS</option><option>STARTS_WITH</option><option>ENDS_WITH</option></select></label><label>Value <input name="value" required maxlength="120"></label><label>Station type <select name="trackedStationType"><option th:each="t : ${ {'STATION','OBJECT','WEATHER','REPEATER','DIGIPEATER','IGATE','IS','WINLINK_GATEWAY','DSTAR','BBS','MMDVM'} }" th:text="${t}"></option></select></label><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="submit">Review rule</button></div></form></dialog>
+                <dialog id="classification-confirm" aria-labelledby="classification-confirm-title"><h2 id="classification-confirm-title">Confirm classification rule</h2><p id="classification-summary"></p><p id="classification-error" role="alert"></p><div class="dialog-actions"><button type="button" data-dialog-cancel>Back</button><button type="button" id="classification-confirm-apply">Add rule</button></div></dialog>
+                <dialog id="classification-remove-confirm" aria-labelledby="classification-remove-title"><h2 id="classification-remove-title">Remove classification rule</h2><p id="classification-remove-summary"></p><p id="classification-remove-error" role="alert"></p><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="button" id="classification-remove-apply">Remove rule</button></div></dialog><script defer th:src="@{/js/admin-dialogs.js}"></script>
+            </section>
+
+            <section class="panel" th:if="${section == 'access'}"><div class="section-actions"><button type="button" id="access-add">Add access rule</button></div>
+                <ul class="classification-list access-rule-list"><li th:each="r : ${acls}"><span th:text="|${r.data.path('callsignTarget').asText()} ← ${r.data.path('callsignChecked').asText()} ${r.data.path('type').asText()} allow=${r.data.path('allowed').asBoolean()}|"></span><form th:action="@{/setup/radio/acl/delete}" method="post"><input type="hidden" name="target" th:value="${r.data.path('callsignTarget').asText()}"><input type="hidden" name="checked" th:value="${r.data.path('callsignChecked').asText()}"><button>Remove access rule</button></form></li></ul>
+                <dialog id="access-editor" aria-labelledby="access-editor-title"><h2 id="access-editor-title">Add access rule</h2><form id="access-form" th:action="@{/setup/radio/acl}" method="post" class="account-form"><label>Target callsign <input name="target" required></label><label>Checked callsign (or *) <input name="checked" required></label><label>Type <select name="type"><option>STATION</option><option>NET</option><option>OBJECT</option><option>WITHIN_PROXIMITY</option></select></label><label>Permission <select name="allowed"><option value="true">Allow</option><option value="false">Deny</option></select></label><label>Proximity in feet <input name="proximity" type="number" min="0" value="0"></label><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="submit">Add Rule</button></div></form></dialog>
+                <dialog id="access-confirm" aria-labelledby="access-confirm-title"><h2 id="access-confirm-title">Confirm access rule</h2><p id="access-summary"></p><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="button" id="access-confirm-apply">Confirm Add Rule</button></div></dialog><script defer th:src="@{/js/admin-dialogs.js}"></script>
+            </section>
+        </main>
+    </body>
+</html>
+

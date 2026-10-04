@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Local accounts')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header>
+<main><div class="page-heading"><h1>Local Accounts</h1><button type="button" id="account-create">Create Account</button></div>
+    <p class="intro">Manage Net Central users, their attributes and roles.</p>
+    <section class="panel" th:each="account : ${accounts}">
+        <h2><span th:text="${account.emailAddress}"></span> <span class="account-name" th:if="${!#strings.isEmpty(account.firstName) or !#strings.isEmpty(account.lastName)}" th:text="|(${account.firstName ?: ''} ${account.lastName ?: ''})|"></span> <span class="account-name" th:text="| - ${account.role}|"></span></h2><div class="account-actions">
+        <div th:if="${actor.role == 'SYSADMIN' or account.role == 'USER' or actor.id == account.id}"><a class="button-link" th:href="@{/users/{id}(id=${account.id})}">Edit Account</a></div>
+        <form th:if="${actor.role == 'SYSADMIN'}" th:action="@{/users/{id}/role(id=${account.id})}" method="post" class="account-form role-form" th:attr="data-account=${account.emailAddress},data-current-role=${account.role}">
+            <input type="hidden" name="role" th:value="${account.role}"><button type="button" data-role-edit>Change Role</button>
+        </form>
+        <form th:if="${actor.role == 'SYSADMIN' or account.role == 'USER'}" th:action="@{/users/{id}/delete(id=${account.id})}" method="post" class="account-delete-form" th:attr="data-account=${account.emailAddress}"><button type="submit">Delete Account</button></form>
+        </div>
+    </section>
+    <dialog id="account-create-dialog" aria-labelledby="account-create-title"><h2 id="account-create-title">Create account</h2>
+        <form th:action="@{/users}" method="post" class="account-form">
+            <label>Username <input name="username" required maxlength="254" autocomplete="off"></label>
+            <label>Password <input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+            <label>Confirm password <input name="password2" type="password" required autocomplete="new-password"></label>
+            <label>Callsign <input name="callsign" maxlength="20"></label>
+            <label>First name <input name="firstName" maxlength="100"></label>
+            <label>Last name <input name="lastName" maxlength="100"></label>
+            <label th:if="${actor.role == 'SYSADMIN'}">Role <select name="role"><option>USER</option><option>ADMIN</option><option>SYSADMIN</option></select></label>
+            <div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="submit">Create account</button></div>
+        </form>
+    </dialog>
+<dialog id="role-editor" aria-labelledby="role-editor-title"><h2 id="role-editor-title">Change Role</h2><p id="role-editor-account"></p><label>Role <select id="role-choice"><option>USER</option><option>ADMIN</option><option>SYSADMIN</option></select></label><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="button" id="role-save" disabled>Save</button></div></dialog>
+<dialog id="account-delete-confirm" aria-labelledby="account-delete-title"><h2 id="account-delete-title">Delete Account</h2><p id="account-delete-summary"></p><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="button" id="account-delete-apply">Delete Account</button></div></dialog>
+<dialog id="role-confirm" aria-labelledby="role-confirm-title"><h2 id="role-confirm-title">Confirm role change</h2><p id="role-confirm-summary"></p><div class="dialog-actions"><button type="button" data-dialog-cancel>Cancel</button><button type="button" id="role-confirm-apply">Confirm change</button></div></dialog>
+<script defer th:src="@{/js/admin-dialogs.js}"></script></main></body></html>

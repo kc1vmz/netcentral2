@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+ <changeSet id="003-communications" author="kc1vmz">
+  <createTable tableName="communication_lock"><column name="id" type="INT"><constraints primaryKey="true" nullable="false"/></column></createTable>
+  <insert tableName="communication_lock"><column name="id" valueNumeric="1"/></insert>
+  <createTable tableName="communication_instance">
+   <column name="id" type="VARCHAR(36)"><constraints primaryKey="true" nullable="false"/></column>
+   <column name="version" type="BIGINT"><constraints nullable="false"/></column>
+   <column name="configuration" type="CLOB"><constraints nullable="false"/></column>
+   <column name="passcode" type="VARCHAR(32)"/>
+   <column name="serial_reservation" type="VARCHAR(1024)"><constraints unique="true" uniqueConstraintName="uq_serial_reservation"/></column>
+  </createTable>
+  <createTable tableName="communication_route">
+   <column name="owner_key" type="VARCHAR(160)"><constraints primaryKey="true" nullable="false"/></column>
+   <column name="version" type="BIGINT" defaultValueNumeric="0"><constraints nullable="false"/></column>
+   <column name="mode" type="VARCHAR(16)"><constraints nullable="false"/></column>
+  </createTable>
+  <sql>ALTER TABLE communication_route ADD CONSTRAINT ck_route_mode CHECK (mode IN ('ALL','SELECTED'))</sql>
+  <createTable tableName="communication_route_instance">
+   <column name="owner_key" type="VARCHAR(160)"><constraints primaryKey="true" nullable="false"/></column>
+   <column name="instance_id" type="VARCHAR(36)"><constraints primaryKey="true" nullable="false"/></column>
+  </createTable>
+  <addForeignKeyConstraint baseTableName="communication_route_instance" baseColumnNames="owner_key" referencedTableName="communication_route" referencedColumnNames="owner_key" constraintName="fk_route_owner" onDelete="CASCADE"/>
+  <addForeignKeyConstraint baseTableName="communication_route_instance" baseColumnNames="instance_id" referencedTableName="communication_instance" referencedColumnNames="id" constraintName="fk_route_instance" onDelete="CASCADE"/>
+  <createIndex tableName="communication_route_instance" indexName="ix_route_instance"><column name="instance_id"/></createIndex>
+  <insert tableName="communication_route"><column name="owner_key" value="DEFAULT"/><column name="mode" value="SELECTED"/></insert>
+  <createSequence sequenceName="aprs_message_number" startValue="1" incrementBy="1"/>
+ </changeSet>
+</databaseChangeLog>

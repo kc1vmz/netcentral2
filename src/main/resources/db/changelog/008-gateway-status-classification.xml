@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="008-gateway-status-classification" author="kc1vmz">
+        <sql><![CDATA[
+INSERT INTO domain_record (kind,record_key,owner_id,payload,version,updated_at) VALUES ('CLASSIFY','566dc51a-d5dd-4d38-a455-1b93dc245fa1','SYSTEM','{"ruleTarget":"STATUS","ruleType":"CONTAINS","trackedStationType":"WINLINK_GATEWAY","value":"WINLINK VARA FM GATEWAY"}',0,CURRENT_TIMESTAMP);
+INSERT INTO domain_record (kind,record_key,owner_id,payload,version,updated_at) VALUES ('CLASSIFY','566dc51a-d5dd-4d38-a455-1b93dc245fa2','SYSTEM','{"ruleTarget":"STATUS","ruleType":"CONTAINS","trackedStationType":"WINLINK_GATEWAY","value":"WINLINK VARA FM WIDE GATEWAY"}',0,CURRENT_TIMESTAMP);
+        ]]></sql>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Create an account')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header>
+<main><h1>Create an account</h1>
+    <form th:action="@{/register}" method="post" class="panel account-form">
+        <label>Username <input name="username" required maxlength="254" autocomplete="username"></label>
+        <label>Password <input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
+        <label>Confirm password <input name="password2" type="password" required autocomplete="new-password"></label>
+        <label>Callsign <input name="callsign" maxlength="20"></label>
+        <label>First name <input name="firstName" maxlength="100" autocomplete="given-name"></label>
+        <label>Last name <input name="lastName" maxlength="100" autocomplete="family-name"></label>
+        <button type="submit">Register</button>
+    </form>
+    <a th:href="@{/login}">Already registered? Sign in</a>
+</main></body></html>

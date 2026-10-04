@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Account request')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header>
+<main><h1>Account request could not be completed</h1>
+    <p role="alert" th:text="${message}"></p>
+    <p><a th:href="@{/profile}">My account</a> · <a th:href="@{/register}">Registration</a> · <a th:href="@{/login}">Sign in</a></p>
+</main></body></html>

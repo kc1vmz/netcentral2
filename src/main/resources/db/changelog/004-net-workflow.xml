@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+<changeSet id="004-net-workflow" author="kc1vmz">
+<sql splitStatements="true"><![CDATA[
+CREATE TABLE net_lock (id INT PRIMARY KEY);
+INSERT INTO net_lock VALUES(1);
+CREATE TABLE managed_net (
+ id VARCHAR(36) PRIMARY KEY, callsign VARCHAR(9) NOT NULL, active_callsign VARCHAR(9) UNIQUE,
+ name VARCHAR(120) NOT NULL, description VARCHAR(1000) NOT NULL, voice_frequency VARCHAR(40) NOT NULL,
+ owner_id VARCHAR(36) NOT NULL, creator_name VARCHAR(254) NOT NULL,
+ open BOOLEAN NOT NULL, private_net BOOLEAN NOT NULL, started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+ closed_at TIMESTAMP WITH TIME ZONE, version BIGINT NOT NULL DEFAULT 0,
+ CHECK ((closed_at IS NULL AND active_callsign IS NOT NULL) OR (closed_at IS NOT NULL AND active_callsign IS NULL))
+);
+CREATE INDEX ix_net_owner ON managed_net(owner_id);
+CREATE TABLE net_expected (net_id VARCHAR(36) NOT NULL REFERENCES managed_net(id), callsign VARCHAR(9) NOT NULL, PRIMARY KEY(net_id,callsign));
+CREATE TABLE net_participant (
+ net_id VARCHAR(36) NOT NULL REFERENCES managed_net(id), callsign VARCHAR(9) NOT NULL,
+ status VARCHAR(200) NOT NULL DEFAULT '', voice_frequency VARCHAR(40) NOT NULL DEFAULT '',
+ tactical_callsign VARCHAR(30) NOT NULL DEFAULT '', started_at TIMESTAMP WITH TIME ZONE NOT NULL,
+ ended_at TIMESTAMP WITH TIME ZONE, last_heard TIMESTAMP WITH TIME ZONE NOT NULL,
+ lat DOUBLE PRECISION, lon DOUBLE PRECISION, version BIGINT NOT NULL DEFAULT 0, PRIMARY KEY(net_id,callsign)
+);
+CREATE INDEX ix_participant_call ON net_participant(callsign, ended_at);
+CREATE TABLE station_position (callsign VARCHAR(9) PRIMARY KEY, lat DOUBLE PRECISION NOT NULL, lon DOUBLE PRECISION NOT NULL, heard_at TIMESTAMP WITH TIME ZONE NOT NULL);
+CREATE TABLE net_message (
+ id VARCHAR(36) PRIMARY KEY, net_id VARCHAR(36) NOT NULL REFERENCES managed_net(id),
+ callsign_from VARCHAR(9) NOT NULL, recipient VARCHAR(20) NOT NULL, message VARCHAR(500) NOT NULL,
+ received_at TIMESTAMP WITH TIME ZONE NOT NULL, direction VARCHAR(12) NOT NULL,
+ delivery VARCHAR(24) NOT NULL, ack_number VARCHAR(5)
+);
+CREATE INDEX ix_message_net_time ON net_message(net_id,received_at,id);
+CREATE INDEX ix_message_ack ON net_message(net_id,recipient,ack_number);
+CREATE TABLE net_radio_dedup (net_id VARCHAR(36) NOT NULL REFERENCES managed_net(id), fingerprint VARCHAR(64) NOT NULL, received_at TIMESTAMP WITH TIME ZONE NOT NULL, PRIMARY KEY(net_id,fingerprint));
+INSERT INTO application_settings(setting_key,setting_value) VALUES('map.tileUrl','https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+INSERT INTO application_settings(setting_key,setting_value) VALUES('map.attribution','© OpenStreetMap contributors');
+]]></sql>
+</changeSet>
+</databaseChangeLog>

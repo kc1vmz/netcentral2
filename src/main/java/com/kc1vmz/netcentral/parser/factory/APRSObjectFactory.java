@@ -1,0 +1,112 @@
+package com.kc1vmz.netcentral.parser.factory;
+
+/*
+    Net Central
+    Copyright (c) 2025, 2026 John Rokicki KC1VMZ
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
+    http://www.kc1vmz.com
+*/
+
+import java.util.Arrays;
+
+import org.slf4j.LoggerFactory;
+
+import com.kc1vmz.netcentral.aprsobject.object.APRSObject;
+import com.kc1vmz.netcentral.aprsobject.utils.CompressedDataFormatUtils;
+import com.kc1vmz.netcentral.parser.exception.APRSTimeConversionException;
+import com.kc1vmz.netcentral.parser.exception.ParserException;
+import com.kc1vmz.netcentral.parser.util.APRSTime;
+import com.kc1vmz.netcentral.parser.util.PacketIdentity;
+import com.kc1vmz.netcentral.parser.util.StringUtils;
+import com.kc1vmz.netcentral.parser.util.Stripper;
+
+import org.slf4j.Logger;
+
+public class APRSObjectFactory {
+    private static final Logger logger = LoggerFactory.getLogger(APRSObjectFactory.class);
+
+
+    public static APRSObject parse(byte [] header, byte [] data) throws ParserException {
+        logger.debug("Parsing APRSObject object");
+        APRSObject ret = new APRSObject();
+
+        String callsignFrom = PacketIdentity.getCallsignFrom(header);
+        callsignFrom = Stripper.stripWhitespace(callsignFrom);
+
+        ret.setHeader(header);
+        ret.setData(data);
+        ret.setDti(data[0]);
+
+        byte [] objectNameBytes = Arrays.copyOfRange(data, 1, 10);
+        String objectName = new String (objectNameBytes);
+        objectName = Stripper.stripWhitespace(objectName);
+        ret.setCallsignTo((objectName.length()> 0) ? objectName : PacketIdentity.getCallsignTo(header));
+        ret.setCallsignFrom(callsignFrom);
+
+        switch (data[10]) {
+            case '*' -> { ret.setAlive(true); }
+            case '_' -> { ret.setAlive(false); }
+            default -> {
+                throw new ParserException("Packet does not properly describe alive or dead");
+            }
+        }
+
+        byte [] time_bytes = Arrays.copyOfRange(data, 11, 18);
+        ret.setTime(new String(time_bytes));
+        try {
+            ret.setLdtime(APRSTime.convertAPRSTimeToZonedDateTime(ret.getTime()));
+        } catch (APRSTimeConversionException e) {
+            logger.error("******** Bad time received - " + ret.getTime() + " **********");
+            logger.error("Exception caught", e);
+        }
+
+        if ((data[18] == '/') || (data[18] == '\\')) {
+            // compressed data format
+            byte [] compressedData = Arrays.copyOfRange(data, 18, 31);
+            String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitude(compressedData), "NS");
+            ret.setLat(lat);
+            String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitude(compressedData), "EW");
+            ret.setLon(lon);
+
+            byte [] comment = Arrays.copyOfRange(data, 31, data.length);
+            ret.setComment(new String(comment));
+            ret.setSymbolTableId(StringUtils.stringify(data[18]));
+            ret.setSymbolTableCode(StringUtils.stringify(data[27]));
+        } else {
+            // regular format
+            byte [] lat = Arrays.copyOfRange(data, 18, 26);
+            ret.setLat(new String(lat));
+
+            byte [] lon = Arrays.copyOfRange(data, 27, 36);
+            int messageStart = 37;
+            if ((lon[8] != 'E') && (lon[8] != 'W')) {
+                lon = Arrays.copyOfRange(data, 27, 35);
+                messageStart--;
+            }
+            ret.setLon(new String(lon));
+
+            ret.setSymbolTableId(StringUtils.stringify(data[26]));
+            ret.setSymbolTableCode(StringUtils.stringify(data[36]));
+
+            byte [] comment = Arrays.copyOfRange(data, messageStart, data.length);
+            ret.setComment(new String(comment));
+        }
+
+        return ret;
+    }
+
+}
+

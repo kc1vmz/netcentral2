@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Schedule')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header><main th:with="s=${detail.schedule}">
+<h1 th:text="|${s.callsign} — ${s.name}|"></h1>
+<p th:text="${s.description}"></p><p th:text="|${s.type} · ${s.timezone} · ${s.duration} minutes · ${s.enabled ? 'Enabled' : 'Disabled'}|"></p>
+<p>Next start (UTC): <span th:text="${s.nextStartTime ?: 'None'}"></span></p>
+<p th:if="${detail.canManage}"><a th:href="@{/schedules/{id}/edit(id=${s.id})}">Edit schedule</a></p>
+<p th:if="${detail.canManage}"><a th:href="@{/schedules/{id}/options(id=${s.id})}">Reminder and invitation options</a></p>
+<p>Refresh this page to see new occurrences. Open a net for its live monitor.</p>
+<section class="panel"><h2>Occurrences</h2><p th:if="${occurrences.isEmpty()}">No occurrences yet.</p>
+<div class="table-scroll"><table class="schedule-table" th:unless="${occurrences.isEmpty()}"><thead><tr><th>Planned start (UTC)</th><th>Planned end (UTC)</th><th>Activated (UTC)</th><th>State</th><th>Net</th></tr></thead>
+<tbody><tr th:each="o : ${occurrences}"><td th:text="${o.plannedStart}"></td><td th:text="${o.plannedEnd}"></td><td th:text="${o.activatedAt ?: '—'}"></td><td th:text="${o.state}"></td><td><a th:if="${o.netId != null}" th:href="@{/nets/{id}(id=${o.netId})}">Open net</a></td></tr></tbody></table></div>
+<p>WAITING means the callsign is in use. SKIPPED means the entire time window elapsed. Neither extends the planned end.</p></section>
+<details th:if="${detail.canManage}"><summary>Remove schedule</summary><p>Stops future occurrences. Active nets finish at their original end; archives are retained.</p>
+<form th:action="@{/schedules/{id}/delete(id=${s.id})}" method="post"><input type="hidden" name="version" th:value="${s.version}"><button>Remove schedule</button></form></details>
+<p><a th:href="@{/schedules}">Back to schedules</a></p>
+</main></body></html>
+

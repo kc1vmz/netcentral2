@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+<changeSet id="005-schedules" author="kc1vmz"><sql splitStatements="true"><![CDATA[
+CREATE TABLE net_schedule (
+ id VARCHAR(36) PRIMARY KEY, callsign VARCHAR(9) NOT NULL, name VARCHAR(120) NOT NULL,
+ description VARCHAR(1000) NOT NULL, voice_frequency VARCHAR(40) NOT NULL,
+ owner_id VARCHAR(36) NOT NULL, creator_name VARCHAR(254) NOT NULL, open BOOLEAN NOT NULL, private_net BOOLEAN NOT NULL,
+ type VARCHAR(24) NOT NULL, timezone VARCHAR(100) NOT NULL, first_start TIMESTAMP NOT NULL,
+ duration INT NOT NULL CHECK(duration BETWEEN 1 AND 10080), ordinal INT NOT NULL,
+ enabled BOOLEAN NOT NULL, deleted BOOLEAN NOT NULL DEFAULT FALSE,
+ next_start TIMESTAMP WITH TIME ZONE, version BIGINT NOT NULL DEFAULT 0
+);
+CREATE TABLE schedule_expected (schedule_id VARCHAR(36) NOT NULL REFERENCES net_schedule(id), callsign VARCHAR(9) NOT NULL, PRIMARY KEY(schedule_id,callsign));
+CREATE TABLE net_occurrence (
+ id VARCHAR(36) PRIMARY KEY, schedule_id VARCHAR(36) NOT NULL REFERENCES net_schedule(id),
+ planned_start TIMESTAMP WITH TIME ZONE NOT NULL, planned_end TIMESTAMP WITH TIME ZONE NOT NULL,
+ activated_at TIMESTAMP WITH TIME ZONE, finalized_at TIMESTAMP WITH TIME ZONE,
+ net_id VARCHAR(36) UNIQUE REFERENCES managed_net(id), state VARCHAR(16) NOT NULL,
+ UNIQUE(schedule_id,planned_start), CHECK(planned_end>planned_start)
+);
+CREATE INDEX ix_occurrence_state_end ON net_occurrence(state,planned_end);
+]]></sql></changeSet></databaseChangeLog>

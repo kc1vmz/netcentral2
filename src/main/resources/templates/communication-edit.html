@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Configure communication')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header><main>
+<h1>Configure communication</h1>
+<p>New connections are disabled. Enabling connects to the configured server or device. TNC2 connections exchange complete text packet lines.</p>
+<form th:action="@{/communications/save}" method="post" class="panel account-form">
+  <input type="hidden" name="id" th:value="${config.id}">
+  <input type="hidden" name="version" th:value="${config.version}">
+  <label>Transport <select name="type">
+    <option th:each="type : ${ {'APRS_IS','KISS_TCP','KISS_SERIAL','TNC2_TCP','TNC2_SERIAL'} }" th:value="${type}" th:text="${type}" th:selected="${type == config.type}"></option>
+  </select></label>
+  <input type="hidden" name="_enabled" value="on">
+  <input type="hidden" name="_transmitEnabled" value="on">
+  <label><input type="checkbox" name="enabled" value="true" th:checked="${config.enabled}"> Enable instance</label>
+  <label><input type="checkbox" name="transmitEnabled" value="true" th:checked="${config.transmitEnabled}"> Allow transmission</label>
+  <fieldset><legend>TCP (APRS-IS or KISS TCP or TNC2 TCP)</legend>
+    <label>Host <input name="host" th:value="${config.host}" maxlength="255"></label>
+    <label>TCP port <input name="port" type="number" th:value="${config.port}" min="1" max="65535"></label>
+  </fieldset>
+  <fieldset><legend>APRS-IS</legend>
+    <label>Login callsign <input name="username" th:value="${config.username}" maxlength="10" autocomplete="off"></label>
+    <label>Passcode <input name="passcode" type="password" autocomplete="new-password" maxlength="32"></label>
+    <p>Leave passcode blank when editing to retain it. Use -1 for receive-only access, with transmission disabled.</p>
+    <label>Server filter <input name="filter" th:value="${config.filter}" maxlength="255"></label>
+  </fieldset>
+  <fieldset><legend>Serial (KISS serial or TNC2 serial)</legend>
+    <label>Serial port/device <input name="serialDevice" th:value="${config.serialDevice}" placeholder="COM6 or /dev/ttyUSB0" maxlength="255"></label>
+    <label>Baud rate <input name="baudRate" type="number" th:value="${config.baudRate}" min="300" max="4000000"></label>
+    <label>Initialization command 1 <input name="initCommand1" th:value="${config.initCommand1}" maxlength="255"></label>
+    <label>Initialization command 2 <input name="initCommand2" th:value="${config.initCommand2}" maxlength="255"></label>
+    <p>Commands use a carriage-return terminator. Leave blank for a device already in KISS mode. TNC2 uses complete packet lines.</p>
+  </fieldset>
+  <fieldset><legend>Radio routing</legend>
+    <label>Digipeater path <input name="digiPath" th:value="${config.digiPath}" placeholder="WIDE1-1,WIDE2-1" maxlength="255"></label>
+    <label>KISS port/channel <input name="kissPort" type="number" th:value="${config.kissPort}" min="0" max="15"></label>
+  </fieldset>
+  <button type="submit">Save connection</button>
+  <a th:href="@{/communications}">Cancel</a>
+</form></main></body></html>
