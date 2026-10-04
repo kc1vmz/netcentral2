@@ -82,21 +82,13 @@ From the root directory, run "mvn clean package".  This will build all java comp
 
 You may also use your favorite IDE that supports maven projects, such as VS Code.  
 
-## Configuration notes
 
-Make sure that the environment variables are set per the next section.  
+## Installation notes
 
+Each release in Github has a netcentral_installer.sh / netcentral_installer.bat file  (also found under the installers directory).
 
-### Public IP addresses
+Run the operating system specific version to download, install and configure Net Central properly.
 
-
-### Environment variables
-
-#### Mandatory  
-  
-#### Optional  
-NETCENTRAL_SERVER_HTTP_PORT     default 8080  
-  
   
 
 ### Operating System specifics
