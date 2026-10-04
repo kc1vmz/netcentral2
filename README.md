@@ -1,35 +1,109 @@
-# Net Central v2
+# Net Central
 
-Net Central v2 is a rebuild of Net Central as one Spring Boot application. Implemented milestones provide Spring MVC, rendered pages, local assets, file H2, Liquibase initialization, local account authentication/authorization, and managed communications.
+## What is this?
 
-Register the first account at `/register` to become system administrator, then sign in at `/login`. Manage your account at `/profile`, administer accounts at `/users`, and configure APRS-IS/KISS/TNC2 instances at `/communications`. Create and monitor nets at `/nets`, including live participants/maps, messaging, archives, and PDF exports. Setup's `/setup/map-cache` selects the external tile server. TNC2 TCP and Serial replace the Kenwood placeholder; see [communication integration](docs/communication-welcome-center-integration.md). Manage scheduled occurrences and restart recovery on `/nets`. Use `/explorer` for stations, objects and reports, `/tools` for Winlink/NTS, and `/setup/operations` for retention and federation. The live Dashboard, Explorer, and responsive Monitor are complete through milestone 7. Operational acceptance remains in milestone 8. The application binds to localhost by default.
+Net Central allows you to maintain situational awareness using APRS in emergency and non-emergency situations.  
+  
+Using an APRS net, you can coordinate and track all participants. Adding objects and providing well-known reporting information, you will enrich the APRS ecosystem with important near-time information.  
 
-## Build and run
+## How APRS nets work
+  
+Start a net and let people know about it. Nets can be announced as bulletins when started.  
+Operators can then participate by checking in and out of a net by sending APRS messages to the callsign of the net.  
+  
+List of valid commands sent as APRS messages to the net callsign:
+CI - Check in to net
+CO - Check out of net
+I - Send net info (name, voice frequency, description)
+S status - report your status so other participants know what you are doing
+STG - report your status color as green.
+STY - report your status color as yellow.
+STR - report your status color as red.
+T callsign - set tactical callsign for net
+F frequency - report your voice freqency that you are monitoring
+X n - report your transmit power n in watts
+E (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR) - report your electrical power type
+B (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR) - report your backup electrical power type
+Y (APPLIANCE, BASE, HANDHELD, INTERNET, MOBILE, OTHER) - report your radio style
+M - send message to all participants in net
+MC - send message to only net control
+R n - replay last n messages sent to the net (n is a number)
+L - list net participants, their callsigns, status, location, and voice freqency monitored
+P callsign - ping callsign to test connectivity
+O callsign - get known operational status of a station by its callsign
+Q - send a question to all participants in net
+A n - answer question n sent to the net
+QL - send a list of unanswered questions
+QR n - Report on question n and its answers
+INV callsign[,callsign2,...] - invite one or more callsigns to a net  
+NCI - toggle notification of all check-ins and check-outs (default OFF)
+H - display help message of all commands
+  
+CI, CO, T, F, X, E, B, NCI and Y can all be combined in a single message (ex: CI X 50 E COMM B SO NCI)
+  
+You must be a registered user on Net Central to start and close nets, but any operator with APRS can participate!
+  
+## Build notes
 
-Requirements: JDK 21 and Maven 3.6.3 or later. Node.js and an external database are not required. Maven needs access to its dependency repositories on the first build.
+Net Central is a Maven-based build.  
 
-```text
-mvn verify
-java -jar target/netcentralv2-0.1.0-SNAPSHOT.jar
-```
+From the root directory, run "mvn clean package".  This will build all java components.
 
-Open [Net Central](http://127.0.0.1:8080). Stop with Ctrl+C. The database defaults to `./data/netcentral.mv.db`, relative to the directory from which Java is started. Use an absolute data directory for a stable installation.
+You may also use your favorite IDE that supports maven projects, such as VS Code.  
 
-- [Windows/Linux installation and configuration](docs/running.md)
-- [Milestone 1 verification and source baseline](docs/milestone-1.md)
-- [Local security and account administration](docs/local-security.md)
-- [Milestone 3: communications, routing, and verification](docs/milestone-3.md)
-- [Milestone 4: net workflow, live monitor, and archives](docs/milestone-4.md)
-- [Milestone 5: schedules and restart recovery](docs/milestone-5.md)
-- [Milestone 6: operational features and verification](docs/milestone-6.md)
-- [Milestone 6 API contracts](docs/milestone-6-api.md)
-- [Milestone 7: responsive UI and live updates](docs/milestone-7.md)
-- [Complete legacy endpoint register](docs/legacy-endpoint-register.md)
-- [API compatibility and intentional changes](docs/api-compatibility.md)
+## Configuration notes
 
-- [Agreed migration specification](docs/migration-specification.md)
-- [Implementation and acceptance checklist](docs/implementation-checklist.md)
-
-The specification records decisions agreed on September 27, 2026. Checked milestones reflect implemented and verified work; unchecked items are future work.
+Make sure that the environment variables are set per the next section.  
 
 
+### Public IP addresses
+
+
+### Environment variables
+
+#### Mandatory  
+  
+#### Optional  
+NETCENTRAL_SERVER_HTTP_PORT     default 8080  
+  
+  
+
+### Operating System specifics
+
+#### Linux
+
+##### Port number usage
+If you attempt to change port numbers other than the defaults, remember that Linux restricts the use of port numbers below 1024 to root without extra effort.  
+
+##### Firewall settings
+
+Ensure that port 8080 is open on the server's firewall. Failure to open these ports will prevent external UI and API access.  
+
+#### Windows
+
+##### Firewall settings
+
+Ensure that port 8080 is open on the server's firewall. Failure to open these ports will prevent external UI and API access.  
+
+
+### Java
+
+Java 21 JDK is preferred for build, and a JRE based on Java 21 for execution.  
+
+Obtain the Java 21 JDK for your specific platform and build using maven or your favorite IDE supporting maven projects.
+
+
+## Running Net Central
+
+Net Central is composed of a single JAR file that contains all of the required sofware.
+
+
+### Running Net Central Server
+
+To run the JAR file, specify:  
+    java netcentral-2.0.0.jar
+
+
+## License
+  
+This software is licensed under GPL v3.  For more information, see LICENSE file.  
