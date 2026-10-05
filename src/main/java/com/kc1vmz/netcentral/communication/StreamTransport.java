@@ -24,6 +24,7 @@ public final class StreamTransport implements CommunicationTransport {
     private volatile boolean verified;
     private InputStream input;
     private OutputStream output;
+    private KenwoodSession kenwood;
 
     public StreamTransport(CommunicationConfig config) {
         this.config = config;
@@ -32,7 +33,7 @@ public final class StreamTransport implements CommunicationTransport {
 
     @Override
     public void connect() throws IOException {
-        if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL").contains(config.type()))
+        if (!Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL", "KENWOOD_SERIAL").contains(config.type()))
             throw new IOException("Unsupported transport type");
         if (closed)
             throw new IOException("Cancelled");
@@ -68,7 +69,11 @@ public final class StreamTransport implements CommunicationTransport {
             input = connection.getInputStream();
             output = connection.getOutputStream();
         }
-        if (config.type().equals("APRS_IS"))
+        if (config.type().equals("KENWOOD_SERIAL")) {
+            kenwood = new KenwoodSession(input, output, config);
+            kenwood.initialize();
+            verified = true;
+        } else if (config.type().equals("APRS_IS"))
             login();
         else
             verified = true;
@@ -110,6 +115,7 @@ public final class StreamTransport implements CommunicationTransport {
 
     @Override
     public Packet read() throws IOException {
+        if (kenwood != null) return kenwood.read();
         if (config.type().equals("APRS_IS") || config.type().startsWith("TNC2_")) {
             String value = readLine();
             if (value == null || value.isBlank() || value.startsWith("#"))
@@ -145,6 +151,7 @@ public final class StreamTransport implements CommunicationTransport {
     public void send(Packet packet) throws IOException {
         if (!canTransmit())
             throw new IOException("Transmission unavailable");
+        if (kenwood != null) { kenwood.send(packet); return; }
         if (config.type().equals("APRS_IS")) {
             Packet wire = new Packet(packet.source(), packet.destination(), List.of("TCPIP*"), packet.information());
             output.write((wire.line() + "\r\n").getBytes(StandardCharsets.ISO_8859_1));
@@ -169,6 +176,7 @@ public final class StreamTransport implements CommunicationTransport {
     @Override
     public void close() {
         closed = true;
+        if (kenwood != null) kenwood.close();
         Socket connection = socket;
         if (connection != null)
             try {

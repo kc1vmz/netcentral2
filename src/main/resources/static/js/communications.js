@@ -19,14 +19,15 @@
   }
   function fieldStates(){
     const type=form.elements.type.value;
-    form.querySelectorAll('[data-types]').forEach(label=>{label.hidden=!label.dataset.types.split(' ').includes(type);label.querySelectorAll('input').forEach(input=>input.disabled=label.hidden);});
+    form.querySelectorAll('[data-types]').forEach(label=>{label.hidden=!label.dataset.types.split(' ').includes(type);label.querySelectorAll('input,select').forEach(input=>input.disabled=label.hidden);});
     form.elements.passcode.required=type==='APRS_IS'&&(!editing||editing.type!=='APRS_IS');
   }
   function open(config=null){
     editing=config;form.reset();document.getElementById('communication-title').textContent=config?'Edit connection':'Add connection';
     const values=config||{type:'APRS_IS',enabled:true,transmitEnabled:true,port:14580,baudRate:9600,kissPort:0};
-    for(const input of form.elements)if(input.name)input.value=values[input.name]??'';
-    form.elements.passcode.value='';fieldStates();document.getElementById('communication-message').textContent='';dialog.showModal();
+    form.serialPortPicker.prepare(values.baudRate, values.serialDevice);
+    for(const input of form.elements)if(input.name)input.value=values[input.name]??(input.name==='baudRate'?'9600':'');
+    form.elements.passcode.value='';fieldStates();document.getElementById('communication-message').textContent='';dialog.showModal();form.serialPortPicker.load();
   }
   function render(){
     list.replaceChildren();
@@ -50,7 +51,12 @@
       for(const {configuration:c} of entries){let input=Array.from(fieldset.querySelectorAll('input')).find(i=>i.value===c.id);if(!input){const label=document.createElement('label');input=document.createElement('input');input.type='checkbox';input.name='instanceIds';input.value=c.id;label.className='check';label.append(input,document.createElement('span'));fieldset.append(label);}input.parentElement.querySelector('span').textContent=c.name;}
     });
   }
-  async function load(){const current=++sequence;const result=await request('/api/v1/communicationInstances');if(current===sequence){entries=result;render();}}
+  async function load(){const current=++sequence;const result=await request('/api/v1/communicationInstances');if(current===sequence){entries=result;render();
+      const messages=await request('/api/v1/communications/installationMessages');
+      if(current===sequence){const pane=document.getElementById('installation-messages');pane.replaceChildren();
+        if(!messages.length)pane.textContent='No installation messages.';
+        for(const item of messages){const line=document.createElement('p');line.textContent=new Date(item.receivedAt).toLocaleString()+' · '+item.from+' → '+item.to+' · '+item.message;pane.append(line);}}
+}}
   async function reloadRoutes(){
     const routes=await request('/api/v1/communicationRoutes');
     document.querySelectorAll('form[action$="/communications/routes"]').forEach(routeForm=>{

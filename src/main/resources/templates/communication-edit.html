@@ -4,11 +4,11 @@
 <body><header th:replace="~{fragments/account :: header}"></header><main>
 <h1>Configure communication</h1>
 <p>New connections are disabled. Enabling connects to the configured server or device. TNC2 connections exchange complete text packet lines.</p>
-<form th:action="@{/communications/save}" method="post" class="panel account-form">
+<form data-serial-port-url="/api/v1/communicationInstances/serialPorts" data-serial-autoload="true" th:action="@{/communications/save}" method="post" class="panel account-form">
   <input type="hidden" name="id" th:value="${config.id}">
   <input type="hidden" name="version" th:value="${config.version}">
   <label>Transport <select name="type">
-    <option th:each="type : ${ {'APRS_IS','KISS_TCP','KISS_SERIAL','TNC2_TCP','TNC2_SERIAL'} }" th:value="${type}" th:text="${type}" th:selected="${type == config.type}"></option>
+    <option th:each="type : ${ {'APRS_IS','KISS_TCP','KISS_SERIAL','TNC2_TCP','TNC2_SERIAL','KENWOOD_SERIAL'} }" th:value="${type}" th:text="${type}" th:selected="${type == config.type}"></option>
   </select></label>
   <input type="hidden" name="_enabled" value="on">
   <input type="hidden" name="_transmitEnabled" value="on">
@@ -19,17 +19,17 @@
     <label>TCP port <input name="port" type="number" th:value="${config.port}" min="1" max="65535"></label>
   </fieldset>
   <fieldset><legend>APRS-IS</legend>
-    <label>Login callsign <input name="username" th:value="${config.username}" maxlength="10" autocomplete="off"></label>
+    <label>Login callsign / Kenwood MYCALL <input name="username" th:value="${config.username}" maxlength="10" autocomplete="off"></label>
     <label>Passcode <input name="passcode" type="password" autocomplete="new-password" maxlength="32"></label>
     <p>Leave passcode blank when editing to retain it. Use -1 for receive-only access, with transmission disabled.</p>
     <label>Server filter <input name="filter" th:value="${config.filter}" maxlength="255"></label>
   </fieldset>
-  <fieldset><legend>Serial (KISS serial or TNC2 serial)</legend>
-    <label>Serial port/device <input name="serialDevice" th:value="${config.serialDevice}" placeholder="COM6 or /dev/ttyUSB0" maxlength="255"></label>
-    <label>Baud rate <input name="baudRate" type="number" th:value="${config.baudRate}" min="300" max="4000000"></label>
+  <fieldset><legend>Serial (KISS, TNC2, or Kenwood)</legend>
+<div data-serial-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL"><label>Serial device<select name="serialDevice" aria-describedby="serial-port-status"><option th:value="${config.serialDevice}" th:text="${config.serialDevice}"></option></select></label><small id="serial-port-status" data-serial-status role="status"></small></div>
+<label data-serial-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL">Baud rate<select name="baudRate" th:attr="data-saved-value=${config.baudRate}"><option value="9600">9600</option></select></label>
     <label>Initialization command 1 <input name="initCommand1" th:value="${config.initCommand1}" maxlength="255"></label>
     <label>Initialization command 2 <input name="initCommand2" th:value="${config.initCommand2}" maxlength="255"></label>
-    <p>Commands use a carriage-return terminator. Leave blank for a device already in KISS mode. TNC2 uses complete packet lines.</p>
+    <p>Commands use a carriage-return terminator. Leave blank for a device already in KISS mode. TNC2 uses complete packet lines. For Kenwood, leave initialization commands blank; RESET, MYCALL and UNPROTO are automatic.</p>
   </fieldset>
   <fieldset><legend>Radio routing</legend>
     <label>Digipeater path <input name="digiPath" th:value="${config.digiPath}" placeholder="WIDE1-1,WIDE2-1" maxlength="255"></label>
@@ -37,4 +37,4 @@
   </fieldset>
   <button type="submit">Save connection</button>
   <a th:href="@{/communications}">Cancel</a>
-</form></main></body></html>
+</form></main><script defer th:src="@{/js/serial-port-picker.js}"></script></body></html>

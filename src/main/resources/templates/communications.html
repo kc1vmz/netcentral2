@@ -12,27 +12,27 @@
 <p id="communication-list-message" role="status"></p><div id="communication-list"></div>
 
 <dialog id="communication-dialog" aria-labelledby="communication-title"><h2 id="communication-title">Connection</h2><p id="communication-message" role="alert"></p>
-<form id="communication-form" class="account-form">
-<label>Type<select name="type"><option value="APRS_IS">APRS-IS</option><option value="KISS_TCP">KISS TCP</option><option value="KISS_SERIAL">KISS Serial</option><option value="TNC2_TCP">TNC2 TCP</option><option value="TNC2_SERIAL">TNC2 Serial</option></select></label>
+<form data-serial-port-url="/api/v1/communicationInstances/serialPorts" id="communication-form" class="account-form">
+<label>Type<select name="type"><option value="APRS_IS">APRS-IS</option><option value="KISS_TCP">KISS TCP</option><option value="KISS_SERIAL">KISS Serial</option><option value="TNC2_TCP">TNC2 TCP</option><option value="TNC2_SERIAL">TNC2 Serial</option><option value="KENWOOD_SERIAL">Kenwood Serial</option></select></label>
 <label>State<select name="enabled"><option value="false">Paused</option><option value="true" selected>Active</option></select></label>
 <label>Transmission<select name="transmitEnabled"><option value="false">Receive only</option><option value="true" selected>Allow transmission</option></select></label>
 <label data-types="APRS_IS KISS_TCP TNC2_TCP">Host<input name="host" maxlength="255" required></label>
 <label data-types="APRS_IS KISS_TCP TNC2_TCP">TCP port<input name="port" type="number" min="1" max="65535" required></label>
-<label data-types="APRS_IS">Login callsign<input name="username" maxlength="10" required></label>
+<label data-types="APRS_IS KENWOOD_SERIAL">Login callsign / Kenwood MYCALL<input name="username" maxlength="10" required></label>
 <label data-types="APRS_IS">Passcode<input name="passcode" type="password" autocomplete="new-password" maxlength="32"><small>Leave blank when editing to retain it. Use -1 for receive-only access.</small></label>
 <label data-types="APRS_IS">Server filter<input name="filter" maxlength="255"></label>
-<label data-types="KISS_SERIAL TNC2_SERIAL">Serial device<input name="serialDevice" placeholder="COM3 or /dev/ttyUSB0" maxlength="255" required></label>
-<label data-types="KISS_SERIAL TNC2_SERIAL">Baud rate<input name="baudRate" type="number" min="300" max="4000000" required></label>
+<div data-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL"><label>Serial device<select name="serialDevice" aria-describedby="serial-port-status" required></select></label><small id="serial-port-status" data-serial-status role="status"></small></div>
+<label data-types="KISS_SERIAL TNC2_SERIAL KENWOOD_SERIAL">Baud rate<select name="baudRate" required><option value="9600">9600</option></select></label>
 <label data-types="KISS_SERIAL TNC2_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
 <label data-types="KISS_SERIAL TNC2_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
-<label data-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL">Digipeater path<input name="digiPath" placeholder="WIDE1-1,WIDE2-1" maxlength="255"></label>
+<label data-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Digipeater path<input name="digiPath" placeholder="WIDE1-1,WIDE2-1" maxlength="255"></label>
 <label data-types="KISS_TCP KISS_SERIAL">KISS port/channel<input name="kissPort" type="number" min="0" max="15" required></label>
-<div class="dialog-actions"><button type="button" id="cancel-communication">Cancel</button><button type="submit">Save connection</button></div></form></dialog>
+<p data-types="KENWOOD_SERIAL">Kenwood command-mode TNC. Startup sets RESET, MYCALL and UNPROTO automatically.</p><div class="dialog-actions"><button type="button" id="cancel-communication">Cancel</button><button type="submit">Save connection</button></div></form></dialog>
 <dialog id="communication-confirm" aria-labelledby="communication-confirm-title"><h2 id="communication-confirm-title"></h2><p id="communication-confirm-description"></p><p id="communication-confirm-error" role="alert"></p><div class="dialog-actions"><button id="cancel-communication-change" type="button">Cancel</button><button id="confirm-communication-change" type="button">Confirm</button></div></dialog>
-<script defer th:src="@{/js/communications.js}"></script>
+<script defer th:src="@{/js/serial-port-picker.js}"></script><script defer th:src="@{/js/communications.js}"></script>
 <dialog id="default-route-dialog" aria-labelledby="default-route-title"><h2 id="default-route-title">Default communication selection</h2>
 <p>Used for traffic without an explicit net or object selection.<br>All includes future instances; selected can be empty.</p>
 <th:block th:each="route : ${routes}" th:if="${route.owner == 'DEFAULT'}"><form th:replace="~{fragments/communication-route :: form(${route})}"></form></th:block>
 </dialog>
 <dialog id="default-route-confirm" aria-labelledby="default-route-confirm-title"><h2 id="default-route-confirm-title">Confirm default communication selection</h2><p id="default-route-summary"></p><div class="dialog-actions"><button type="button" id="default-route-back">Back</button><button type="button" id="default-route-apply">Confirm selection</button></div></dialog>
-</main></body></html>
+<section class="panel"><h2>Installation messages</h2><p>Messages addressed to a Kenwood instance MYCALL. These are not forwarded to a net or object.</p><div id="installation-messages" class="table-scroll"></div></section></main></body></html>

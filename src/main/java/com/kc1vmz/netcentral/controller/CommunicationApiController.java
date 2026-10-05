@@ -10,6 +10,7 @@ import com.kc1vmz.netcentral.communication.CommunicationConfig;
 import com.kc1vmz.netcentral.communication.CommunicationService;
 import com.kc1vmz.netcentral.communication.PacketHub;
 import com.kc1vmz.netcentral.communication.RoutingService;
+import com.kc1vmz.netcentral.communication.SerialPorts;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -27,6 +28,13 @@ public class CommunicationApiController {
     @GetMapping("/communicationInstances")
     public List<CommunicationService.View> list() {
         return communications.list();
+    }
+
+    @GetMapping("/communicationInstances/serialPorts")
+    public SerialPorts.Result serialPorts() {
+        return SerialPorts.discover(communications.list().stream().map(CommunicationService.View::configuration)
+                .filter(CommunicationConfig::serial)
+                .map(c -> new SerialPorts.Assignment(c.serialDevice(), c.name(), c.enabled())).toList());
     }
 
     @GetMapping("/communicationInstances/{id}")

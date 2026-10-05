@@ -97,7 +97,9 @@ public class CommunicationManager {
             // Open the exact resolved device that was reserved, even if an alias is
             // retargeted later.
             ManagedConnection worker = new ManagedConnection(key == null ? config : config.device(key), factory,
-                    packet -> packets.receive(config.id(), packet), packets::sent);
+                    packet -> packets.receive(config.id(), packet), packet -> packets.sent(
+                        config.type().equals("KENWOOD_SERIAL") ? new Packet(config.username(), packet.destination(),
+                            config.digiPath() == null || config.digiPath().isBlank() ? List.of() : List.of(config.digiPath().split(",")), packet.information()) : packet));
             workers.put(config.id(), worker);
             worker.start();
         }

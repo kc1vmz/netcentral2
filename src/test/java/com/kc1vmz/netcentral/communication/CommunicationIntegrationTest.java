@@ -225,10 +225,12 @@ class CommunicationIntegrationTest {
             Browser admin = new Browser(app);
             Browser member = new Browser(app);
             assertThat(admin.get("/api/v1/communicationInstances").statusCode()).isEqualTo(401);
+            assertThat(admin.get("/api/v1/communicationInstances/serialPorts").statusCode()).isEqualTo(401);
             admin.send("POST", "/api/v1/login", Map.of("username", "root", "password", PASSWORD));
             member.send("POST", "/api/v1/login", Map.of("username", "member", "password", PASSWORD));
             assertThat(member.get("/communications").statusCode()).isEqualTo(403);
             assertThat(member.get("/api/v1/communicationInstances").statusCode()).isEqualTo(403);
+            assertThat(member.get("/api/v1/communicationInstances/serialPorts").statusCode()).isEqualTo(403);
             assertThat(member.send("POST", "/api/v1/communicationInstances", Map.of()).statusCode()).isEqualTo(403);
             assertThat(admin.raw("POST", "/api/v1/communicationInstances", "{}", "application/json", null).statusCode())
                     .isEqualTo(403);
@@ -249,6 +251,9 @@ class CommunicationIntegrationTest {
                             .statusCode())
                     .isEqualTo(302);
             assertThat(admin.json(admin.get("/api/v1/communicationInstances")).size()).isEqualTo(2);
+            var ports = admin.get("/api/v1/communicationInstances/serialPorts");
+            assertThat(ports.statusCode()).isEqualTo(200);
+            assertThat(admin.json(ports).path("ports").isArray()).isTrue();
             assertThat(admin.send("PUT", "/api/v1/communicationRoutes/DEFAULT",
                     Map.of("version", 0, "mode", "SELECTED", "instanceIds", List.of(id))).statusCode()).isEqualTo(200);
             assertThat(

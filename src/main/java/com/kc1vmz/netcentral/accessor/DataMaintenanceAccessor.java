@@ -28,7 +28,7 @@ public class DataMaintenanceAccessor {
         store.lock();
         var jdbc = store.jdbc();
         jdbc.update("DELETE FROM resource_history WHERE object_id IN (SELECT record_key FROM domain_record WHERE kind='OBSERVED_OBJECT')");
-        jdbc.update("DELETE FROM domain_record WHERE kind IN ('STATION','OBSERVED_OBJECT','FEDERATED_NET','FEDERATION_QUERY')");
+        jdbc.update("DELETE FROM domain_record WHERE kind IN ('STATION','OBSERVED_OBJECT','FEDERATED_NET','FEDERATION_QUERY','INSTALLATION_MESSAGE')");
         jdbc.update("DELETE FROM operational_report WHERE remote=TRUE");
         jdbc.update("DELETE FROM raw_packet");
         jdbc.update("DELETE FROM station_position");

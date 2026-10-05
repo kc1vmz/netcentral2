@@ -14,7 +14,8 @@ class CommunicationConfigTest {
             {"KISS_TCP", "KISS TCP: localhost:8001"},
             {"TNC2_TCP", "TNC2_TCP: localhost:8001"},
             {"KISS_SERIAL", "KISS Serial: COM9 (9600)"},
-            {"TNC2_SERIAL", "TNC2_SERIAL: COM9 (9600)"}
+            {"TNC2_SERIAL", "TNC2_SERIAL: COM9 (9600)"},
+            {"KENWOOD_SERIAL", "Kenwood Serial: COM9 (9600, N0CALL)"}
         };
         for (String[] example : cases) {
             CommunicationConfig config = new CommunicationConfig("id", 0, "Old custom name", example[0], false,

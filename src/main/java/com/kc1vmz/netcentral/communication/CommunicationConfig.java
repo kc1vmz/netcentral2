@@ -14,13 +14,14 @@ public record CommunicationConfig(String id, long version, String name, String t
             case "KISS_TCP" -> "KISS TCP: " + host + ":" + port;
             case "TNC2_TCP" -> "TNC2_TCP: " + host + ":" + port;
             case "TNC2_SERIAL" -> "TNC2_SERIAL: " + serialDevice + " (" + baudRate + ")";
+            case "KENWOOD_SERIAL" -> "Kenwood Serial: " + serialDevice + " (" + baudRate + ", " + username + ")";
             case "KISS_SERIAL" -> "KISS Serial: " + serialDevice + " (" + baudRate + ")";
             default -> type;
         };
     }
 
     public boolean serial() {
-        return "KISS_SERIAL".equals(type) || "TNC2_SERIAL".equals(type);
+        return "KISS_SERIAL".equals(type) || "TNC2_SERIAL".equals(type) || "KENWOOD_SERIAL".equals(type);
     }
 
     public CommunicationConfig device(String resolvedDevice) {

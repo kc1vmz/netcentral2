@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/account :: head('Schedule')}"></head>
 <body><header th:replace="~{fragments/account :: header}"></header><main th:with="s=${detail.schedule}">
 <h1 th:text="|${s.callsign} — ${s.name}|"></h1>
-<p th:text="${s.description}"></p><p th:text="|${s.type} · ${s.timezone} · ${s.duration} minutes · ${s.enabled ? 'Enabled' : 'Disabled'}|"></p>
+<p th:text="${s.description}"></p><p th:text="|${s.type} · ${s.timezone} · ${s.duration / 60.0} hours · ${s.enabled ? 'Enabled' : 'Disabled'}|"></p>
 <p>Next start (UTC): <span th:text="${s.nextStartTime ?: 'None'}"></span></p>
 <p th:if="${detail.canManage}"><a th:href="@{/schedules/{id}/edit(id=${s.id})}">Edit schedule</a></p>
 <p th:if="${detail.canManage}"><a th:href="@{/schedules/{id}/options(id=${s.id})}">Reminder and invitation options</a></p>

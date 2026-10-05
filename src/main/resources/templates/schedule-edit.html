@@ -17,7 +17,7 @@
 <label data-recurrence="ONE_TIME_ONLY">Start date and time <input type="datetime-local" name="firstStart" required th:value="${schedule?.firstStart}"></label>
 <label data-recurrence="DAILY WEEKLY MONTHLY_DAY MONTHLY_RELATIVE">Time <input type="time" name="startTime" required th:value="${startTime}"></label>
 <label>Time zone <select name="timezone" required><option th:each="zone : ${timezones}" th:value="${zone}" th:text="${zone.replace('_', ' ')}" th:selected="${zone == (schedule == null ? defaultTimezone : schedule.timezone)}"></option></select></label>
-<label>Duration (elapsed minutes) <input type="number" name="duration" min="1" max="10080" required th:value="${schedule?.duration ?: 60}"></label>
+<label>Duration (hours) <input type="number" name="durationHours" min="1" max="168" step="1" required th:value="${schedule == null ? 1 : (schedule.duration + 59) / 60}"></label>
 <label class="check"><input type="checkbox" name="enabled" value="true" th:checked="${schedule == null || schedule.enabled}"> Enabled</label>
 <label class="check"><input type="checkbox" name="open" value="true" th:checked="${schedule == null || schedule.open}"> Open APRS check-in</label>
 <label>Expected callsigns <textarea name="expectedParticipants" th:text="${detail == null ? '' : #strings.listJoin(#lists.toList(detail.expectedParticipants), ' ')}"></textarea></label>

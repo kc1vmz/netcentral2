@@ -76,7 +76,7 @@ public class CommunicationService {
         boolean aprs = "APRS_IS".equals(config.type());
         config = new CommunicationConfig(config.id(), config.version(), config.name(), config.type(), config.enabled(),
                 config.transmitEnabled(), serial ? null : config.host(), serial ? null : config.port(),
-                aprs ? config.username() : null, aprs ? config.passcode() : null, aprs ? config.filter() : null,
+                aprs || "KENWOOD_SERIAL".equals(config.type()) ? config.username() : null, aprs ? config.passcode() : null, aprs ? config.filter() : null,
                 serial ? config.serialDevice() : null, serial ? config.baudRate() : null,
                 serial ? config.initCommand1() : null, serial ? config.initCommand2() : null,
                 aprs ? null : config.digiPath(), config.type() != null && config.type().startsWith("KISS_") ? config.kissPort() : null);
@@ -113,7 +113,7 @@ public class CommunicationService {
     }
 
     private void validate(CommunicationConfig c) {
-        if (c.type() == null || !Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL").contains(c.type()))
+        if (c.type() == null || !Set.of("APRS_IS", "KISS_TCP", "KISS_SERIAL", "TNC2_TCP", "TNC2_SERIAL", "KENWOOD_SERIAL").contains(c.type()))
             throw bad("Invalid transport type");
         for (String value : new String[] { c.host(), c.username(), c.passcode(), c.filter(), c.serialDevice(),
                 c.initCommand1(), c.initCommand2(), c.digiPath() }) {
@@ -135,6 +135,15 @@ public class CommunicationService {
                 throw bad("Invalid host");
             if (c.port() == null || c.port() < 1 || c.port() > 65535)
                 throw bad("TCP port must be between 1 and 65535");
+        }
+        if (c.type().equals("KENWOOD_SERIAL")) {
+            requiredText(c.username(), "Kenwood MYCALL");
+            try { KissCodec.validateAddress(c.username()); }
+            catch (IllegalArgumentException invalid) { throw bad("Invalid Kenwood MYCALL"); }
+            if (c.username().contains("*") || !c.username().equals(c.username().toUpperCase(java.util.Locale.ROOT)))
+                throw bad("Use an uppercase Kenwood callsign and optional SSID");
+            if ((c.initCommand1() != null && !c.initCommand1().isBlank()) || (c.initCommand2() != null && !c.initCommand2().isBlank()))
+                throw bad("Kenwood startup commands are configured automatically");
         }
         if (c.type().equals("APRS_IS")) {
             if (c.username() == null || !c.username().matches("[A-Za-z0-9-]{1,10}"))

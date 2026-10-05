@@ -80,7 +80,7 @@ class ScheduleWorkflowTest {
                 String call = "FORM" + (++index);
                 String fields = "callsign=" + call + "&name=Recurring&type=" + choice
                         + "&timezone=America%2FNew_York&startTime=19%3A30&weekday=7&monthDay=LAST&ordinal=2"
-                        + "&duration=60&enabled=true&communicationMode=ALL&lat=42&lon=-71";
+                        + "&durationHours=1&enabled=true&communicationMode=ALL&lat=42&lon=-71";
                 var result = b.raw("POST", "/schedules/save", fields, "application/x-www-form-urlencoded", b.csrf());
                 assertThat(result.statusCode()).withFailMessage(result.body()).isEqualTo(302);
                 var row = jdbc.queryForMap("SELECT * FROM net_schedule WHERE callsign=?", call);
@@ -115,11 +115,16 @@ class ScheduleWorkflowTest {
             assertThat(page.statusCode()).isEqualTo(200);
             assertThat(page.body()).contains("Just once", "Every day", "Every week", "Monthly on a specific day", "Monthly on a relative day", "net-position-map", "schedule-save-dialog", "data-symbol-picker").doesNotContain("Private web access");
             assertThat(page.body()).contains("<select name=\"timezone\"", "value=\"America/New_York\"", "value=\"Europe/London\"", "value=\"Asia/Tokyo\"", "value=\"Australia/Sydney\"", "value=\"UTC\"");
-            String fields="callsign=SCH001&name=Scheduled+test&type=DAILY&timezone=UTC&firstStart=2030-01-01T12%3A00&duration=60&open=true&enabled=true&communicationMode=ALL&lat=42&lon=-71&checkinMessage=Welcome&announce=true&checkinReminder=true&questionReminder=true&participantInviteAllowed=true&symbolTableId=%2F&symbolTableCode=n";
+            String fields="callsign=SCH001&name=Scheduled+test&type=DAILY&timezone=UTC&firstStart=2030-01-01T12%3A00&durationHours=2&open=true&enabled=true&communicationMode=ALL&lat=42&lon=-71&checkinMessage=Welcome&announce=true&checkinReminder=true&questionReminder=true&participantInviteAllowed=true&symbolTableId=%2F&symbolTableCode=n";
+            for (String invalid : List.of("0", "-1", "1.5", "169")) {
+                assertThat(b.raw("POST","/schedules/save",fields.replace("durationHours=2","durationHours="+invalid),
+                    "application/x-www-form-urlencoded",b.csrf()).statusCode()).isEqualTo(400);
+            }
             var result=b.raw("POST","/schedules/save",fields,"application/x-www-form-urlencoded",b.csrf());
             assertThat(result.statusCode()).withFailMessage(result.body()).isEqualTo(302);
             assertThat(result.headers().firstValue("Location").orElseThrow()).endsWith("/nets#scheduled-nets");
             String id=app.getBean(JdbcTemplate.class).queryForObject("SELECT id FROM net_schedule WHERE callsign='SCH001'",String.class);
+            assertThat(app.getBean(JdbcTemplate.class).queryForObject("SELECT duration FROM net_schedule WHERE id=?",Integer.class,id)).isEqualTo(120);
             var options=b.json(b.get("/api/v1/scheduledNets/"+id+"/options"));
             assertThat(options.path("checkinMessage").asText()).isEqualTo("Welcome");
             assertThat(options.path("lat").asDouble()).isEqualTo(42);
@@ -128,7 +133,7 @@ class ScheduleWorkflowTest {
             var editPage=b.get("/schedules/"+id+"/edit");
             assertThat(editPage.statusCode()).isEqualTo(200);
             assertThat(editPage.body()).contains("value=\"UTC\" selected=\"selected\"");
-            assertThat(editPage.body()).contains("Update", "data-return-url=\"/schedules/"+id+"\"");
+            assertThat(editPage.body()).contains("Duration (hours)", "name=\"durationHours\"", "value=\"2\"", "Update", "data-return-url=\"/schedules/"+id+"\"");
             long version=app.getBean(JdbcTemplate.class).queryForObject("SELECT version FROM net_schedule WHERE id=?",Long.class,id);
             long route=app.getBean(JdbcTemplate.class).queryForObject("SELECT version FROM communication_route WHERE owner_key=?",Long.class,"SCHEDULE:"+id);
             result=b.raw("POST","/schedules/save",fields.replace("announce=true","announce=false")+"&id="+id+"&version="+version+"&routingVersion="+route,"application/x-www-form-urlencoded",b.csrf());

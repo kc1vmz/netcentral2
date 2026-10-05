@@ -112,13 +112,16 @@ public class SchedulePageController {
             @RequestParam(defaultValue = "false") boolean open,
             @RequestParam(defaultValue = "false") boolean privateNet,
             @RequestParam Type type, @RequestParam String timezone, @RequestParam(required = false) LocalDateTime firstStart,
-            @RequestParam int duration,
+            @RequestParam int durationHours,
             @RequestParam(defaultValue = "1") int ordinal, @RequestParam(defaultValue = "false") boolean enabled,
             @RequestParam(defaultValue = "-1") Long version, @RequestParam String communicationMode,
             @RequestParam(required = false) Set<String> communicationInstanceIds,
             @RequestParam(defaultValue = "-1") Long routingVersion,
             @RequestParam(defaultValue = "") String expectedParticipants,
             @RequestParam Map<String, String> values, @RequestParam double lat, @RequestParam double lon) {
+        if (durationHours < 1 || durationHours > 168)
+            throw com.kc1vmz.netcentral.operations.OperationsStore.bad("Choose a whole number of hours from 1 to 168");
+        int duration = durationHours * 60;
         boolean recurrenceControls = type != Type.ONE_TIME_ONLY && values.containsKey("startTime");
         if (recurrenceControls) {
             try {

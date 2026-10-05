@@ -27,6 +27,44 @@ class OperationsWorkflowTest {
     Path directory;
 
     @Test
+    void kenwoodConfigurationExplicitCommandsAndMycallAcknowledgments() throws Exception {
+        try(var app=start()) {
+            var b=user(app,"kenwood-admin");
+            var config=new HashMap<String,Object>(Map.of("type","KENWOOD_SERIAL","enabled",true,"transmitEnabled",true,
+                "serialDevice","COM71","baudRate",9600,"username","N0CALL-10","digiPath","WIDE1-1"));
+            String instance=ok(b,b.send("POST","/api/v1/communicationInstances",config)).path("configuration").path("id").asText();
+            assertThat(b.send("POST","/api/v1/communicationInstances",config).statusCode()).isEqualTo(409);
+            var kiss=new HashMap<String,Object>(config);kiss.put("type","KISS_SERIAL");kiss.put("kissPort",0);
+            assertThat(b.send("POST","/api/v1/communicationInstances",kiss).statusCode()).isEqualTo(409);
+            config.put("serialDevice","COM72");config.put("username","N0CALL-11");
+            ok(b,b.send("POST","/api/v1/communicationInstances",config));
+            config.put("serialDevice","COM73");config.put("username","INVALIDCALLSIGN");
+            assertThat(b.send("POST","/api/v1/communicationInstances",config).statusCode()).isEqualTo(400);
+            app.getBean(CommunicationManager.class).reconcile();
+            await(() -> app.getBean(CommunicationManager.class).available(instance));
+            String id=net(b,instance);
+            command(app,instance,"N1ABC","N0CALL-10","CI{i1");
+            await(() -> get(b,"/api/v1/communications/installationMessages").size()==1);
+            assertThat(get(b,"/api/v1/nets/"+id+"/snapshot").path("participants")).isEmpty();
+            command(app,instance,"N1ABC","NET006","CI{c1");
+            await(() -> get(b,"/api/v1/nets/"+id+"/snapshot").path("participants").size()==1);
+            for(String action:List.of("ack","rej")) {
+                var messages=ok(b,b.send("POST","/api/v1/nets/"+id+"/messages",Map.of("recipient","N1ABC","message",action+" test","acknowledgementRequested",true)));
+                String number="";
+                for(var message:messages)if(message.path("message").asText().equals(action+" test"))number=message.path("ackNumber").asText();
+                assertThat(number).isNotBlank();
+                command(app,instance,"N1ABC","N0CALL-10",action+number);
+                await(() -> {
+                    for(var m:get(b,"/api/v1/nets/"+id+"/snapshot").path("messages"))
+                        if(m.path("message").asText().equals(action+" test"))return m.path("delivery").asText().equals(action.equals("ack")?"ACKNOWLEDGED":"REJECTED");
+                    return false;
+                });
+            }
+            assertThat(b.get("/communications").body()).contains("Kenwood Serial","Installation messages");
+        }
+    }
+
+    @Test
     void withdrawingDeletesObjectAndDisablesConfiguredManager() throws Exception {
         try(var app=start()) {
             var b=user(app,"withdraw-delete");
