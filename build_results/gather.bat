@@ -7,4 +7,4 @@ copy ..\README.md target
 copy ..\installers\linux\netcentral_installer.sh target
 copy ..\installers\linux\netcentral_uninstaller.sh target
 copy ..\installers\windows\netcentral_installer.bat target
-copy ..\target\netcentral-2.0.0.jar target
+copy ..\target\netcentral-2.0.1.jar target
