@@ -124,7 +124,7 @@ Net Central is composed of a single JAR file that contains all of the required s
 ### Running Net Central Server
 
 To run the JAR file, specify:  
-    java netcentral-2.0.1.jar
+    java netcentral-2.1.0.jar
 
 
 ## License
