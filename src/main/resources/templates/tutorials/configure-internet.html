@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Connect Net Central to the APRS Internet Service (APRS-IS) to receive APRS traffic over the Internet and, when authorized and enabled, send APRS messages and object beacons. No local radio or TNC is required for this connection.</p>
+<p>The APRS-IS connection is a communication instance. You can use it alongside radio instances and choose which connections each net or object uses.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central with an Admin or Sysadmin account.</li>
+<li>Ensure the computer running Net Central has Internet access and can make an outbound TCP connection to your chosen APRS-IS server.</li>
+<li>Have the APRS-IS server's host name and TCP port. Choose an endpoint intended for APRS clients and confirm whether it supports server filters.</li>
+<li>Have the callsign you intend to use for the APRS-IS login and its corresponding APRS-IS passcode if you will transmit. This is separate from your Net Central account email and password.</li>
+<li>Decide which area or stations you want to monitor, and prepare a server filter supported by your selected server. For receive-only access, use passcode <code>-1</code> with transmission disabled.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/communications}">Communications</a> and select <strong>Add connection</strong>.</p></li>
+<li><p>Select <strong>APRS-IS</strong> as the <strong>Type</strong>.</p></li>
+<li><p>Choose the <strong>State</strong> and <strong>Transmission</strong>. New connections default to <strong>Active</strong> and <strong>Allow transmission</strong>. Select <strong>Receive only</strong> to start by listening, or <strong>Paused</strong> to save without connecting yet. Passcode -1 requires Receive only.</p></li>
+<li><p>Enter the <strong>Host</strong> and <strong>TCP port</strong> supplied for your chosen APRS-IS endpoint. The form initially offers port 14580; use your server's actual port. Enter a host name or address, not a web page URL.</p></li>
+<li><p>Enter your APRS-IS callsign in <strong>Login callsign / Kenwood MYCALL</strong>. For this connection type, this field is the APRS-IS login identity. Enter the corresponding numeric <strong>Passcode</strong>, or -1 for receive-only operation. Do not enter your Net Central password.</p></li>
+<li><p>Enter the <strong>Server filter</strong> for the traffic you want to receive. Net Central adds the filter keyword when building the login request, so enter only the filter expression. Use the syntax documented by your selected APRS-IS service. If you leave this blank, you have not requested a custom filter; the traffic received depends on the endpoint's behavior.</p></li>
+<li><p>Select <strong>Save connection</strong>. Net Central derives the instance name from the host, port, and login callsign. An Active instance begins connecting immediately. If you saved it as Paused, select <strong>Resume</strong> and confirm when ready.</p></li>
+<li><p>Review <strong>Default communication selection</strong> for traffic without an explicit net or object selection. Choose all eligible instances or only selected instances, select <strong>Update</strong>, and confirm. Also review the Communications selection of each net or object that should use this APRS-IS instance.</p></li>
+<li><p>When ready to transmit, select <strong>Edit</strong>, supply a valid passcode if needed, choose <strong>Allow transmission</strong>, and save. When editing an existing APRS-IS connection, leaving Passcode blank retains the saved passcode.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>On Communications, select <strong>Refresh</strong>. Confirm the instance is Active and reaches CONNECTED for verified transmission-enabled operation, or RECEIVE_ONLY when transmission is disabled or the server reports an unverified login. CONNECTING or RETRYING indicates that setup has not yet completed; review the displayed error.</li>
+<li>Check that <strong>Received</strong> increases and <strong>Last packet</strong> updates as traffic arrives. Open <a th:href="@{/explorer}">Explorer</a> and look for stations or objects covered by your filter. Quiet traffic or a restrictive filter may mean there is nothing new to display.</li>
+<li>For a transmit test, use a net or object configured to select this instance and send a suitable APRS message or beacon. Confirm that <strong>Sent</strong> increases, then verify reception through another APRS client or the intended recipient. A Sent count records a local send; it does not by itself confirm delivery.</li>
+<li>For directed messages, first receive traffic from the destination through an eligible connection. Net Central preserves its receiving-connection and recently-heard routing rules; an APRS-IS connection alone does not guarantee that a directed message has a route.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Authentication:</strong> Allow transmission does not override the server's authentication result. If you expected CONNECTED but see RECEIVE_ONLY, check the transmission setting, callsign, passcode, and server response.</li>
+<li><strong>Filters and routing:</strong> A filter that excludes a destination's traffic can prevent Net Central from learning a route to that station. Choose a scope that supports your operation without collecting unnecessary traffic.</li>
+<li><strong>Internet versus radio:</strong> Sending to APRS-IS is not proof that a packet was transmitted over RF. Delivery to a radio station depends on the available APRS infrastructure and its forwarding behavior.</li>
+<li><strong>Multiple instances:</strong> You can configure several APRS-IS and radio connections. Avoid accidentally configuring duplicate TCP endpoints or selecting more outgoing connections than intended. All eligible instances includes future instances; an empty selected set allows no transmissions through that selection.</li>
+<li><strong>Pause versus Receive only:</strong> Paused stops the connection. Receive only keeps reception available while preventing outgoing transmissions.</li>
+<li><strong>Connection problems:</strong> Check host spelling, DNS, the configured port, outbound firewall access, and server availability. The connection originates from the Net Central host, not the computer displaying your browser.</li>
+<li><strong>Monitoring:</strong> Review Failed, Discarded, Queued, and any displayed error. After an interruption, confirm the connection has recovered and new traffic is arriving before relying on it for net operations.</li>
+</ul></section>
+</th:block></body></html>

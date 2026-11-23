@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Ask a numbered question of a running net and collect answers by participant callsign. Use Net Monitor to ask questions, record answers received through another channel, and review responses. Checked-in participants can also ask and answer questions through APRS messages.</p>
+<p>Questions and answers remain associated with the net and are available in its archive and Q&amp;A Report after completion.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>For browser controls, sign in as the net owner or an administrator authorized to manage the net.</li>
+<li>Select a running net. A scheduled definition or archived net cannot accept new questions or answers.</li>
+<li>Have the intended participants check in. An answer can only be recorded for a currently checked-in callsign.</li>
+<li>Verify that the net's selected communication instances are available and allow transmission, and that destinations have eligible routes.</li>
+<li>Prepare a concise question and know the correct question number when entering an answer.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and select the intended <strong>Running net</strong> in the carousel. Check its name and callsign.</p></li>
+<li><p>In <strong>Questions</strong>, select <strong>Ask question</strong>. Enter the question text without a radio-command prefix. The browser field accepts up to 500 characters, but short questions are easier to deliver and read over APRS.</p></li>
+<li><p>Select <strong>Ask participants</strong>, review the confirmation dialog, and confirm. Net Central assigns the next question number and sends the question to the currently checked-in participants. Select <strong>Cancel</strong> if you want to leave the question unsent.</p></li>
+<li><p>Select the question in the independently scrollable Questions list. Entries show their number, such as <strong>Q 1</strong>. The <strong>Answers</strong> section displays responses for the selected question.</p></li>
+<li><p>To record a response received by voice or another channel, select <strong>Record answer</strong> in the Answers section. Enter the <strong>Question number</strong>, <strong>Participant callsign</strong>, and <strong>Answer</strong>. Use the checked-in callsign, including its SSID when applicable.</p></li>
+<li><p>Review all three fields and select <strong>Save answer</strong>. This saves immediately without a second confirmation. Select <strong>Close</strong> to leave the dialog, then select the question to review the recorded response.</p></li>
+</ol>
+<h3>Using a radio or APRS client</h3>
+<p>After checking in, address these APRS messages to the running net's callsign:</p>
+<table><thead><tr><th>Command</th><th>Example</th><th>Result</th></tr></thead><tbody>
+<tr><td>Q text</td><td><code>Q Can you operate until 1800?</code></td><td>Creates a numbered question and sends it to checked-in participants.</td></tr>
+<tr><td>A number text</td><td><code>A 1 Yes, available until 1800</code></td><td>Records your answer to question 1.</td></tr>
+<tr><td>QL</td><td><code>QL</code></td><td>Returns questions you have not yet answered.</td></tr>
+<tr><td>QR number</td><td><code>QR 1</code></td><td>Returns question 1 and its recorded answers.</td></tr>
+</tbody></table><p>Use the actual question number from this net. Net Central replies with a thank-you message after accepting a radio question or answer.</p></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm the new question appears once in Questions with the expected text and number.</li>
+<li>Have a checked-in participant verify reception of the numbered question on their APRS client. A question appearing in the browser proves it was recorded, not that every transmission reached its destination.</li>
+<li>After a response, select the question and check that Answers shows the correct callsign and text. The answer also produces a recorded event in the net's message history.</li>
+<li>From a participant's radio, use QR with the question number to retrieve the recorded responses. QL should no longer include a question that participant has answered.</li>
+<li>If updates are paused, resume them to see incoming responses. Confirm that you selected the correct question before treating an empty Answers section as a missing response.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>One answer per callsign:</strong> Recording another answer from the same callsign to the same question replaces its previous answer. Review the callsign and question number before saving a correction.</li>
+<li><strong>Answer delivery:</strong> Answers are stored for review; they are not automatically broadcast to every participant. Use the console or QR to review the responses.</li>
+<li><strong>Question scope:</strong> Numbers belong to a specific net. Question 1 in one net is unrelated to question 1 in another net or a later scheduled occurrence.</li>
+<li><strong>Length:</strong> Browser question and answer fields accept up to 500 characters, but APRS messages have shorter transport limits and include command or question-number prefixes. Keep operational text brief rather than assuming a long browser entry will arrive intact in one radio message.</li>
+<li><strong>Late arrivals:</strong> The initial question transmission targets participants checked in at that time. A participant who checks in later can request unanswered questions using QL. The net's Question reminder option can also be managed through Edit Net.</li>
+<li><strong>Missing responses:</strong> Check participation, the question number, route availability, and communication status. A station must be checked in when its answer is recorded.</li>
+<li><strong>Archives:</strong> After the net is secured, open <a th:href="@{/archives}">Archives</a>, select the net, and review Questions and Answers or choose <strong>Generate Q&amp;A Report</strong>. Archived records are read-only.</li>
+</ul></section>
+</th:block></body></html>

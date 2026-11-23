@@ -1,19 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/account :: head('Schedule')}"></head>
-<body><header th:replace="~{fragments/account :: header}"></header><main th:with="s=${detail.schedule}">
-<h1 th:text="|${s.callsign} — ${s.name}|"></h1>
-<p th:text="${s.description}"></p><p th:text="|${s.type} · ${s.timezone} · ${s.duration / 60.0} hours · ${s.enabled ? 'Enabled' : 'Disabled'}|"></p>
-<p>Next start (UTC): <span th:text="${s.nextStartTime ?: 'None'}"></span></p>
-<p th:if="${detail.canManage}"><a th:href="@{/schedules/{id}/edit(id=${s.id})}">Edit schedule</a></p>
-<p th:if="${detail.canManage}"><a th:href="@{/schedules/{id}/options(id=${s.id})}">Reminder and invitation options</a></p>
-<p>Refresh this page to see new occurrences. Open a net for its live monitor.</p>
-<section class="panel"><h2>Occurrences</h2><p th:if="${occurrences.isEmpty()}">No occurrences yet.</p>
-<div class="table-scroll"><table class="schedule-table" th:unless="${occurrences.isEmpty()}"><thead><tr><th>Planned start (UTC)</th><th>Planned end (UTC)</th><th>Activated (UTC)</th><th>State</th><th>Net</th></tr></thead>
-<tbody><tr th:each="o : ${occurrences}"><td th:text="${o.plannedStart}"></td><td th:text="${o.plannedEnd}"></td><td th:text="${o.activatedAt ?: '—'}"></td><td th:text="${o.state}"></td><td><a th:if="${o.netId != null}" th:href="@{/nets/{id}(id=${o.netId})}">Open net</a></td></tr></tbody></table></div>
-<p>WAITING means the callsign is in use. SKIPPED means the entire time window elapsed. Neither extends the planned end.</p></section>
-<details th:if="${detail.canManage}"><summary>Remove schedule</summary><p>Stops future occurrences. Active nets finish at their original end; archives are retained.</p>
-<form th:action="@{/schedules/{id}/delete(id=${s.id})}" method="post"><input type="hidden" name="version" th:value="${s.version}"><button>Remove schedule</button></form></details>
-<p><a th:href="@{/schedules}">Back to schedules</a></p>
-</main></body></html>
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace" th:with="s=${detail.schedule}">
+<div th:replace="~{fragments/net-carousel :: carousel}"></div>
+<section class="panel" id="net-details"><div class="monitor-section-heading"><h2>Details</h2><div class="monitor-section-actions" th:if="${detail.canManage}"><a class="button-link" th:href="@{/schedules/{id}/edit(id=${s.id})}">Edit Net</a><button type="button" id="delete-schedule">Delete Net</button></div></div>
+<div class="net-details-columns"><dl class="resource-facts"><dt>Description</dt><dd th:text="${s.description}"></dd><dt>Net type</dt><dd>Scheduled</dd><dt>Check-in</dt><dd th:text="${s.open ? 'Open' : 'Closed'}"></dd><dt>Status</dt><dd th:text="${s.enabled ? 'Enabled' : 'Disabled'}"></dd></dl><dl class="resource-facts"><dt>Recurrence</dt><dd th:text="${s.type.name() == 'ONE_TIME_ONLY' ? 'Just once' : s.type.name() == 'DAILY' ? 'Every day' : s.type.name() == 'WEEKLY' ? 'Every week' : s.type.name() == 'MONTHLY_DAY' ? 'Monthly on a specific day' : 'Monthly on a relative day'}"></dd><dt>Duration</dt><dd th:text="|${s.duration / 60} hours|"></dd><dt>Net start (local time)</dt><dd th:attr="data-monitor-time=${s.nextStartTime}" th:text="${s.nextStartTime ?: 'None'}"></dd><dt>Time zone</dt><dd th:text="${s.timezone}"></dd></dl></div></section>
 
+<dialog id="delete-schedule-dialog" th:if="${detail.canManage}" aria-labelledby="delete-schedule-title"><h2 id="delete-schedule-title">Delete scheduled net?</h2><p th:text="|Delete ${s.name} (${s.callsign}) and stop all future occurrences? Running nets and archived history will be retained.|"></p>
+<form th:action="@{/schedules/{id}/delete(id=${s.id})}" method="post"><input type="hidden" name="version" th:value="${s.version}"><div class="dialog-actions"><button type="submit">Delete Net</button><button type="button" id="delete-schedule-cancel">Cancel</button></div></form></dialog>
+</main></body></html>

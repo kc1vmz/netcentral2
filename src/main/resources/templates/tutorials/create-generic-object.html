@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Create a Generic APRS Object to advertise a named location with an APRS symbol and comment. Net Central manages the object and can send periodic beacons through the communication instances you select.</p>
+<p>A Generic APRS Object provides a simple location marker. It does not have the operational reporting groups of Shelter or EOC objects, or the key/value fields of a Net Central General Resource.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central.</li>
+<li>Choose an available object callsign of up to nine characters. Avoid conflicts with existing managed objects or running nets.</li>
+<li>Know the location to advertise, choose an appropriate APRS symbol, and prepare a short identifying comment.</li>
+<li>Have an administrator configure the radio or Internet communication instances you intend to use. For beacon transmission, the selected connections must be available and allow transmission.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/explorer}">Explorer</a> and select <strong>Create object</strong>.</p></li>
+<li><p>Enter the object's <strong>Callsign</strong>. This is its APRS object identity, not necessarily the source callsign of the station transmitting its beacon.</p></li>
+<li><p>Set <strong>Type</strong> to <strong>Generic APRS Object</strong>. The form initially selects Net Central General Resource, so change this explicitly for a generic object.</p></li>
+<li><p>Set <strong>Object location</strong> using one of the two methods:</p><ul>
+<li><strong>Manual entry:</strong> Enter latitude and longitude in decimal degrees. Latitude must be between -90 and 90; longitude between -180 and 180. Use negative numbers for south and west.</li>
+<li><strong>Use map:</strong> Click the intended location, then drag the marker if necessary. Review the displayed coordinates before continuing.</li>
+</ul><p>Both coordinates are required for creation.</p></li>
+<li><p>Enter a <strong>Comment</strong> of up to 80 characters describing the location or its purpose. Choose the desired <strong>APRS symbol</strong> using the symbol picker.</p></li>
+<li><p>Leave <strong>Active (send periodic beacons)</strong> checked to advertise the object periodically.</p></li>
+<li><p>Choose <strong>Communications</strong>. Keep <strong>All eligible instances, including future ones</strong> to use all eligible connections, or choose <strong>Selected instances</strong> and check the intended connections. An empty selected set transmits nowhere.</p></li>
+<li><p>Review the callsign, type, coordinates, comment, symbol, and communication selection. Select <strong>Create</strong> and confirm the creation dialog. To abandon the form instead, select <strong>Cancel</strong> and confirm discarding the changes.</p></li>
+<li><p>Review the resulting <strong>Object Details</strong> pane. It shows the callsign, location, status, symbol and description, and comment. A Generic APRS Object does not display resource-value or priority-report panes.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that Object Details shows the intended callsign and coordinates, Active status, and the expected symbol and comment.</li>
+<li>Return to Explorer, choose an appropriate object resource filter, and locate the object. Select it and use <strong>View details</strong> to reopen its details page.</li>
+<li>Verify that the map marker appears at the intended location. If it does not, review the coordinates and current Explorer filter.</li>
+<li>Check the selected instances on <a th:href="@{/communications}">Communications</a>, or ask an administrator to check them. Confirm outgoing traffic and verify the object's appearance on another APRS client or receiver.</li>
+<li>If a remote client does not show the object, check its filters, the selected communication instances, transmission permission, and beacon interval. Saving the object locally does not prove remote reception.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Choosing the right type:</strong> Use Net Central General Resource when you need named key/value information. Use Shelter or EOC for their operational reporting groups. Choose Generic APRS Object for a simple marker with a comment and symbol.</li>
+<li><strong>Editing:</strong> The creating account or an authorized administrator can use <strong>Edit</strong> on the details page to change the configuration. Select Update and confirm to save changes. The callsign is read-only when editing.</li>
+<li><strong>Beacon interval:</strong> Settings → Announcements controls Beacon seconds. Active enables periodic beaconing; it does not guarantee an available route or successful delivery.</li>
+<li><strong>Communication scope:</strong> All eligible instances includes connections created later. Selected instances keeps the object limited to the connections you choose.</li>
+<li><strong>Ownership:</strong> Seeing an object heard from another station in Explorer does not make it locally managed. Management controls apply to objects managed by Net Central and require the appropriate permissions.</li>
+<li><strong>Withdrawal:</strong> For an active object you manage, select <strong>Withdraw object</strong> and confirm to send a withdrawal and delete the object and its associated data. The callsign can then be reused. This does not wait for remote confirmation, so other clients may retain the old marker until they receive the withdrawal or expire their cached data.</li>
+<li><strong>No net archive:</strong> Withdrawing an object is not the same as securing a net. Preserve any information you need before deletion.</li>
+<li><strong>Kenwood:</strong> Kenwood Serial transmits using its configured MYCALL as the RF source. The object's identity is carried within the APRS object packet; verify the object name and location on the receiving client.</li>
+</ul></section>
+</th:block></body></html>

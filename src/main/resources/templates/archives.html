@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Net Archive')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace" id="archive-browser" th:attr="data-selected=${selectedArchive}">
+<h1>Net Archive</h1><p class="intro">Information about previous nets, including participants, messages, question and answers.</p>
+<p id="archive-status" role="status"></p><p id="archive-empty" hidden>No archived nets.</p>
+<div class="archive-columns" id="archive-columns">
+<div><section class="panel"><h2>Archived nets</h2><div class="archive-scroll" id="archive-list-scroll" tabindex="0" aria-label="Archived nets"><table><thead><tr><th>Callsign</th><th>Name</th><th>Start time</th><th>End time</th></tr></thead><tbody id="archive-list"></tbody></table><button type="button" id="archive-more">Load more archives</button></div></section>
+<section class="panel" data-archive-selected hidden><h2>Net details</h2><div id="archive-details"></div><div class="archive-reports" id="archive-reports"></div></section></div>
+<div data-archive-selected hidden><section class="panel"><h2>Participants</h2><div class="archive-scroll"><table><thead><tr><th>Callsign</th><th>Status</th><th>Status color</th><th>Last heard</th></tr></thead><tbody id="archive-participants"></tbody></table></div></section><section class="panel"><h2>Participant details</h2><div id="archive-participant-details">Select a participant.</div></section></div>
+<div data-archive-selected hidden><section class="panel"><h2>Messages</h2><div class="archive-scroll"><table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th><th>Delivery</th></tr></thead><tbody id="archive-messages"></tbody></table></div><button type="button" id="archive-messages-more">Load more messages</button></section>
+<section class="panel"><h2>Questions</h2><div class="archive-scroll" id="archive-questions"></div></section><section class="panel"><h2>Answers</h2><div class="archive-scroll" id="archive-answers">Select a question.</div></section></div></div>
+<script defer th:src="@{/js/net-participants.js}"></script><script defer th:src="@{/js/archives.js}"></script></main></body></html>

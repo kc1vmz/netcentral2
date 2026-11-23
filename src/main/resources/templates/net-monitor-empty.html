@@ -1,0 +1,8 @@
+<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Net Monitor')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace">
+<h1>Net Monitor</h1><div class="net-carousel-heading monitor-empty-actions"><a class="button-link" th:href="@{/nets/new}">Create Net</a></div>
+<section class="panel monitor-empty"><h2>No nets running or scheduled.</h2>
+<p>To schedule a net for the future, or create a net to start immediately, press the 'Create Net' button above and follow the instructions.</p>
+<p>For additional help on creating nets, review the <a th:href="@{/help}">online help</a>.</p></section>
+</main></body></html>

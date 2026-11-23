@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Create a Net Central General Resource object to advertise a location and maintain named resource values. For example, a supply location might have values such as WATER=AVAILABLE or CAPACITY=20.</p>
+<p>The Type field calls this <strong>Net Central General Resource</strong>. Unlike a Generic APRS Object, it includes a Resource values section and supports authorized key=value radio updates. It does not use the specialized Shelter or EOC report forms.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central. The creating account or an authorized administrator can manage the object afterward.</li>
+<li>Choose an available object callsign of up to nine characters and know its location. Avoid conflicts with existing managed objects or running nets.</li>
+<li>Prepare a short comment, choose an APRS symbol, and decide which named values the resource should hold.</li>
+<li>Have an administrator configure and verify the radio or Internet communication instances the object will use.</li>
+<li>For radio updates, have an administrator review Settings → Object security so the intended stations are authorized to update the object.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/explorer}">Explorer</a> and select <strong>Create object</strong>.</p></li>
+<li><p>Enter the object's <strong>Callsign</strong> and choose <strong>Net Central General Resource</strong> in <strong>Type</strong>. This is the creation form's default type.</p></li>
+<li><p>Set <strong>Object location</strong>. With <strong>Manual entry</strong>, enter decimal-degree latitude and longitude, using negative values for south and west. Alternatively, select <strong>Use map</strong>, click the location, and drag the marker to adjust it. Both coordinates are required.</p></li>
+<li><p>Enter a <strong>Comment</strong> of up to 80 characters identifying the resource, and choose the appropriate <strong>APRS symbol</strong>.</p></li>
+<li><p>Leave <strong>Active (send periodic beacons)</strong> checked to advertise the object. In <strong>Communications</strong>, keep <strong>All eligible instances, including future ones</strong> or choose <strong>Selected instances</strong> and check the intended connections. An empty selected set transmits nowhere.</p></li>
+<li><p>Review the settings, select <strong>Create</strong>, and confirm the creation dialog. To abandon the form, select <strong>Cancel</strong> and confirm discarding changes.</p></li>
+<li><p>On the object's details page, locate <strong>Resource values</strong> and select <strong>Add</strong>. Enter a <strong>Name</strong> and <strong>Value</strong>, such as WATER and AVAILABLE. Select Add and confirm. The pair appears on its own line in the list.</p></li>
+<li><p>Repeat for additional values. To replace an existing value, add the same name with its new value and confirm. To delete a pair, select its <strong>Remove</strong> button and confirm the removal.</p></li>
+</ol>
+<h3>Reading and updating values by radio</h3>
+<p>Address APRS messages to the object's callsign:</p>
+<table><thead><tr><th>Message</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>R</code></td><td>Request the resource's stored values.</td></tr>
+<tr><td><code>WATER=AVAILABLE</code></td><td>Set the WATER value to AVAILABLE when the sending station is authorized.</td></tr>
+<tr><td><code>?NCGRV</code></td><td>Request the stored key=value pairs.</td></tr>
+<tr><td><code>?INFO</code></td><td>Request identifying information and supported queries.</td></tr>
+<tr><td><code>?CMD</code></td><td>Request the supported command list.</td></tr>
+</tbody></table><p>Use short, consistent names and values for radio exchanges. Radio update permissions do not automatically follow from a station knowing the object's callsign.</p></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that Object Details shows the intended callsign, location, status, symbol description, and comment, and that the Resource values section is present.</li>
+<li>After adding a value, verify the displayed name and value. Reload the page to confirm it was saved. After removing a pair, confirm that it no longer appears.</li>
+<li>Find the object in Explorer using an appropriate resource filter, select it, and confirm its map location. Use View details to reopen its page.</li>
+<li>From an eligible APRS connection, send R to the object's callsign and verify the returned values. For a radio update test, send a key=value message from an authorized station, then reload the object's details and confirm the change.</li>
+<li>Verify beacon reception using another APRS client or receiver. If needed, ask an administrator to review the selected instances on <a th:href="@{/communications}">Communications</a>.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Choosing the right object:</strong> Use this type for flexible named values. Choose Generic APRS Object for a simple location marker, or Shelter/EOC for their predefined operational reports.</li>
+<li><strong>Replacing values:</strong> Adding an existing name overwrites its current value after confirmation. Use the same spelling consistently and verify the result before making further changes.</li>
+<li><strong>Browser versus radio:</strong> Browser edits require object-management permission. Radio writes are governed by Object security rules. If a radio update fails, review the sender's authorization as well as connection and routing availability.</li>
+<li><strong>Editing configuration:</strong> Use Edit for location, comment, symbol, and communication settings. The callsign is read-only when editing. Resource values are managed separately on the details page.</li>
+<li><strong>Beaconing:</strong> Settings → Announcements controls Beacon seconds. Saving a value locally does not prove that another station received a beacon or query response.</li>
+<li><strong>History:</strong> The Resource values section shows the current pairs; it is not a visible revision-history viewer. Preserve any earlier values you need before replacing or removing them.</li>
+<li><strong>Withdrawal:</strong> For an active object you manage, Withdraw object asks for confirmation, sends a withdrawal, and deletes the object and its associated data. Its callsign can then be reused. This is not the net archive workflow, and remote reception is not confirmed before deletion.</li>
+<li><strong>Connection selection:</strong> All eligible instances includes future connections. Select particular instances when the resource should be advertised only on specific paths.</li>
+<li><strong>Kenwood:</strong> Kenwood Serial uses its configured MYCALL as the RF source, while the object has its own identity within the APRS object packet. Verify both the advertised object and directed-message behavior with your setup.</li>
+</ul></section>
+</th:block></body></html>

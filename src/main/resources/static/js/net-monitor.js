@@ -17,7 +17,6 @@
   try { const saved=JSON.parse(localStorage.getItem(storageKey)||'{}'); if(saved.center){map.setView(saved.center,saved.zoom);fitted=true;} selectedCall=saved.call;selectedQuestion=saved.question; } catch {}
   function saveView(){try{const c=map.getCenter();localStorage.setItem(storageKey,JSON.stringify({center:[c.lat,c.lng],zoom:map.getZoom(),call:selectedCall,question:selectedQuestion}));}catch{}}
   map.on('moveend',saveView);map.on('dragstart',()=>{fitted=true;});
-  document.getElementById('net-selection')?.addEventListener('change',event=>{location.href='/nets/'+encodeURIComponent(event.target.value);});
   const {showUncertainty} = await import('./position-uncertainty.mjs');
   const markers = new Map();
   import('./net-map-layers.mjs').then(({addNetMapLayers}) => addNetMapLayers(map, root.dataset.netId))
@@ -76,8 +75,6 @@
     if (current && (snapshot.net.version < current.net.version ||
         (snapshot.net.version === current.net.version && snapshot.routing.version < current.routing.version))) return;
     current = snapshot;
-    document.getElementById('net-callsign').textContent = snapshot.net.callsign;
-    document.getElementById('net-name').textContent = snapshot.net.name;
     document.getElementById('net-description').textContent = snapshot.net.description;
     document.getElementById('net-open').textContent = snapshot.net.open ? 'Open' : 'Closed';
     const end=snapshot.net.endTime?null:snapshot.plannedEndTime;
@@ -108,8 +105,8 @@
       callButton.addEventListener('click',()=>{selectedCall=participant.callsign;saveView();if(markers.has(selectedCall))map.panTo(markers.get(selectedCall).getLatLng());render(current);});callCell.append(callButton);row.append(callCell);
       cell(row, participant.status);
       const statusColor=participant.expectedOnly?null:participant.statusColor;
-      cell(row, statusColor ? statusColor.charAt(0)+statusColor.slice(1).toLowerCase() : '');
-      if(['RED','YELLOW','GREEN'].includes(statusColor))row.lastChild.className='participant-color participant-color-'+statusColor.toLowerCase();
+      cell(row, statusColor === 'WHITE' ? 'Unknown' : statusColor ? statusColor.charAt(0)+statusColor.slice(1).toLowerCase() : '');
+      if(['RED','YELLOW','GREEN','WHITE'].includes(statusColor))row.lastChild.className='participant-color participant-color-'+statusColor.toLowerCase();
       cell(row, participant.expectedOnly ? '' : participant.lastHeardTime ? time(participant.lastHeardTime) : 'Unknown');
       row.lastChild.dataset.lastHeard=participant.lastHeardTime||'';
       cell(row, participant.expectedOnly ? 'Expected' : active ? 'Checked in' : 'Checked out');
@@ -165,7 +162,7 @@
     updateHeardAge();
     const details=document.getElementById('selected-participant'),selected=participantRows.find(p=>p.callsign===selectedCall);
     if(details){details.replaceChildren();if(selected){const facts=document.createElement('dl');facts.className='resource-facts';
-      for(const [label,value] of (selected.expectedOnly ? [['Callsign',selected.callsign],['Status','Expected']] : [['Callsign',selected.callsign],['Tactical callsign',selected.tacticalCallsign],['Status',selected.status],['Status color',selected.statusColor],['Frequency',selected.voiceFrequency],['Checked in',time(selected.startTime)],['Last heard',time(selected.lastHeardTime)],['Position precision',selected.uncertaintyMeters>0?'Approximate':'Reported position'],['Latitude',selected.lat],['Longitude',selected.lon],['Transmit watts',selected.transmitPower],['Power',selected.electricalPowerType],['Backup power',selected.backupElectricalPowerType],['Radio',selected.radioStyle]])){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value??'Unknown';if(label==='Status color'&&['RED','YELLOW','GREEN'].includes(value)){dd.textContent=value.charAt(0)+value.slice(1).toLowerCase();dd.className='participant-color participant-color-'+value.toLowerCase();}facts.append(dt,dd);}details.append(facts);
+      for(const [label,value] of (selected.expectedOnly ? [['Callsign',selected.callsign],['Status','Expected']] : [['Callsign',selected.callsign],['Tactical callsign',selected.tacticalCallsign],['Status',selected.status],['Status color',selected.statusColor],['Frequency',selected.voiceFrequency],['Checked in',time(selected.startTime)],['Last heard',time(selected.lastHeardTime)],['Position precision',selected.uncertaintyMeters>0?'Approximate':'Reported position'],['Latitude',selected.lat],['Longitude',selected.lon],['Transmit watts',selected.transmitPower],['Power',selected.electricalPowerType],['Backup power',selected.backupElectricalPowerType],['Radio',selected.radioStyle]])){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value??'Unknown';if(label==='Status color'&&['RED','YELLOW','GREEN','WHITE'].includes(value)){dd.textContent=value==='WHITE'?'Unknown':value.charAt(0)+value.slice(1).toLowerCase();dd.className='participant-color participant-color-'+value.toLowerCase();}facts.append(dt,dd);}details.append(facts);
     }else details.textContent='Select a participant or map marker.';}
     if(focused)[...document.querySelectorAll('[data-focus-key]')].find(el=>el.dataset.focusKey===focused)?.focus({preventScroll:true});
     document.getElementById('recipient-list')?.replaceChildren(recipients);

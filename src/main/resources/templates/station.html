@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/account :: head('Station')}"></head>
-<body><header th:replace="~{fragments/account :: header}"></header><main>
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace">
 <h1 th:text="${station.id}"></h1>
 <section class="panel"><h2>General Information</h2><dl class="resource-facts">
-<th:block th:each="field : ${stationDetails.fields()}" th:if="${field.key != 'lat' and field.key != 'lon'}"><dt data-field-label th:text="${field.key}"></dt><dd th:attr="data-field=${field.key},data-value=${field.value.toString()}" th:text="${field.value.asText(field.value.toString())}"></dd></th:block>
+<th:block th:each="field : ${stationDetails.properties()}" th:if="${field.key != 'lat' and field.key != 'lon'}"><dt data-field-label th:text="${field.key}"></dt><dd th:attr="data-field=${field.key},data-value=${field.value.toString()}" th:text="${field.value.asText(field.value.toString())}"></dd></th:block>
 <th:block th:if="${stationDetails.has('lon') or stationDetails.has('lat')}"><dt>Location</dt><dd th:text="|${stationDetails.path('lon').asText('Unknown')}, ${stationDetails.path('lat').asText('Unknown')}|"></dd></th:block>
 <dt>Ignored</dt><dd th:text="${ignored ? 'Yes' : 'No'}"></dd></dl></section>
 <section class="panel" id="latest-weather"><h2>Current Weather</h2>

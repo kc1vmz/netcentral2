@@ -8,7 +8,7 @@ import com.kc1vmz.netcentral.account.LocalPrincipal;
 
 @ControllerAdvice(assignableTypes = { AccountPageController.class, HomeController.class,
         CommunicationPageController.class, NetPageController.class, SchedulePageController.class,
-        OperationsPageController.class, DataController.class })
+        OperationsPageController.class, HelpPageController.class, DataController.class })
 public class AccountPageAdvice {
     @ModelAttribute("systemAdministrator")
     public boolean systemAdministrator(Authentication authentication) {

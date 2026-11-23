@@ -1,20 +1,44 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configure net | Net Central</title><link rel="icon" th:href="@{/favicon.ico}"><link rel="stylesheet" th:href="@{/css/application.css}"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/leaflet.css}"><script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script type="module" th:src="@{/js/net-position.mjs}"></script></head>
-<body><header th:replace="~{fragments/account :: header}"></header><main>
-<h1 th:text="${net == null ? 'Create a net' : 'Edit net'}"></h1>
-<form th:action="@{/nets/save}" method="post" class="panel account-form">
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace">
+<h1 th:text="${editorMode == 'CREATE' ? 'Create a net' : editorMode == 'SCHEDULE' ? 'Edit scheduled net' : 'Edit net'}"></h1>
+<form th:action="@{${editorMode == 'SCHEDULE' ? '/schedules/save' : '/nets/save'}}" id="net-editor-form" th:attr="data-editor-mode=${editorMode},data-net-action=@{/nets/save},data-schedule-action=@{/schedules/save}" method="post" class="account-form net-editor">
 <input type="hidden" name="id" th:value="${net?.id}">
 <input type="hidden" name="version" th:value="${net?.version ?: -1}">
 <input type="hidden" name="routingVersion" th:value="${snapshot?.routing?.version ?: -1}">
-<label>Net callsign <input name="callsign" required maxlength="9" th:value="${net?.callsign}" th:readonly="${net != null}" placeholder="NET001"></label>
+<section class="panel net-editor-section" aria-labelledby="net-details-heading"><h2 id="net-details-heading">Net details</h2>
+<div class="net-identity-row">
+<label>Net callsign <input name="callsign" required maxlength="9" th:value="${net?.callsign}" th:readonly="${editorMode == 'NET'}" placeholder="NET001"></label>
 <label>Name <input name="name" required maxlength="120" th:value="${net?.name}"></label>
-<label>Description <textarea name="description" maxlength="1000" th:text="${net?.description}"></textarea></label>
+</div>
+<div class="net-description-row">
+<label>Description <textarea name="description" rows="1" maxlength="1000" th:text="${net?.description}"></textarea></label>
 <label>Voice frequency <input name="voiceFrequency" maxlength="40" th:value="${net?.voiceFrequency}"></label>
-<label class="check"><input type="checkbox" name="open" value="true" th:checked="${net == null || net.open}"> Open APRS check-in</label>
-<p>When unchecked, only expected or invited callsign roots may check in.</p>
-<label>Expected callsigns <textarea name="expectedParticipants" placeholder="N0CALL N1ABC" th:text="${snapshot == null ? '' : #strings.listJoin(#lists.toList(snapshot.expectedParticipants), ' ')}"></textarea></label>
 <label>Welcome message sent at check-in <input name="checkinMessage" maxlength="67" th:value="${options.path('checkinMessage').asText('')}"></label>
+</div>
+</section>
+<section class="panel net-editor-section" aria-labelledby="schedule-heading"><h2 id="schedule-heading">Schedule</h2>
+<label>Recurrence <select name="type" aria-label="Schedule">
+<option th:if="${editorMode != 'SCHEDULE'}" value="NOW" th:selected="${schedule == null}">Now</option><option th:if="${editorMode != 'NET'}" th:each="type : ${T(com.kc1vmz.netcentral.net.ScheduleModels.Type).values()}" th:value="${type}" th:text="${type.name() == 'ONE_TIME_ONLY' ? 'Just once' : type.name() == 'DAILY' ? 'Every day' : type.name() == 'WEEKLY' ? 'Every week' : type.name() == 'MONTHLY_DAY' ? 'Monthly on a specific day' : 'Monthly on a relative day'}" th:selected="${schedule != null && schedule.type == type}"></option></select></label>
+<div class="net-editor-section" data-schedule-only th:hidden="${schedule == null}">
+<div class="schedule-field-row" data-recurrence="WEEKLY MONTHLY_RELATIVE">
+<label id="relative-week" data-recurrence="MONTHLY_RELATIVE">Relative week <select th:disabled="${schedule == null}" name="ordinal"><option th:each="n : ${#numbers.sequence(1,6)}" th:value="${n}" th:text="${n == 6 ? 'Last' : n}" th:selected="${schedule != null && schedule.ordinal == n}"></option></select></label>
+<label data-recurrence="WEEKLY MONTHLY_RELATIVE">Day <select th:disabled="${schedule == null}" name="weekday"><option th:each="day : ${weekdays}" th:value="${day.value}" th:text="${#strings.capitalize(day.name().toLowerCase())}" th:selected="${day.value == weekday}"></option></select></label>
+</div>
+<label data-recurrence="MONTHLY_DAY">Day of month <select th:disabled="${schedule == null}" name="monthDay"><option th:each="day : ${#numbers.sequence(1,31)}" th:value="${day}" th:text="${day}" th:selected="${#strings.toString(day) == monthDay}"></option><option value="LAST" th:selected="${monthDay == 'LAST'}">Last</option></select></label>
+<div class="schedule-field-row">
+<label data-recurrence="ONE_TIME_ONLY">Start date and time <input th:disabled="${schedule == null}" type="datetime-local" name="firstStart" required th:value="${schedule?.firstStart}"></label>
+<label data-recurrence="DAILY WEEKLY MONTHLY_DAY MONTHLY_RELATIVE">Time <input th:disabled="${schedule == null}" type="time" name="startTime" required th:value="${startTime}"></label>
+<label>Time zone <select th:disabled="${schedule == null}" name="timezone" required><option th:each="zone : ${timezones}" th:value="${zone}" th:text="${zone.replace('_', ' ')}" th:selected="${zone == (schedule == null ? defaultTimezone : schedule.timezone)}"></option></select></label>
+</div>
+<label>Duration (hours) <input th:disabled="${schedule == null}" type="number" name="durationHours" min="1" max="168" step="1" required th:value="${schedule == null ? 1 : (schedule.duration + 59) / 60}"></label>
+<label class="check"><input th:disabled="${schedule == null}" type="checkbox" name="enabled" value="true" th:checked="${schedule == null || schedule.enabled}"> Enabled</label>
+</div>
+</section>
+<div class="net-editor-columns">
+<div class="net-editor-left">
+<section class="panel net-editor-section" aria-labelledby="net-position-heading"><h2 id="net-position-heading">Symbol and location</h2>
 <fieldset><legend>APRS symbol</legend><input type="hidden" name="symbolTableId" maxlength="1" th:value="${options.path('symbolTableId').asText('/')}"><input type="hidden" name="symbolTableCode" maxlength="1" th:value="${options.path('symbolTableCode').asText('n')}"><div data-symbol-picker></div></fieldset>
 
 <fieldset><legend>Net location</legend>
@@ -25,18 +49,38 @@
 <div id="location-map-panel" hidden><p>Click the map to select the net location. The marker can be dragged.</p><p id="location-summary" role="status">Select a location on the map.</p>
 <div id="net-position-map" style="height:320px" aria-label="Select net location" th:attr="data-tile-url=${mapSettings.tileUrl},data-attribution=${mapSettings.attribution}"></div>
 </div></fieldset>
-<label>Announce start and stop by bulletin <select name="announce"><option value="false" th:selected="${!options.path('announce').asBoolean(net == null)}">No</option><option value="true" th:selected="${options.path('announce').asBoolean(net == null)}">Yes</option></select></label>
-<label>Remind participants to check out <select name="checkinReminder"><option value="false" th:selected="${!options.path('checkinReminder').asBoolean(net == null)}">No</option><option value="true" th:selected="${options.path('checkinReminder').asBoolean(net == null)}">Yes</option></select></label>
-<label>Question reminder <select name="questionReminder"><option value="false" th:selected="${!options.path('questionReminder').asBoolean()}">No</option><option value="true" th:selected="${options.path('questionReminder').asBoolean()}">Yes</option></select></label>
-<label>Participant invite allowed <select name="participantInviteAllowed"><option value="false" th:selected="${!options.path('participantInviteAllowed').asBoolean()}">No</option><option value="true" th:selected="${options.path('participantInviteAllowed').asBoolean()}">Yes</option></select></label>
-<label>Communications <select name="communicationMode">
+</section>
+<section class="panel net-editor-section" aria-labelledby="net-communications-heading"><h2 id="net-communications-heading">Communications</h2>
+<select name="communicationMode" aria-labelledby="net-communications-heading">
 <option value="SELECTED" th:selected="${snapshot != null && snapshot.routing.mode == 'SELECTED'}">Selected instances</option>
 <option value="ALL" th:selected="${snapshot == null || snapshot.routing.mode == 'ALL'}">All eligible instances, including future ones</option>
-</select></label>
+</select>
 <fieldset id="net-selected-instances" th:hidden="${snapshot == null || snapshot.routing.mode != 'SELECTED'}"><legend>Selected instances</legend>
 <label class="check" th:each="item : ${instances}"><input type="checkbox" name="communicationInstanceIds" th:value="${item.id}"
  th:checked="${snapshot != null && snapshot.routing.instanceIds.contains(item.id)}"><span th:text="|${item.name} (${item.type})|"></span></label>
 <p th:if="${instances.isEmpty()}">An administrator must configure communication instances first. An empty selection transmits nowhere.</p>
 </fieldset>
-<div class="dialog-actions"><button type="submit" th:text="${net == null ? 'Create net' : 'Save net'}">Create net</button><button type="button" id="net-cancel" data-dialog-cancel>Cancel</button></div>
-</form><dialog id="net-cancel-dialog" aria-labelledby="net-cancel-title"><h2 id="net-cancel-title">Cancel net changes?</h2><p th:text="${net == null ? 'Discard your unsaved changes and return to the nets page?' : 'Discard your unsaved changes and return to this net?'}"></p><div class="dialog-actions"><button type="button" id="net-cancel-confirm" th:attr="data-return-url=${net == null ? '/nets' : '/nets/' + net.id}">Discard changes</button><button type="button" id="net-cancel-back" data-dialog-cancel>Keep editing</button></div></dialog></main><script defer th:src="@{/js/aprs-symbol-picker.js}"></script></body></html>
+</section>
+</div>
+<div class="net-editor-right">
+<section class="panel net-editor-section" aria-labelledby="net-participation-heading"><h2 id="net-participation-heading">Participation</h2>
+<label class="check"><input type="checkbox" name="open" value="true" th:checked="${net == null || net.open}"> Open APRS check-in</label>
+<p>When unchecked, only expected or invited callsign roots may check in.</p>
+<label>Expected callsigns <textarea name="expectedParticipants" rows="1" placeholder="N0CALL N1ABC" th:text="${snapshot == null ? '' : #strings.listJoin(#lists.toList(snapshot.expectedParticipants), ' ')}"></textarea></label>
+<label>Participant invite allowed <select name="participantInviteAllowed"><option value="false" th:selected="${!options.path('participantInviteAllowed').asBoolean()}">No</option><option value="true" th:selected="${options.path('participantInviteAllowed').asBoolean()}">Yes</option></select></label>
+</section>
+<section class="panel net-editor-section" aria-labelledby="net-reminders-heading"><h2 id="net-reminders-heading">Reminders</h2>
+<label>Announce start and stop by bulletin <select name="announce"><option value="false" th:selected="${!options.path('announce').asBoolean(net == null)}">No</option><option value="true" th:selected="${options.path('announce').asBoolean(net == null)}">Yes</option></select></label>
+<label>Remind participants to check out <select name="checkinReminder"><option value="false" th:selected="${!options.path('checkinReminder').asBoolean(net == null)}">No</option><option value="true" th:selected="${options.path('checkinReminder').asBoolean(net == null)}">Yes</option></select></label>
+<label>Question reminder <select name="questionReminder"><option value="false" th:selected="${!options.path('questionReminder').asBoolean()}">No</option><option value="true" th:selected="${options.path('questionReminder').asBoolean()}">Yes</option></select></label>
+
+
+</section>
+</div>
+</div>
+<p th:if="${editorMode == 'SCHEDULE'}">Edits affect future occurrences only.</p>
+<div class="dialog-actions"><button type="submit" id="net-save-button" th:text="${editorMode == 'CREATE' ? 'Create net' : 'Update'}">Create net</button><button type="button" id="net-cancel" data-dialog-cancel>Cancel</button></div>
+</form>
+<dialog id="net-cancel-dialog" aria-labelledby="net-cancel-title"><h2 id="net-cancel-title">Cancel net changes?</h2><p>Discard your unsaved changes?</p><div class="dialog-actions"><button type="button" id="net-cancel-confirm" th:attr="data-return-url=${editorMode == 'CREATE' ? '/nets' : editorMode == 'SCHEDULE' ? '/schedules/' + net.id : '/nets/' + net.id}">Discard changes</button><button type="button" id="net-cancel-back" data-dialog-cancel>Keep editing</button></div></dialog>
+<dialog id="schedule-save-dialog" aria-labelledby="net-save-title"><h2 id="net-save-title">Confirm net changes</h2><p id="net-save-description"></p><div class="dialog-actions"><button type="button" id="schedule-save-confirm">Confirm</button><button type="button" id="schedule-save-back">Cancel</button></div></dialog>
+</main><script defer th:src="@{/js/aprs-symbol-picker.js}"></script><script defer th:src="@{/js/net-edit.js}"></script></body></html>

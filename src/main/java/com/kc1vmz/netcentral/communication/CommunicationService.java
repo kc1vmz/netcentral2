@@ -1,6 +1,7 @@
 package com.kc1vmz.netcentral.communication;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -79,7 +80,7 @@ public class CommunicationService {
                 aprs || "KENWOOD_SERIAL".equals(config.type()) ? config.username() : null, aprs ? config.passcode() : null, aprs ? config.filter() : null,
                 serial ? config.serialDevice() : null, serial ? config.baudRate() : null,
                 serial ? config.initCommand1() : null, serial ? config.initCommand2() : null,
-                aprs ? null : config.digiPath(), config.type() != null && config.type().startsWith("KISS_") ? config.kissPort() : null);
+                aprs ? null : config.digiPath(), config.type() != null && config.type().startsWith("KISS_") ? config.kissPort() : null, config.transmitSpacingMs());
         validate(config);
         String key = null;
         if (config.enabled() && config.serial()) {
@@ -140,7 +141,7 @@ public class CommunicationService {
             requiredText(c.username(), "Kenwood MYCALL");
             try { KissCodec.validateAddress(c.username()); }
             catch (IllegalArgumentException invalid) { throw bad("Invalid Kenwood MYCALL"); }
-            if (c.username().contains("*") || !c.username().equals(c.username().toUpperCase(java.util.Locale.ROOT)))
+            if (c.username().contains("*") || !c.username().equals(c.username().toUpperCase(Locale.ROOT)))
                 throw bad("Use an uppercase Kenwood callsign and optional SSID");
             if ((c.initCommand1() != null && !c.initCommand1().isBlank()) || (c.initCommand2() != null && !c.initCommand2().isBlank()))
                 throw bad("Kenwood startup commands are configured automatically");

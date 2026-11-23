@@ -158,7 +158,7 @@ public class NetSchedulerAccessor {
         Schedule previous = id.isBlank() ? null : find(id);
         var merged = id.isBlank() ? com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode()
                 : (com.fasterxml.jackson.databind.node.ObjectNode) options(id).deepCopy();
-        values.fields().forEachRemaining(e -> merged.set(e.getKey(), e.getValue()));
+        values.properties().forEach(e -> merged.set(e.getKey(), e.getValue()));
         var clean = com.kc1vmz.netcentral.operations.NetOptions.validate(merged);
         if (!clean.has("lat") || !clean.has("lon")) throw bad("Net latitude and longitude are required");
         Schedule saved = id.isBlank() ? create(edit) : update(id, edit);

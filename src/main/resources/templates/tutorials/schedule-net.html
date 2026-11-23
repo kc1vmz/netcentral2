@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Create a definition that starts an APRS net at a future time or on a repeating schedule. Each occurrence becomes a running net with its own participants, messages, questions, and answers. Net Central closes and archives that occurrence when its planned duration ends.</p>
+<p>Scheduled and immediate nets share the same creation form. Select a recurrence other than <strong>Now</strong> to create a schedule.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to your Net Central account.</li>
+<li>Choose a net callsign, name, description, and location. Avoid callsign conflicts with other nets or managed objects, especially during the intended operating window.</li>
+<li>Decide the recurrence, start time, time zone, and duration. The form accepts whole hours from 1 through 168.</li>
+<li>Have an administrator configure and verify the communication instances the net should use. They must be available and permit transmission when the net runs.</li>
+<li>Plan for Net Central to be running during the scheduled window. Know the expected callsigns if participation will be restricted.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and select <strong>Create Net</strong>.</p></li>
+<li><p>Complete <strong>Net details</strong>: enter the required <strong>Net callsign</strong> and <strong>Name</strong>, then add the description, optional voice frequency, and welcome message sent at check-in.</p></li>
+<li><p>In <strong>Schedule</strong>, change <strong>Recurrence</strong> from Now to the appropriate choice:</p>
+<table><thead><tr><th>Recurrence</th><th>Fields to complete</th></tr></thead><tbody>
+<tr><td>Just once</td><td>Choose the start date and time for a single occurrence.</td></tr>
+<tr><td>Every day</td><td>Choose the time of day.</td></tr>
+<tr><td>Every week</td><td>Choose a day from Sunday through Saturday and a time.</td></tr>
+<tr><td>Monthly on a specific day</td><td>Choose a day from 1 through 31, or Last, and a time.</td></tr>
+<tr><td>Monthly on a relative day</td><td>Choose Relative week (1 through 5, or Last), a weekday, and a time. For example, 2 and Tuesday means the second Tuesday of each month.</td></tr>
+</tbody></table></li>
+<li><p>Select the <strong>Time zone</strong> in which the entered start time should be interpreted. Choose the operating area's named zone when you want the net to stay at the same local clock time through seasonal clock changes.</p></li>
+<li><p>Enter <strong>Duration (hours)</strong> as a whole number from 1 through 168. Leave <strong>Enabled</strong> checked to allow automatic starts. Uncheck it if you want to save the definition without starting occurrences yet.</p></li>
+<li><p>In <strong>Symbol and location</strong>, choose the APRS symbol and supply a net location. Use <strong>Manual entry</strong> for decimal-degree latitude and longitude, or <strong>Use map</strong> to place and adjust the marker. Location is required for net object beaconing.</p></li>
+<li><p>Choose <strong>Communications</strong>. The default is <strong>All eligible instances, including future ones</strong>. To limit the net, choose <strong>Selected instances</strong> and check the desired connections. An empty selection transmits nowhere.</p></li>
+<li><p>Set <strong>Participation</strong>. Leave <strong>Open APRS check-in</strong> checked for unrestricted admission, or uncheck it and enter expected callsigns separated by spaces or commas. Choose whether participant invitations are allowed.</p></li>
+<li><p>Set <strong>Reminders</strong>: start/stop bulletins, checkout reminders, and question reminders. Start/stop announcements and checkout reminders default to Yes. For more guidance on common fields, see <a th:href="@{/help/tutorials/create-net}">Create a net</a>.</p></li>
+<li><p>Select <strong>Create scheduled net</strong>, review the confirmation, and confirm. In Net Monitor, use the carousel arrows to select the new entry labeled <strong>Scheduled</strong>. To abandon the form, select <strong>Cancel</strong> and confirm discarding changes.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Find the Scheduled entry in Net Monitor and confirm its name and callsign. Review Details for the recurrence, duration, next net start, configured time zone, and Enabled or Disabled status.</li>
+<li>Remember that <strong>Net start (local time)</strong> is displayed in your browser's local time zone. The separate Time zone field identifies the zone used to calculate the schedule. Account for this difference when reviewing the start time from another location.</li>
+<li>When the start time arrives, refresh Net Monitor and look for the separate <strong>Running net</strong> entry with the same callsign. Select it to view participants and live activity. Its Details section should show the scheduled end time.</li>
+<li>Have a station check in and verify the expected welcome message and communication activity. A schedule being Enabled does not prove that the radio or Internet connection is working.</li>
+<li>After the planned end, confirm that the occurrence is available in <a th:href="@{/archives}">Archives</a>. For a repeating schedule, review the Scheduled entry for its next start.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Schedule versus occurrence:</strong> The Scheduled entry is the reusable definition. The Running net entry is one occurrence. Editing the schedule affects future occurrences; editing a running net affects only that net.</li>
+<li><strong>Offline starts:</strong> If Net Central starts after the planned start but before the planned end, it begins the net for the remaining time. If the entire window has elapsed, that occurrence is skipped. A late start does not extend the planned end.</li>
+<li><strong>Callsign conflicts:</strong> An occurrence waits while its callsign is unavailable. If the conflict clears before the planned end, it can run for the remaining time; otherwise it is skipped. Avoid overlapping schedules that require the same callsign.</li>
+<li><strong>Short months:</strong> A numbered day beyond the end of a month uses that month's last day. For example, day 31 runs on the last day of a shorter month. A fifth weekday that does not occur uses the month's last matching weekday.</li>
+<li><strong>Clock changes:</strong> Recurrence follows the chosen time zone's local clock. A start time in a spring-forward gap shifts forward by the gap length; a repeated fall-back time uses the earlier offset. Duration is elapsed time, so the displayed local end time can cross a clock change.</li>
+<li><strong>Disabling or deleting:</strong> Use Edit Net to disable future starts. Delete Net removes the schedule after confirmation while retaining running occurrences and archived history. Secure Net applies to a running occurrence, not the schedule definition.</li>
+<li><strong>Just once:</strong> A one-time schedule has no further start after its occurrence is consumed. Review the next-start value rather than assuming Enabled means another occurrence remains.</li>
+<li><strong>Changing type:</strong> Editing a schedule cannot convert it to an immediate net. To start a separate net now, use Create Net and select Now.</li>
+</ul></section>
+</th:block></body></html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head(${tutorial.title})}"></head>
+<body>
+<header th:replace="~{fragments/account :: header}"></header>
+<main class="workspace">
+<div class="page-heading"><div><h1 th:text="${tutorial.title}">Tutorial</h1></div></div>
+<th:block th:if="${tutorial.slug == 'configure-radio'}" th:insert="~{tutorials/configure-radio :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'configure-internet'}" th:insert="~{tutorials/configure-internet :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'create-net'}" th:insert="~{tutorials/create-net :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'schedule-net'}" th:insert="~{tutorials/schedule-net :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'net-messages'}" th:insert="~{tutorials/net-messages :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'net-questions-and-answers'}" th:insert="~{tutorials/net-questions-and-answers :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'secure-net'}" th:insert="~{tutorials/secure-net :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'create-priority-object'}" th:insert="~{tutorials/create-priority-object :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'create-generic-object'}" th:insert="~{tutorials/create-generic-object :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'winlink-messages'}" th:insert="~{tutorials/winlink-messages :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'nts-radiograms'}" th:insert="~{tutorials/nts-radiograms :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'create-general-object'}" th:insert="~{tutorials/create-general-object :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'check-in-net'}" th:insert="~{tutorials/check-in-net :: content}"></th:block>
+<th:block th:if="${tutorial.slug == 'operate-net'}" th:insert="~{tutorials/operate-net :: content}"></th:block>
+<section class="panel" th:unless="${tutorial.slug == 'configure-radio' or tutorial.slug == 'configure-internet' or tutorial.slug == 'create-net' or tutorial.slug == 'schedule-net' or tutorial.slug == 'net-messages' or tutorial.slug == 'net-questions-and-answers' or tutorial.slug == 'secure-net' or tutorial.slug == 'create-priority-object' or tutorial.slug == 'create-generic-object' or tutorial.slug == 'winlink-messages' or tutorial.slug == 'nts-radiograms' or tutorial.slug == 'create-general-object' or tutorial.slug == 'check-in-net' or tutorial.slug == 'operate-net'}"><p>This tutorial is coming soon.</p></section>
+</main>
+</body>
+</html>

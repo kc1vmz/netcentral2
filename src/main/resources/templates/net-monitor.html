@@ -8,13 +8,14 @@
 <script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script defer th:src="@{/js/monitor-layout.js}"></script><script defer th:src="@{/js/net-participants.js}"></script><script defer th:src="@{/js/net-monitor.js}"></script>
 </head><body><header th:replace="~{fragments/account :: header}"></header>
 <main id="net-monitor" class="monitor" th:attr="data-net-id=${snapshot.net.id}">
+<div th:replace="~{fragments/net-carousel :: carousel}"></div>
+<h1 th:if="${snapshot.net.endTime != null}" th:text="|Net Archive — ${snapshot.net.name} (${snapshot.net.callsign})|"></h1>
 <section class="panel" id="net-details">
-<div class="monitor-section-heading"><h1>Net Details</h1><div class="monitor-section-actions" data-management th:if="${snapshot.canManage && snapshot.net.endTime == null}">
-<a class="button-link" th:href="@{/nets/{id}/edit(id=${snapshot.net.id})}">Edit</a><button type="button" id="close-net">Secure</button>
+<div class="monitor-section-heading"><h2>Details</h2><div class="monitor-section-actions" data-management th:if="${snapshot.canManage && snapshot.net.endTime == null}">
+<a class="button-link" th:href="@{/nets/{id}/edit(id=${snapshot.net.id})}">Edit Net</a><button type="button" id="close-net">Secure Net</button>
 </div></div>
-<label>Selected net <select id="net-selection"><option th:each="n : ${netChoices}" th:value="${n.id}" th:selected="${n.id == snapshot.net.id}" th:text="|${n.callsign} — ${n.name}${n.endTime == null ? '' : ' (archived)'}|"></option></select></label>
-<dl class="resource-facts"><dt>Callsign</dt><dd id="net-callsign" th:text="${snapshot.net.callsign}"></dd><dt>Name</dt><dd id="net-name" th:text="${snapshot.net.name}"></dd><dt>Description</dt><dd id="net-description" th:text="${snapshot.net.description}"></dd><dt>Net type</dt><dd id="net-open" th:text="${snapshot.net.open ? 'Open' : 'Closed'}"></dd><dt id="net-planned-end-label" th:hidden="${snapshot.plannedEndTime == null}">Scheduled end</dt><dd id="net-planned-end" th:hidden="${snapshot.plannedEndTime == null}" th:attr="data-time=${snapshot.plannedEndTime}"></dd></dl>
-<p><span id="net-state" th:text="${snapshot.net.endTime == null ? 'Active' : 'Archived'}"></span> · <span id="live-status" role="status">Connecting live view…</span></p>
+<dl class="resource-facts"><dt>Description</dt><dd id="net-description" th:text="${snapshot.net.description}"></dd><dt>Net type</dt><dd th:text="${snapshot.plannedEndTime != null ? 'Scheduled' : 'Immediate'}"></dd><dt>Check-in</dt><dd id="net-open" th:text="${snapshot.net.open ? 'Open' : 'Closed'}"></dd><dt id="net-planned-end-label" th:hidden="${snapshot.plannedEndTime == null}">Scheduled end</dt><dd id="net-planned-end" th:hidden="${snapshot.plannedEndTime == null}" th:attr="data-time=${snapshot.plannedEndTime}"></dd></dl>
+<p>Status: <span id="net-state" th:text="${snapshot.net.endTime == null ? 'Active' : 'Archived'}"></span> · <span id="live-status" role="status">Connecting live view…</span></p>
 <p id="action-status" role="status" aria-live="polite"></p>
 </section>
 <div class="monitor-grid"><section class="panel"><h2>Participant map</h2><div id="net-map" aria-label="Participant locations"></div>

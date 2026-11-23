@@ -1,5 +1,7 @@
 package com.kc1vmz.netcentral.operations;
 
+import com.kc1vmz.netcentral.communication.AprsMessageProtocol;
+
 import com.kc1vmz.netcentral.communication.*;
 import java.util.*;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,6 +27,12 @@ public class KenwoodMessages {
     }
     public record Acknowledge(String instance,String from,String to,String number) {}
 
+    @EventListener
+    @Transactional
+    public void repeated(PacketHub.RepeatedMessage event) {
+        receive(new PacketHub.UniquePacket(event.received()));
+    }
+
     @EventListener @Order(-10) @Transactional
     public void receive(PacketHub.UniquePacket event) {
         var received=event.received();var packet=received.packet();
@@ -33,25 +41,27 @@ public class KenwoodMessages {
         String info=packet.information();
         if(info.length()<11 || info.charAt(0)!=':' || info.charAt(10)!=':'
             || !info.substring(1,10).strip().equalsIgnoreCase(config.username()))return;
-        String body=info.substring(11).strip();
+        String body=AprsMessageProtocol.normalize(info.substring(11));
+        var parsed=AprsMessageProtocol.parse(body);
+        var control=AprsMessageProtocol.control(body);
+        String acknowledged=control != null ? control.number() : parsed.replyAck();
         store.lock();
-        if(body.matches("(?i)(ack|rej)[A-Za-z0-9]{1,5}")) {
+        if(acknowledged != null && !acknowledged.isEmpty()) {
             // Numbers come from the shared database sequence, not a per-net counter.
             var rows=store.jdbc().queryForList("SELECT m.id,m.net_id FROM net_message m JOIN managed_net n ON n.id=m.net_id WHERE m.direction='OUT' AND m.recipient=? AND m.ack_number=? AND n.closed_at IS NULL AND m.delivery IN ('PENDING','SENT')",
-                packet.source(),body.substring(3));
+                packet.source(),acknowledged);
             if(rows.size()==1) {
                 String net=rows.getFirst().get("NET_ID").toString();
                 if(routing.permits("NET:"+net,config.id())) {
-                    store.jdbc().update("UPDATE net_message SET delivery=? WHERE id=?",body.toLowerCase(Locale.ROOT).startsWith("ack")?"ACKNOWLEDGED":"REJECTED",rows.getFirst().get("ID"));
+                    store.jdbc().update("UPDATE net_message SET delivery=? WHERE id=?",control == null || control.kind().equalsIgnoreCase("ack") ? "ACKNOWLEDGED":"REJECTED",rows.getFirst().get("ID"));
                     store.jdbc().update("UPDATE managed_net SET version=version+1 WHERE id=?",net);
                 }
             }
-            return;
+            if(control != null) return;
         }
-        var number=java.util.regex.Pattern.compile("\\{([A-Za-z0-9]{1,5})$").matcher(body);
-        if(number.find())events.publishEvent(new Acknowledge(config.id(),config.username(),packet.source(),number.group(1)));
-        if(store.duplicateRadio(config.username(),packet.source(),body))return;
-        String text=number.find(0)?body.substring(0,number.start()):body;
+        if(parsed.number() != null) events.publishEvent(new Acknowledge(config.id(),config.username(),packet.source(),parsed.number()));
+        if(parsed.number() != null && store.duplicateRadio(config.username(),packet.source(),parsed.body()+"{"+parsed.number()))return;
+        String text=parsed.body();
         var data=store.mapper().createObjectNode().put("instance",config.name()).put("from",packet.source())
             .put("to",config.username()).put("message",text).put("receivedAt",received.time().toString());
         store.saveInternal("INSTALLATION_MESSAGE",UUID.randomUUID().toString(),"",data);

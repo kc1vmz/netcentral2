@@ -28,40 +28,31 @@ public class SchedulePageController {
 
     @GetMapping("/schedules")
     public String list(Model model) {
-        return "redirect:/nets#scheduled-nets";
+        return "redirect:/nets";
     }
 
     @GetMapping("/schedules/new")
     public String create(Model model) {
+        model.addAttribute("net", null);
+        model.addAttribute("snapshot", null);
+        model.addAttribute("editorMode", "CREATE");
         model.addAttribute("detail", null);
         model.addAttribute("schedule", null);
         model.addAttribute("options", com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode());
         configure(model);
-        return "schedule-edit";
+        return "net-edit";
     }
 
     private void configure(Model model) {
         model.addAttribute("mapSettings", nets.map());
         model.addAttribute("instances", communications.routeChoices());
-        model.addAttribute("defaultTimezone", schedules.defaultTimezone());
-        var timezones = new TreeSet<>(java.time.ZoneId.getAvailableZoneIds());
-        timezones.add(schedules.defaultTimezone());
-        if (model.getAttribute("schedule") instanceof Schedule schedule)
-            timezones.add(schedule.timezone());
-        model.addAttribute("timezones", timezones);
-        Schedule schedule = (Schedule) model.getAttribute("schedule");
-        var anchor = schedule == null ? java.time.LocalDateTime.now(java.time.ZoneId.of(schedules.defaultTimezone())) : schedule.firstStart();
-        model.addAttribute("startTime", anchor.toLocalTime().withSecond(0).withNano(0).toString());
-        model.addAttribute("weekday", anchor.getDayOfWeek().getValue());
-        model.addAttribute("monthDay", schedule != null && schedule.type() == Type.MONTHLY_DAY && schedule.ordinal() == 6 ? "LAST" : Integer.toString(anchor.getDayOfMonth()));
-        model.addAttribute("weekdays", List.of(java.time.DayOfWeek.SUNDAY, java.time.DayOfWeek.MONDAY, java.time.DayOfWeek.TUESDAY,
-                java.time.DayOfWeek.WEDNESDAY, java.time.DayOfWeek.THURSDAY, java.time.DayOfWeek.FRIDAY, java.time.DayOfWeek.SATURDAY));
+        NetFormSupport.scheduleFields(model, schedules);
     }
 
     @GetMapping("/schedules/{id}")
     public String detail(@PathVariable String id, Model model) {
         model.addAttribute("detail", schedules.detail(id));
-        model.addAttribute("occurrences", schedules.occurrences(id));
+        NetMonitorNavigation.populate(model, nets, schedules, "/schedules/" + id);
         return "schedule";
     }
 
@@ -72,9 +63,12 @@ public class SchedulePageController {
             throw new AccessDeniedException("Schedule owner required");
         model.addAttribute("detail", detail);
         model.addAttribute("schedule", detail.schedule());
+        model.addAttribute("net", detail.schedule());
+        model.addAttribute("snapshot", detail);
+        model.addAttribute("editorMode", "SCHEDULE");
         model.addAttribute("options", schedules.options(id));
         configure(model);
-        return "schedule-edit";
+        return "net-edit";
     }
 
     @GetMapping("/schedules/{id}/options")
@@ -163,13 +157,14 @@ public class SchedulePageController {
         options.put("symbolTableId", values.getOrDefault("symbolTableId", "/"));
         options.put("symbolTableCode", values.getOrDefault("symbolTableCode", "n"));
         Schedule saved = schedules.saveConfigured(id, edit, options, recurrenceControls);
-        return id.isBlank() ? "redirect:/nets#scheduled-nets" : "redirect:/schedules/" + saved.id();
+        return id.isBlank() ? "redirect:/nets" : "redirect:/schedules/" + saved.id();
     }
 
     @PostMapping("/schedules/{id}/delete")
     public String delete(@PathVariable String id, @RequestParam long version) {
+        String next = NetMonitorNavigation.afterDeletion(nets, schedules, "/schedules/" + id);
         schedules.delete(id, version);
-        return "redirect:/nets#scheduled-nets";
+        return "redirect:" + next;
     }
 
     @ExceptionHandler(ResponseStatusException.class)

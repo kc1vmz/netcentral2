@@ -11,7 +11,7 @@ class KenwoodSessionTest {
         return new CommunicationConfig("kenwood",0,"","KENWOOD_SERIAL",true,transmit,null,null,"N1ABC-10",null,null,
             "COM9",9600,null,null,"WIDE1-1,WIDE2-1",null);
     }
-    static class Radio extends OutputStream implements AutoCloseable {
+    static class Radio extends OutputStream {
         final PipedInputStream input=new PipedInputStream(8192);
         final PipedOutputStream received;
         final List<String> commands=new ArrayList<>(),payloads=new ArrayList<>();

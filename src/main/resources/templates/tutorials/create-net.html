@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Create an APRS net that starts immediately. Participants can check in, exchange messages, report their status and location, and answer questions. Net Monitor provides the controls for managing the running net.</p>
+<p>Immediate and scheduled nets use the same creation form. This tutorial uses <strong>Now</strong>; choosing another recurrence creates a scheduled net instead.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to your Net Central account.</li>
+<li>Choose a net callsign and a descriptive name. The callsign identifies the net on APRS and must not conflict with another running net or a managed object.</li>
+<li>Know the net's location and decide whether participation will be open or limited to expected and invited stations.</li>
+<li>Have an administrator configure the radio or Internet communication instances you intend to use. For on-air or Internet operation, verify that the selected connections are Active and allow transmission.</li>
+<li>If check-in will be restricted, prepare the expected callsigns. If participants will coordinate by voice, have the frequency information ready.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and select <strong>Create Net</strong>. The button is also available when no nets are running or scheduled.</p></li>
+<li><p>Complete <strong>Net details</strong>. Enter the required <strong>Net callsign</strong> and <strong>Name</strong>. Add a <strong>Description</strong>, optional <strong>Voice frequency</strong>, and a <strong>Welcome message sent at check-in</strong>. The welcome message can contain up to 67 characters.</p></li>
+<li><p>In <strong>Schedule</strong>, leave <strong>Recurrence</strong> set to <strong>Now</strong>, the default. Date, time zone, and duration controls are hidden for an immediate net.</p></li>
+<li><p>In <strong>Symbol and location</strong>, choose an <strong>APRS symbol</strong>. Set the <strong>Net location</strong> using either:</p><ul>
+<li><strong>Manual entry:</strong> Enter latitude and longitude as decimal degrees. Latitude must be between -90 and 90; longitude between -180 and 180. Use negative values for south and west.</li>
+<li><strong>Use map:</strong> Click the intended location. Drag the marker to adjust it and review the displayed coordinates.</li>
+</ul><p>A location is required so Net Central can beacon the net object with a usable position.</p></li>
+<li><p>In <strong>Communications</strong>, choose <strong>All eligible instances, including future ones</strong>, the default, or <strong>Selected instances</strong>. For Selected instances, check each connection the net should use. An empty selection transmits nowhere.</p></li>
+<li><p>Configure <strong>Participation</strong>:</p><ul>
+<li><strong>Open APRS check-in:</strong> Leave checked to allow stations to check in without being on the expected list. Uncheck it to restrict check-in to expected or invited callsign roots.</li>
+<li><strong>Expected callsigns:</strong> Enter callsigns separated by spaces or commas. Expected stations appear in the participant list with Expected status until they check in.</li>
+<li><strong>Participant invite allowed:</strong> Choose whether participants may invite other stations. Inviting a station adds it to the expected list.</li>
+</ul></li>
+<li><p>Configure <strong>Reminders</strong>. <strong>Announce start and stop by bulletin</strong> and <strong>Remind participants to check out</strong> default to Yes. Set <strong>Question reminder</strong> according to your operating needs.</p></li>
+<li><p>Select <strong>Create net</strong>, review the confirmation dialog, and confirm creation. Net Monitor opens the new running net. To abandon the form instead, select <strong>Cancel</strong> and confirm discarding the changes.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that Net Monitor's carousel shows the correct name and callsign and labels the entry as a running net. In Details, verify the description, Immediate net type, check-in policy, and Active status.</li>
+<li>Have a participant send the APRS message <code>CI</code> to the net callsign, or use <strong>Check in Station</strong> in the Participants section. Verify that the participant appears as checked in with a Green status color.</li>
+<li>If configured, verify that the participant receives the welcome message. A restricted net should reject check-in from callsigns that are neither expected nor invited.</li>
+<li>Check the selected instances on <a th:href="@{/communications}">Communications</a> for received and sent traffic, or ask an administrator to check them. Use another APRS client or receiver to verify the net's beacon or announcement; creating the record alone does not prove delivery.</li>
+<li>If a checked-in participant has a recent usable position, confirm that it appears on the participant map. Check-in alone does not supply a position.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Open versus closed:</strong> Closed check-in restricts admission; it does not mean the net is finished. Use <strong>Secure Net</strong> when operations are complete.</li>
+<li><strong>Duration:</strong> A net created with Now has no scheduled end time. It continues until secured and is restored as a running net after an application restart.</li>
+<li><strong>Editing:</strong> Use <strong>Edit Net</strong> in Details to update the running net. Its callsign cannot be changed there, and editing cannot convert it into a scheduled definition.</li>
+<li><strong>Status colors:</strong> Check-in sets Green. Participants can report Green, Yellow, or Red using STG, STY, or STR. Checkout sets White/Unknown; securing the net preserves the last stored colors.</li>
+<li><strong>Routing:</strong> Directed messages and invitations require an eligible route to the destination. If an invitation reports no route, hear the station on an eligible communication instance before retrying.</li>
+<li><strong>Selection scope:</strong> All eligible instances includes connections added later. Use Selected instances when the net should remain limited to particular connections.</li>
+<li><strong>Kenwood:</strong> A Kenwood Serial instance uses its configured MYCALL as the RF source. Account for that when choosing the net's communications and verifying traffic.</li>
+<li><strong>Completion:</strong> Secure Net asks for confirmation before closing and archiving the net. The archive retains its participants, messages, questions, and answers and provides the three report downloads.</li>
+</ul></section>
+</th:block></body></html>

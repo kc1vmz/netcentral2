@@ -3,54 +3,55 @@
 <body>
     <div th:fragment="commands"><p>Send commands to the net callsign once you have checked in.</p>
     <dl>
-        <dt><b>CI / CO</b></dt>
+        <dt id="net-command-ci"><b>CI / CO</b></dt>
         <dd>Check in / check out.</dd>
-        <dt><b>STG / STY / STR</b></dt><dd>Set your status color to green, yellow, or red. Participant lists show (G), (Y), or (R).</dd>
-        <dt><b>T name</b></dt>
+        <dt id="net-command-stg"><b>STG / STY / STR</b></dt><dd>Set your status color to green, yellow, or red. Participant lists show (G), (Y), (R), or (U) for Unknown. Checking out sets White/Unknown; net completion preserves status colors.</dd>
+        <dt id="net-command-t"><b>T name</b></dt>
         <dd>Set tactical callsign.</dd>
-        <dt><b>F frequency</b></dt>
+        <dt id="net-command-f"><b>F frequency</b></dt>
         <dd>Set voice frequency monitoring.</dd>
-        <dt><b>X watts</b></dt>
+        <dt id="net-command-x"><b>X watts</b></dt>
         <dd>Set transmit power.</dd>
-        <dt><b>E (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR)</b></dt>
+        <dt id="net-command-e"><b>E (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR)</b></dt>
         <dd>Set primary electrical power type.</dd>
-        <dt><b>B (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR)</b></dt>
+        <dt id="net-command-b"><b>B (BATTERY, COMMERCIAL, GENERATOR, NONE, SOLAR)</b></dt>
         <dd>Set backup electrical power type.</dd>
-        <dt><b>Y (APPLIANCE, BASE, HANDHELD, INTERNET, MOBILE, OTHER)</b></dt>
+        <dt id="net-command-y"><b>Y (APPLIANCE, BASE, HANDHELD, INTERNET, MOBILE, OTHER)</b></dt>
         <dd>Set radio style</dd>
         <p></p>
         <dt>These commands can be combined into a single message.</dt>
         <p></p>
-        <dt><b>S text</b></dt>
+        <dt id="net-command-s"><b>S text</b></dt>
         <dd>Set status.</dd>
-        <dt><b>M text</b></dt>
+        <dt id="net-command-m"><b>M text</b></dt>
         <dd>Send message to all active participants.</dd>
-        <dt><b>MC text</b></dt>
+        <dt id="net-command-mc"><b>MC text</b></dt>
         <dd>Send message to Net Central console only.</dd>
         <p></p>
-        <dt><b>L</b></dt>
+        <dt id="net-command-l"><b>L</b></dt>
         <dd>List participants.</dd>
-        <dt><b>P callsign</b></dt>
+        <dt id="net-command-p"><b>P callsign</b></dt>
         <dd>Ping a participant.</dd>
-        <dt><b>I</b></dt>
+        <dt id="net-command-o"><b>O callsign</b></dt><dd>Request the last known station status.</dd>
+        <dt id="net-command-i"><b>I</b></dt>
         <dd>Get information about net.</dd>
-        <dt><b>H</b></dt>
+        <dt id="net-command-h"><b>H</b></dt>
         <dd>Help and supported commands.</dd>
 
-        <dt><b>R count</b></dt>
+        <dt id="net-command-r"><b>R count</b></dt>
         <dd>Replay last (count) number of messages.</dd>
-        <dt><b>Q text</b></dt>
+        <dt id="net-command-q"><b>Q text</b></dt>
         <dd>Ask a question of all net participants.</dd>
-        <dt><b>QL</b></dt>
+        <dt id="net-command-ql"><b>QL</b></dt>
         <dd>List your unanswered questions.</dd>
-        <dt><b>QR number</b></dt>
+        <dt id="net-command-qr"><b>QR number</b></dt>
         <dd>Get answers to question by question number.</dd>
-        <dt><b>A number text</b></dt>
+        <dt id="net-command-a"><b>A number text</b></dt>
         <dd>Answer a question by number.</dd>
 
-        <dt><b>INV callsign</b></dt>
+        <dt id="net-command-inv"><b>INV callsign</b></dt>
         <dd>Invite station to a net.</dd>
-        <dt><b>NCI</b></dt>
+        <dt id="net-command-nci"><b>NCI</b></dt>
         <dd>Toggle net participation notification.</dd>
     </dl>
 </div>

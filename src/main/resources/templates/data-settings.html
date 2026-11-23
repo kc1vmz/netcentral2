@@ -2,7 +2,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Data | Net Central</title>
 <meta name="csrf-token" th:content="${_csrf.token}"><meta name="csrf-header" th:content="${_csrf.headerName}">
 <link rel="icon" th:href="@{/favicon.ico}"><link rel="stylesheet" th:href="@{/css/application.css}"><script defer th:src="@{/js/data-settings.js}"></script>
-</head><body><header th:replace="~{fragments/account :: header}"></header><main><h1>Data</h1>
+</head><body><header th:replace="~{fragments/account :: header}"></header><main class="workspace settings-workspace"><h1 id="settings-title">Settings</h1><h2>Data</h2>
 <section class="panel"><div class="section-heading"><h2>APRS Data</h2><button type="button" data-delete="aprs">Delete</button></div><p class="intro">Delete all heard APRS data</p></section>
 <section class="panel"><div class="section-heading"><h2>Net Central Data</h2><button type="button" data-delete="nets">Delete</button></div><p class="intro">Delete all Net Central data</p></section>
 <p id="data-status" role="status"></p>

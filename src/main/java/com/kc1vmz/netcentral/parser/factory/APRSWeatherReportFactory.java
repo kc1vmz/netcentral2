@@ -147,7 +147,7 @@ public class APRSWeatherReportFactory {
     private static APRSWeatherReport parseCompleteWithoutTimestamp(byte[] header, byte[] data, APRSWeatherReport ret) {
         int messageIndex = 0;
 
-        if (data[10] == '_') {  // TODO: check for length not symbol
+        if (data[10] == '_') {
             return parseCompleteWithoutTimestampCompressedLocation(header, data, ret);
         }
 

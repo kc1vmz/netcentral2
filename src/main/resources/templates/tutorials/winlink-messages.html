@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Send a simple text email through Net Central's Winlink tool. The tool communicates with WLNK-1 using APRS messages, handles the password challenge, and submits the recipient, subject, and message text.</p>
+<p>This tool works independently of nets. It uses the default communication selection rather than a particular net's selected instances.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central and have a Winlink callsign and password for the identity you intend to use.</li>
+<li>For a User account, configure your callsign in My account. The sender must have the same base callsign as your account; an administrator can use a different sender.</li>
+<li>Have an administrator configure and verify an APRS communication instance that allows transmission and can exchange messages with WLNK-1.</li>
+<li>Review Default communication selection on Communications. It must include an eligible connection with a route to WLNK-1.</li>
+<li>Know the intended recipient and prepare a short plain-text subject and message. Keep Net Central running while the exchange completes.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/tools(section='winlink')}">Tools → Winlink</a>.</p></li>
+<li><p>Enter <strong>Callsign</strong> using the Winlink identity that will originate the message. Do not enter a net callsign unless it is the appropriate authorized identity for this operation.</p></li>
+<li><p>Enter the corresponding <strong>Winlink password</strong>. This is not your Net Central account password or APRS-IS passcode.</p></li>
+<li><p>Enter one <strong>Recipient</strong> address or callsign accepted by the destination service. The form supports a single recipient string, not a comma-separated address list or a display name such as Name &lt;address&gt;.</p></li>
+<li><p>Enter an optional <strong>Subject</strong>. Keep it brief: the tool permits up to 50 subject characters, and the combined recipient and subject must also fit the APRS submission header's 67-character limit, including its command and spaces.</p></li>
+<li><p>Enter the <strong>Message</strong>, up to 2,000 characters. Use plain text; there is no attachment field. Short messages require fewer APRS packets.</p></li>
+<li><p>Review the sender, recipient, subject, and body, then select <strong>Send via Winlink</strong>. This submits immediately without a second confirmation dialog.</p></li>
+<li><p>Review the status shown above the tool. Net Central sends the login request to WLNK-1, responds to its challenge, and, if accepted, submits the message in APRS-sized parts. Do not repeatedly press Send while that exchange is in progress.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Check the submission result for an immediate error. WAITING means the request is awaiting the gateway exchange; it does not mean the email was delivered.</li>
+<li>Review the selected connection on <a th:href="@{/communications}">Communications</a>, or ask an administrator to do so. Check for outgoing packets and incoming replies from WLNK-1, and inspect any connection errors.</li>
+<li>Confirm receipt with the intended recipient or through an appropriate Winlink client. Even a SENT session state records completion of the outgoing packet group, not proof of final email delivery or that a person read the message.</li>
+<li>Be aware that the tool's result text is the status returned when the form was submitted; this page is not a live session-progress display. Do not refresh a submitted form merely to check progress, because the browser may offer to resubmit it.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>No route:</strong> NO_ROUTE means the tool could not select an eligible route to WLNK-1. Check default communication selection, recent routing information, connection availability, and transmission permission. Having a connection configured is not sufficient by itself.</li>
+<li><strong>Authentication:</strong> Net Central handles the gateway's challenge automatically. Verify the exact callsign and Winlink password if the exchange is rejected. The password is held temporarily for the exchange and cleared after responding to the challenge or when the session is cleaned up.</li>
+<li><strong>One request per callsign:</strong> A session already registered for the sender prevents another request for that callsign until it is removed or expires. Sessions expire ten minutes after creation; repeated submissions can produce an existing-request error rather than another send.</li>
+<li><strong>Length and formatting:</strong> Recipient characters are limited to letters, numbers, and @ . _ + -. The tool splits the body into chunks of up to 50 characters. Keep wording concise and avoid relying on elaborate email formatting.</li>
+<li><strong>Restart behavior:</strong> Winlink sessions are kept in memory and do not survive an application restart. If an exchange is interrupted, verify whether the recipient received the message before trying again.</li>
+<li><strong>Radio and Internet:</strong> The tool uses APRS messaging, not a direct SMTP connection or a local Winlink mailbox client. The chosen radio or APRS-IS path must support the gateway exchange.</li>
+<li><strong>Kenwood identity:</strong> Kenwood Serial uses its configured MYCALL as the RF source. Ensure that identity is appropriate for the callsign used by this tool so gateway replies can match the session.</li>
+<li><strong>Duplicate prevention:</strong> If the outcome is uncertain, investigate the connection and recipient's mailbox before manually sending the same message again.</li>
+</ul></section>
+</th:block></body></html>

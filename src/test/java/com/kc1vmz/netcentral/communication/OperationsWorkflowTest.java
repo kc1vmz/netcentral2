@@ -53,14 +53,14 @@ class OperationsWorkflowTest {
                 String number="";
                 for(var message:messages)if(message.path("message").asText().equals(action+" test"))number=message.path("ackNumber").asText();
                 assertThat(number).isNotBlank();
-                command(app,instance,"N1ABC","N0CALL-10",action+number);
+                command(app,instance,"N1ABC","N0CALL-10",action.equals("ack") ? "Received{i2}"+number+"\r\n" : action+number+"\r");
                 await(() -> {
                     for(var m:get(b,"/api/v1/nets/"+id+"/snapshot").path("messages"))
                         if(m.path("message").asText().equals(action+" test"))return m.path("delivery").asText().equals(action.equals("ack")?"ACKNOWLEDGED":"REJECTED");
                     return false;
                 });
             }
-            assertThat(b.get("/communications").body()).contains("Kenwood Serial","Installation messages");
+            assertThat(b.get("/communications").body()).contains("Kenwood Serial").doesNotContain("Installation messages");
         }
     }
 
@@ -304,7 +304,7 @@ class OperationsWorkflowTest {
     private String instance(CommunicationIntegrationTest.Browser b, String name) throws Exception {
         return ok(b,
                 b.send("POST", "/api/v1/communicationInstances", Map.of("name", name, "type", "KISS_TCP", "enabled",
-                        true, "transmitEnabled", true, "host", "127.0.0.1", "port", 8001, "kissPort", 0)))
+                        true, "transmitEnabled", true, "host", "127.0.0.1", "port", 8001, "kissPort", 0, "transmitSpacingMs", 0)))
                 .path("configuration").path("id").asText();
     }
 
@@ -532,7 +532,6 @@ class OperationsWorkflowTest {
             await(() -> app.getBean(CommunicationManager.class).available(instance));
             var transport = app.getBean(CommunicationIntegrationTest.FakeFactory.class).transports.get(instance);
             command(app, instance, "N1ABC", "NET006", "CI{1");
-            String participants = "/api/v1/nets/" + id + "/participants";
             await(() -> get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").size() == 1);
             assertThat(get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText()).isEqualTo("GREEN");
             for (var choice : List.of("STY:YELLOW:2", "STG:GREEN:3", "STR:RED:4")) {
@@ -546,7 +545,7 @@ class OperationsWorkflowTest {
             await(() -> transport.sent.stream().anyMatch(p -> p.information().contains("NCNTP: N1ABC (R)")));
             command(app, instance, "N1ABC", "NET006", "STY CO{7");
             await(() -> !get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("endTime").isNull());
-            assertThat(get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText()).isEqualTo("RED");
+            assertThat(get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText()).isEqualTo("WHITE");
             command(app, instance, "N1ABC", "NET006", "CI{8");
             await(() -> get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText().equals("GREEN"));
             command(app, instance, "N1ABC", "NET006", "STY{9");
@@ -557,8 +556,14 @@ class OperationsWorkflowTest {
             var b = user(app, "color-admin");
             String participants = "/api/v1/nets/" + id + "/participants";
             assertThat(get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText()).isEqualTo("YELLOW");
+            ok(b, b.send("POST", participants + "/N2ABC", Map.of()));
             ok(b, b.send("DELETE", participants + "/N1ABC", Map.of()));
-            assertThat(get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText()).isEqualTo("RED");
+            assertThat(get(b, "/api/v1/nets/" + id + "/snapshot").path("participants").get(0).path("statusColor").asText()).isEqualTo("WHITE");
+            long version = get(b, "/api/v1/nets/" + id).path("version").asLong();
+            ok(b, b.send("DELETE", "/api/v1/nets/" + id + "?version=" + version, Map.of()));
+            var archived = get(b, "/api/v1/nets/" + id + "/snapshot").path("participants");
+            assertThat(archived.get(0).path("statusColor").asText()).isEqualTo("WHITE");
+            assertThat(archived.get(1).path("statusColor").asText()).isEqualTo("GREEN");
         }
     }
 
@@ -616,7 +621,10 @@ class OperationsWorkflowTest {
                 ImageIO.write(new PDFRenderer(doc).renderImageWithDPI(0, 100), "png",
                         Path.of("target/milestone6-questions.png").toFile());
             }
-            assertThat(b.get("/nets/" + id).statusCode()).isEqualTo(200);
+            var archivedPage = b.get("/nets/" + id);
+            assertThat(archivedPage.statusCode()).isEqualTo(302);
+            assertThat(archivedPage.headers().firstValue("Location").orElseThrow()).endsWith("/archives?net=" + id);
+            assertThat(b.get("/archives?net=" + id).statusCode()).isEqualTo(200);
         }
         try (var app = start()) {
             var b = user(app, "root");

@@ -1,3 +1,33 @@
-<!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Help')}"></head><body><header th:replace="~{fragments/account :: header}"></header><main><h1>Help</h1><p class="intro">Get access to additional resources to help you use Net Central.</p><section class="panel"><h2>Online resources</h2><p><a href="https://www.kc1vmz.com">www.kc1vmz.com</a></p></section><section class="panel" id="licenses"><h2>Licenses and acknowledgments</h2><p>Net Central — Copyright © 2025–2026 John Rokicki KC1VMZ.</p><p><a href="/licenses/GPL-3.0.txt">GNU General Public License</a></p><ul><li>Spring Framework and Spring Boot: Apache License 2.0.</li><li>Apache PDFBox: Apache License 2.0; embedded Liberation Sans carries its bundled font license.</li><li>Font Awesome Free 6.7.2: <a href="/licenses/fontawesome.txt">font and code licenses</a>.</li><li>Leaflet: BSD 2-Clause License.</li><li>jSerialComm: LGPL 3.0 and Apache License 2.0.</li><li>H2: MPL 2.0 / EPL 1.0.</li><li>Thymeleaf, Liquibase, Jackson, and SLF4J retain their respective bundled licenses.</li></ul><p>Dependency JARs contain their original license and notice files.</p><p>Map tiles use the configured provider attribution and terms.</p></section><section class="panel"><h2>Version</h2><p>Net Central v2.0.1</p></section></main></body></html>
-
-
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/account :: head('Help')}"></head>
+<body><header th:replace="~{fragments/account :: header}"></header>
+<main class="workspace help-workspace">
+<div class="page-heading"><div><h1>Help</h1><p class="intro">Get access to additional resources to help you use Net Central.</p></div></div>
+<div class="dashboard-grid help-columns">
+<div>
+<section class="panel" id="tutorials" aria-labelledby="tutorials-title">
+<h2 id="tutorials-title">Tutorials</h2>
+<details th:each="group : ${tutorialGroups}" class="panel radio-command-section tutorial-group">
+<summary><h3 th:text="${group.title}">Category</h3></summary>
+<ul><li th:each="tutorial : ${group.tutorials}"><a th:href="@{/help/tutorials/{slug}(slug=${tutorial.slug})}" th:text="${tutorial.title}" target="_blank" rel="noopener noreferrer">Tutorial</a></li></ul>
+</details>
+</section>
+<section class="panel"><h2>Online resources</h2><p><a href="https://www.kc1vmz.com">www.kc1vmz.com</a></p></section>
+<section class="panel"><h2>Version</h2><p>Net Central v2.0.1</p></section>
+</div>
+<div>
+<section class="panel" id="radio-commands" aria-labelledby="radio-commands-title">
+<h2 id="radio-commands-title">Radio Commands</h2>
+    <details class="panel radio-command-section"><summary><h3 id="radio-commands-heading">Net radio commands</h3></summary>
+        <div th:replace="~{fragments/radio-commands :: commands}"></div>
+    </details>
+<details class="panel radio-command-section"><summary><h3>Net Manager radio commands</h3></summary><div th:replace="~{fragments/radio-commands :: manager}"></div></details>
+<details class="panel radio-command-section"><summary><h3>Priority object radio commands</h3></summary><div th:replace="~{fragments/radio-commands :: priority}"></div></details>
+<details class="panel radio-command-section"><summary><h3>General resource object radio commands</h3></summary><div th:replace="~{fragments/radio-commands :: resources}"></div></details>
+<details class="panel radio-command-section"><summary><h3>Generic APRS object commands (sourced by Net Central)</h3></summary><div th:replace="~{fragments/radio-commands :: generic}"></div></details>
+</section>
+<section class="panel" id="licenses"><h2>Licenses and acknowledgments</h2><p>Net Central — Copyright © 2025–2026 John Rokicki KC1VMZ.</p><p><a href="/licenses/GPL-3.0.txt">GNU General Public License</a></p><details class="radio-command-section"><summary>Third-party licenses</summary><ul><li>Spring Framework and Spring Boot: Apache License 2.0.</li><li>Apache PDFBox: Apache License 2.0; embedded Liberation Sans carries its bundled font license.</li><li>Font Awesome Free 6.7.2: <a href="/licenses/fontawesome.txt">font and code licenses</a>.</li><li>Leaflet: BSD 2-Clause License.</li><li>jSerialComm: LGPL 3.0 and Apache License 2.0.</li><li>H2: MPL 2.0 / EPL 1.0.</li><li>Thymeleaf, Liquibase, Jackson, and SLF4J retain their respective bundled licenses.</li></ul></details><p>Dependency JARs contain their original license and notice files.</p><p>Map tiles use the configured provider attribution and terms.</p></section>
+</div>
+</div>
+</main><script defer th:src="@{/js/help-links.js}"></script></body></html>

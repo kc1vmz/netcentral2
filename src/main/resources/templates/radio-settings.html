@@ -3,8 +3,8 @@
     <head th:replace="~{fragments/account :: head(${title})}"></head>
     <body>
         <header th:replace="~{fragments/account :: header}"></header>
-        <main>
-            <h1 th:text="${title}"></h1>
+        <main class="workspace settings-workspace">
+            <h1 id="settings-title">Settings</h1><h2 th:text="${title}"></h2>
             
             
             <p class="intro" th:if="${section == 'ignored'}">Manage which stations are ignored by Net Central.</p>

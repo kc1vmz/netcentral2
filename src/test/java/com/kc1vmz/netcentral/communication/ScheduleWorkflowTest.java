@@ -71,6 +71,62 @@ class ScheduleWorkflowTest {
     }
 
     @Test
+    void sharedEditorDefaultsToNowAndKeepsRecordTypesSeparate() throws Exception {
+        try (var app = start(false)) {
+            var b = user(app, "shared-form");
+            var jdbc = app.getBean(JdbcTemplate.class);
+            var empty = b.get("/nets");
+            assertThat(empty.statusCode()).isEqualTo(200);
+            assertThat(empty.body()).contains("No nets running or scheduled.", "Create Net", "online help")
+                    .doesNotContain("aria-label=\"Choose a net\"");
+            for (String path : List.of("/nets/new", "/schedules/new")) {
+                var page = b.get(path);
+                assertThat(page.statusCode()).withFailMessage(page.body()).isEqualTo(200);
+                assertThat(page.body()).contains("id=\"net-editor-form\"", "data-editor-mode=\"CREATE\"",
+                        "value=\"NOW\" selected=\"selected\"", "data-schedule-only hidden=\"hidden\"",
+                        "Create net", "Just once", "Every day");
+            }
+            String fields = "callsign=NOW001&name=Immediate&open=true&type=NOW&communicationMode=ALL&lat=42&lon=-71&checkinMessage=Hello";
+            var created = b.raw("POST", "/nets/save", fields, "application/x-www-form-urlencoded", b.csrf());
+            assertThat(created.statusCode()).withFailMessage(created.body()).isEqualTo(302);
+            String netId = jdbc.queryForObject("SELECT id FROM managed_net WHERE active_callsign='NOW001'", String.class);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM net_schedule", Integer.class)).isZero();
+            String edit = b.get("/nets/" + netId + "/edit").body();
+            assertThat(edit).contains("data-editor-mode=\"NET\"", "value=\"NOW\"", "value=\"Hello\"")
+                    .doesNotContain("value=\"DAILY\"");
+            assertThat(b.raw("POST", "/nets/save", fields.replace("type=NOW", "type=DAILY") + "&id=" + netId,
+                    "application/x-www-form-urlencoded", b.csrf()).statusCode()).isEqualTo(400);
+            String future = fields.replace("NOW001", "SCHNEW").replace("type=NOW", "type=ONE_TIME_ONLY")
+                    + "&firstStart=2035-01-01T12%3A00&timezone=UTC&durationHours=1&enabled=true";
+            var scheduled = b.raw("POST", "/schedules/save", future, "application/x-www-form-urlencoded", b.csrf());
+            assertThat(scheduled.statusCode()).withFailMessage(scheduled.body()).isEqualTo(302);
+            String scheduleId = jdbc.queryForObject("SELECT id FROM net_schedule WHERE callsign='SCHNEW'", String.class);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM managed_net", Integer.class)).isEqualTo(1);
+            assertThat(b.get("/nets").headers().firstValue("Location").orElse("")).endsWith("/nets/" + netId);
+            var monitor = b.get("/nets/" + netId);
+            assertThat(monitor.statusCode()).withFailMessage(monitor.body()).isEqualTo(200);
+            assertThat(monitor.body()).contains("Net Monitor", "Details", "Create Net", "Secure Net", "Edit Net",
+                    "Immediate (NOW001)", "/schedules/" + scheduleId, "Previous net", "Next net")
+                    .doesNotContain("Selected net", "id=\"net-selection\"", "id=\"net-callsign\"", "id=\"net-name\"");
+            var schedulePage = b.get("/schedules/" + scheduleId);
+            assertThat(schedulePage.statusCode()).withFailMessage(schedulePage.body()).isEqualTo(200);
+            assertThat(schedulePage.body()).contains("Net Monitor", "Delete Net", "Edit Net", "delete-schedule-dialog", "net-details-columns", "Net start (local time)", "/nets/" + netId)
+                    .doesNotContain("id=\"close-net\"");
+            edit = b.get("/schedules/" + scheduleId + "/edit").body();
+            assertThat(edit).contains("data-editor-mode=\"SCHEDULE\"", "value=\"ONE_TIME_ONLY\"", "value=\"Hello\"")
+                    .doesNotContain("value=\"NOW\"");
+            assertThat(b.raw("POST", "/schedules/save", future.replace("type=ONE_TIME_ONLY", "type=NOW") + "&id=" + scheduleId,
+                    "application/x-www-form-urlencoded", b.csrf()).statusCode()).isEqualTo(400);
+            long scheduleVersion = jdbc.queryForObject("SELECT version FROM net_schedule WHERE id=?", Long.class, scheduleId);
+            var deleted = b.raw("POST", "/schedules/" + scheduleId + "/delete", "version=" + scheduleVersion,
+                    "application/x-www-form-urlencoded", b.csrf());
+            assertThat(deleted.statusCode()).isEqualTo(302);
+            assertThat(deleted.headers().firstValue("Location").orElse("")).endsWith("/nets/" + netId);
+            assertThat(b.get("/nets/" + netId).body()).contains("disabled aria-label=\"Previous net\"");
+        }
+    }
+
+    @Test
     void recurringFormControlsPersistDayTimeAndNextOccurrence() throws Exception {
         try (var app = start(false)) {
             var b = user(app, "recurring-admin");
@@ -114,7 +170,7 @@ class ScheduleWorkflowTest {
             var page=b.get("/schedules/new");
             assertThat(page.statusCode()).isEqualTo(200);
             assertThat(page.body()).contains("Just once", "Every day", "Every week", "Monthly on a specific day", "Monthly on a relative day", "net-position-map", "schedule-save-dialog", "data-symbol-picker").doesNotContain("Private web access");
-            assertThat(page.body()).contains("<select name=\"timezone\"", "value=\"America/New_York\"", "value=\"Europe/London\"", "value=\"Asia/Tokyo\"", "value=\"Australia/Sydney\"", "value=\"UTC\"");
+            assertThat(page.body()).contains("name=\"timezone\"", "value=\"America/New_York\"", "value=\"Europe/London\"", "value=\"Asia/Tokyo\"", "value=\"Australia/Sydney\"", "value=\"UTC\"");
             String fields="callsign=SCH001&name=Scheduled+test&type=DAILY&timezone=UTC&firstStart=2030-01-01T12%3A00&durationHours=2&open=true&enabled=true&communicationMode=ALL&lat=42&lon=-71&checkinMessage=Welcome&announce=true&checkinReminder=true&questionReminder=true&participantInviteAllowed=true&symbolTableId=%2F&symbolTableCode=n";
             for (String invalid : List.of("0", "-1", "1.5", "169")) {
                 assertThat(b.raw("POST","/schedules/save",fields.replace("durationHours=2","durationHours="+invalid),
@@ -122,7 +178,7 @@ class ScheduleWorkflowTest {
             }
             var result=b.raw("POST","/schedules/save",fields,"application/x-www-form-urlencoded",b.csrf());
             assertThat(result.statusCode()).withFailMessage(result.body()).isEqualTo(302);
-            assertThat(result.headers().firstValue("Location").orElseThrow()).endsWith("/nets#scheduled-nets");
+            assertThat(result.headers().firstValue("Location").orElseThrow()).endsWith("/nets");
             String id=app.getBean(JdbcTemplate.class).queryForObject("SELECT id FROM net_schedule WHERE callsign='SCH001'",String.class);
             assertThat(app.getBean(JdbcTemplate.class).queryForObject("SELECT duration FROM net_schedule WHERE id=?",Integer.class,id)).isEqualTo(120);
             var options=b.json(b.get("/api/v1/scheduledNets/"+id+"/options"));
@@ -263,10 +319,10 @@ class ScheduleWorkflowTest {
                     .statusCode()).isEqualTo(403);
             assertThat(admin.get("/api/v1/scheduledNets/" + id).statusCode()).isEqualTo(200);
             assertThat(owner.get("/schedules").headers().firstValue("Location").orElseThrow())
-                    .endsWith("/nets#scheduled-nets");
+                    .endsWith("/nets");
             for (String path : List.of("/nets")) {
                 var page = owner.get(path);
-                assertThat(page.statusCode()).withFailMessage(page.body()).isEqualTo(200);
+                assertThat(page.statusCode()).withFailMessage(page.body()).isEqualTo(302);
             }
 /*            for (String path : List.of("/nets", "/schedules/new", "/schedules/" + id, "/schedules/" + id + "/edit")) {
                 var page = owner.get(path);

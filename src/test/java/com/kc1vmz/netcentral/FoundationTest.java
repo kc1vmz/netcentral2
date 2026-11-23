@@ -31,9 +31,11 @@ class FoundationTest {
                         assertThatThrownBy(() -> jdbc.update(
                                         "INSERT INTO application_settings (setting_key, setting_value) VALUES (?, ?)",
                                         "application.name", "Duplicate")).isInstanceOf(RuntimeException.class);
-                        assertThat(get(client, context, "/").body()).contains("Net Central")
-                                        .contains("Net radio commands", "CI / CO", "Net Manager", "General resource object radio commands")
-                                        .doesNotContain("${applicationName}", "About this installation");
+                        for (String path : new String[] {"/", "/home"}) {
+                                var response = get(client, context, path);
+                                assertThat(response.statusCode()).isEqualTo(302);
+                                assertThat(response.headers().firstValue("Location").orElseThrow()).endsWith("/dashboard");
+                        }
                         assertThat(get(client, context, "/css/application.css").statusCode()).isEqualTo(200);
                         assertThat(get(client, context, "/js/application.js").body()).contains("skip-link");
                         assertThat(get(client, context, "/h2-console").statusCode()).isEqualTo(404);
@@ -42,7 +44,10 @@ class FoundationTest {
                 }
                 assertThat(Files.exists(Path.of(database + ".mv.db"))).isTrue();
                 try (ServletWebServerApplicationContext context = start(database)) {
-                        assertThat(get(client, context, "/home").body()).contains("My local installation");
+                        assertThat(get(client, context, "/home").headers().firstValue("Location").orElseThrow()).endsWith("/dashboard");
+                        assertThat(context.getBean(JdbcTemplate.class).queryForObject(
+                                        "SELECT setting_value FROM application_settings WHERE setting_key='application.name'", String.class))
+                                        .isEqualTo("My local installation");
                         assertThat(context.getBean(JdbcTemplate.class)
                                         .queryForObject("SELECT COUNT(*) FROM DATABASECHANGELOG", Integer.class))
                                         .isEqualTo(appliedMigrations);

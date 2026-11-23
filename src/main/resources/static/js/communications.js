@@ -24,7 +24,7 @@
   }
   function open(config=null){
     editing=config;form.reset();document.getElementById('communication-title').textContent=config?'Edit connection':'Add connection';
-    const values=config||{type:'APRS_IS',enabled:true,transmitEnabled:true,port:14580,baudRate:9600,kissPort:0};
+    const values=config||{type:'APRS_IS',enabled:true,transmitEnabled:true,port:14580,baudRate:9600,kissPort:0,transmitSpacingMs:1000};
     form.serialPortPicker.prepare(values.baudRate, values.serialDevice);
     for(const input of form.elements)if(input.name)input.value=values[input.name]??(input.name==='baudRate'?'9600':'');
     form.elements.passcode.value='';fieldStates();document.getElementById('communication-message').textContent='';dialog.showModal();form.serialPortPicker.load();
@@ -51,12 +51,7 @@
       for(const {configuration:c} of entries){let input=Array.from(fieldset.querySelectorAll('input')).find(i=>i.value===c.id);if(!input){const label=document.createElement('label');input=document.createElement('input');input.type='checkbox';input.name='instanceIds';input.value=c.id;label.className='check';label.append(input,document.createElement('span'));fieldset.append(label);}input.parentElement.querySelector('span').textContent=c.name;}
     });
   }
-  async function load(){const current=++sequence;const result=await request('/api/v1/communicationInstances');if(current===sequence){entries=result;render();
-      const messages=await request('/api/v1/communications/installationMessages');
-      if(current===sequence){const pane=document.getElementById('installation-messages');pane.replaceChildren();
-        if(!messages.length)pane.textContent='No installation messages.';
-        for(const item of messages){const line=document.createElement('p');line.textContent=new Date(item.receivedAt).toLocaleString()+' · '+item.from+' → '+item.to+' · '+item.message;pane.append(line);}}
-}}
+  async function load(){const current=++sequence;const result=await request('/api/v1/communicationInstances');if(current===sequence){entries=result;render();}}
   async function reloadRoutes(){
     const routes=await request('/api/v1/communicationRoutes');
     document.querySelectorAll('form[action$="/communications/routes"]').forEach(routeForm=>{
@@ -78,7 +73,7 @@
   form.addEventListener('submit',async event=>{
     event.preventDefault();if(busy)return;busy=true;const save=form.querySelector('[type="submit"]');save.disabled=true;
     const value={version:editing?.version??0,kissPort:0};
-    for(const [key,text] of new FormData(form))value[key]=['port','baudRate','kissPort'].includes(key)?Number(text):['enabled','transmitEnabled'].includes(key)?text==='true':text.trim();
+    for(const [key,text] of new FormData(form))value[key]=['port','baudRate','kissPort','transmitSpacingMs'].includes(key)?Number(text):['enabled','transmitEnabled'].includes(key)?text==='true':text.trim();
     try{await request('/api/v1/communicationInstances'+(editing?'/'+encodeURIComponent(editing.id):''),editing?'PUT':'POST',value);dialog.close();await load();}
     catch(error){await failure(error,document.getElementById('communication-message'));}
     finally{busy=false;save.disabled=false;}

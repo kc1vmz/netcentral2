@@ -246,14 +246,93 @@ class LiveViewWorkflowTest {
                     .doesNotContain("Save ignore rule", "Add access rule");
             assertThat(b.get("/setup/radio?section=access").body()).contains("Add access rule")
                     .doesNotContain("Save ignore rule", "Add classification rule");
-            assertThat(b.get("/nets").body()).contains("Scheduled nets", "Create a scheduled net")
+            assertThat(b.get("/nets").body()).contains("No nets running or scheduled.", "Create Net", "online help")
                     .doesNotContain("Find net", "Completed nets", "Setup: Map Cache");
             assertThat(b.get("/archives").body()).contains("Net Archive").doesNotContain("Create a net", "Find net",
                     "Setup: Map Cache");
             assertThat(b.get("/explorer").body()).doesNotContain("Situational awareness", "Map width",
                     "Fit visible resources", "Include withdrawn");
             assertThat(b.get("/help").body()).contains("<h1>Help</h1>", "Online resources", "https://www.kc1vmz.com",
-                    "Licenses and acknowledgments");
+                    "Licenses and acknowledgments", "Tutorials", "Radio Commands", "CI / CO", "Net Manager radio commands",
+                    "Priority object radio commands", "General resource object radio commands", "Generic APRS object commands",
+                    "href=\"/profile\"", "id=\"logout-form\"", "data-system-administrator=\"true\"")
+                    .doesNotContain("href=\"/login\"", "href=\"/register\"");
+            for (String slug : List.of("configure-radio", "configure-internet", "create-net", "schedule-net",
+                    "net-messages", "net-questions-and-answers", "secure-net", "check-in-net", "operate-net", "create-priority-object",
+                    "create-general-object", "create-generic-object", "winlink-messages", "nts-radiograms")) {
+                var tutorial = b.get("/help/tutorials/" + slug);
+                assertThat(tutorial.statusCode()).isEqualTo(200);
+                assertThat(tutorial.body()).contains(
+                        "href=\"/profile\"", "id=\"logout-form\"", "data-system-administrator=\"true\"")
+                        .doesNotContain("href=\"/login\"", "href=\"/register\"", "Back to Tutorials");
+                if (slug.equals("configure-radio")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "KISS Serial", "TNC2 TCP", "Kenwood Serial")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("configure-internet")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "APRS-IS", "Server filter", "Receive only")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("create-net")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Open APRS check-in", "Create net", "Net location")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("schedule-net")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Monthly on a relative day", "Duration (hours)", "Create scheduled net")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("net-messages")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Request APRS acknowledgment", "MC text", "M text")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("net-questions-and-answers")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Ask participants", "Record answer", "QR number")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("secure-net")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Secure Net", "Generate ICS 309 Report", "Archived")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("create-priority-object")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Net Central Shelter Object", "Net Central EOC Object", "Mobilization information")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("create-generic-object")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Generic APRS Object", "Object location", "Withdraw object")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("winlink-messages")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Send via Winlink", "WLNK-1", "Winlink password")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("nts-radiograms")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Send radiogram", "NTSGTE", "Check mismatch")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("create-general-object")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Net Central General Resource", "Resource values", "WATER=AVAILABLE")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("check-in-net")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "Check in Station", "/help#net-command-ci", "/help#radio-commands-heading")
+                            .doesNotContain("Radio command references", "<table>")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else if (slug.equals("operate-net")) {
+                    assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
+                            "Verifying success", "Additional considerations", "/help#net-command-ci", "/help#net-command-o", "CO", "NCI")
+                            .doesNotContain("This tutorial is coming soon.");
+                } else assertThat(tutorial.body()).contains("This tutorial is coming soon.");
+            }
+            String helpPage = b.get("/help").body();
+            assertThat(helpPage.indexOf("Operating in a net")).isGreaterThan(helpPage.indexOf("Checking into a net"))
+                    .isLessThan(helpPage.indexOf("Creating a priority object"));
+            assertThat(helpPage.indexOf("Checking into a net")).isGreaterThan(helpPage.indexOf("Secure a net"))
+                    .isLessThan(helpPage.indexOf("Creating a priority object"));
+            assertThat(helpPage).contains("id=\"net-command-ci\"", "id=\"net-command-nci\"", "help-links.js");
+            assertThat(helpPage.indexOf("Creating a general resource object")).isGreaterThan(helpPage.indexOf("Creating a priority object"))
+                    .isLessThan(helpPage.indexOf("Creating a generic APRS object"));
+            assertThat(b.get("/help/tutorials/unknown").statusCode()).isEqualTo(404);
             assertThat(b.get("/licenses").headers().firstValue("Location").orElse("")).endsWith("/help#licenses");
             assertThat(b.get("/tools?section=winlink").body()).contains("Send via Winlink")
                     .doesNotContain("Send radiogram");

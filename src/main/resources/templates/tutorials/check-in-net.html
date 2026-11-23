@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Check into a running APRS net so your station appears as a participant and can receive net messages and questions. You can check in from an APRS radio or client, or an authorized net operator can check your station in through Net Monitor.</p>
+<p>Being listed as Expected or receiving an invitation is not itself a check-in.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Know the running net's exact callsign and the station callsign, including SSID, you will use.</li>
+<li>For radio check-in, use an APRS-capable radio or client with a working path to Net Central. A Net Central web account is not required to send the radio command.</li>
+<li>For restricted check-in, have the net operator add your callsign root to the expected list or invite you before joining.</li>
+<li>For browser check-in, sign in as the net owner or an authorized administrator.</li>
+<li>Confirm the net is running. A Scheduled definition is not open for participation until an occurrence starts, and an archived net cannot accept check-ins.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Identify the intended net. In <a th:href="@{/nets}">Net Monitor</a>, select its Running net entry and review the callsign and check-in policy. Use that callsign as the APRS message destination.</p></li>
+<li><p>From your APRS radio or client, send <a href="/help#net-command-ci"><code>CI</code></a> as the message text to the net callsign. Send it using the station identity you intend to participate under.</p></li>
+<li><p>Review the reply. If admission is rejected because the net restricts check-in, ask its operator to add or invite your callsign and try again after that change.</p></li>
+<li><p>Alternatively, as an authorized browser operator, select <strong>Check in station</strong> at the top of Participants. Enter the station callsign in the <strong>Check in Station</strong> dialog, select <strong>Check in</strong>, and confirm. Select Cancel to abandon the dialog.</p></li>
+<li><p>Once checked in, report useful operating information using the commands described on the main Help page. Send them to the same net callsign. Use brief messages and consult the linked command help for supported values.</p></li>
+<li><p>When leaving the net, send <a href="/help#net-command-ci"><code>CO</code></a>. An authorized browser operator can also select your participant entry, choose Check out, and confirm.</p></li>
+</ol><h3>Radio command help</h3><p>For status, equipment, messaging, questions, and other commands, see <a href="/help#radio-commands-heading">Net radio commands on the main Help page</a>. For Net Manager and object commands, see the full <a href="/help#radio-commands">Radio Commands section</a>.</p></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that the station appears as checked in in Participants rather than Expected. A successful check-in sets its status color to Green.</li>
+<li>If a welcome message is configured, verify reception on the participant's APRS client. Check the reply to CI rather than treating an APRS protocol acknowledgment alone as proof of admission.</li>
+<li>Send L to request the participant list and check for your callsign. Status colors are shown as (G), (Y), (R), or (U) for Unknown.</li>
+<li>After sending status or equipment commands, select the station in Net Monitor and review Participant details.</li>
+<li>After checkout, confirm the participant is checked out and its status color is White/Unknown. Participation history remains recorded.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Station identity:</strong> Use the same callsign and SSID throughout the session. Admission rules match callsign roots, but participation and answers are associated with the checked-in station identity.</li>
+<li><strong>Browser check-in and routing:</strong> Checking in through the browser does not prove the station has been heard over APRS. The station should transmit through an eligible connection so directed messages have a usable route.</li>
+<li><strong>Location:</strong> Check-in does not supply position. A participant appears on the map when Net Central has a recent usable position for it.</li>
+<li><strong>Rejoining:</strong> Checking back in after checkout sets Green again. Descriptive status text and status color are separate fields.</li>
+<li><strong>Unknown:</strong> Checkout assigns White/Unknown, displayed as (U) in radio lists when applicable. There is no STW command.</li>
+<li><strong>Net completion:</strong> Securing the net ends participation without changing the last stored colors. Join a new running net rather than attempting to check into its archive.</li>
+<li><strong>Follow-up activities:</strong> See <a th:href="@{/help/tutorials/net-messages}">Send messages to a net</a> and <a th:href="@{/help/tutorials/net-questions-and-answers}">Questions and Answers in a net</a> for detailed workflows.</li>
+</ul></section>
+</th:block></body></html>

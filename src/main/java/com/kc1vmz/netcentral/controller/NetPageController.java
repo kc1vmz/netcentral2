@@ -35,22 +35,26 @@ public class NetPageController {
 
     @GetMapping("/nets")
     public String list(Model model) {
-        model.addAttribute("nets", nets.list(false));
-        model.addAttribute("schedules", schedules.list());
-        model.addAttribute("archiveOnly", false);
-        return "nets";
+        var entries = NetMonitorNavigation.entries(nets, schedules);
+        return entries.isEmpty() ? "net-monitor-empty" : "redirect:" + entries.getFirst().url();
     }
 
     @GetMapping("/archives")
-    public String archives(Model model) {
-        model.addAttribute("nets", java.util.List.of());
-        model.addAttribute("archives", nets.list(true));
-        model.addAttribute("archiveOnly", true);
-        return "nets";
+    public String archives(@RequestParam(required=false) String net, Model model) {
+        if (net != null) {
+            var selected = nets.get(net);
+            if (selected.endTime() == null)
+                throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Archive not found");
+            model.addAttribute("selectedArchive", selected.id());
+        }
+        return "archives";
     }
 
     @GetMapping("/nets/new")
     public String create(Model model) {
+        model.addAttribute("schedule", null);
+        model.addAttribute("editorMode", "CREATE");
+        NetFormSupport.scheduleFields(model, schedules);
         model.addAttribute("net", null);
         model.addAttribute("snapshot", null);
         model.addAttribute("options", JsonNodeFactory.instance.objectNode());
@@ -61,10 +65,10 @@ public class NetPageController {
 
     @GetMapping("/nets/{id}")
     public String monitor(@PathVariable String id, Model model) {
-        model.addAttribute("snapshot", nets.snapshot(id));
-        var choices = new java.util.ArrayList<>(nets.list(false));
-        choices.addAll(nets.list(true));
-        model.addAttribute("netChoices", choices);
+        var snapshot = nets.snapshot(id);
+        if (snapshot.net().endTime() != null) return "redirect:/archives?net=" + snapshot.net().id();
+        model.addAttribute("snapshot", snapshot);
+        NetMonitorNavigation.populate(model, nets, schedules, "/nets/" + id);
         return "net-monitor";
     }
 
@@ -73,6 +77,9 @@ public class NetPageController {
         var snapshot = nets.snapshot(id);
         if (!snapshot.canManage())
             throw new AccessDeniedException("Net owner required");
+        model.addAttribute("schedule", null);
+        model.addAttribute("editorMode", "NET");
+        NetFormSupport.scheduleFields(model, schedules);
         model.addAttribute("net", snapshot.net());
         model.addAttribute("snapshot", snapshot);
         model.addAttribute("options", nets.options(id));
@@ -92,6 +99,8 @@ public class NetPageController {
             @RequestParam(defaultValue = "-1") Long routingVersion,
             @RequestParam(defaultValue = "") String expectedParticipants,
             @RequestParam Map<String, String> values, @RequestParam double lat, @RequestParam double lon) {
+        if (!"NOW".equals(values.getOrDefault("type", "NOW")))
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "An active net must use Now; save schedules through the schedule form");
         Set<String> expected = Arrays.stream(expectedParticipants.split("[,\\s]+")).filter(s -> !s.isBlank())
                 .collect(Collectors.toSet());
         NetEdit edit = new NetEdit(callsign, name, description, voiceFrequency, open, privateNet, version,

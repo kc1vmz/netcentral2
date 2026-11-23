@@ -94,7 +94,7 @@ class NetWorkflowTest {
             await(() -> app.getBean(CommunicationManager.class).available(connection));
             var transport = app.getBean(CommunicationIntegrationTest.FakeFactory.class).transports.get(connection);
             id = net(browser, "NET001", connection, false, true);
-            assertThat(browser.get("/nets").statusCode()).isEqualTo(200);
+            assertThat(browser.get("/nets").statusCode()).isEqualTo(302);
             assertThat(browser.get("/nets/new").statusCode()).isEqualTo(200);
             assertThat(browser.get("/nets/" + id + "/edit").statusCode()).isEqualTo(200);
             var page = browser.get("/nets/" + id);
@@ -104,12 +104,15 @@ class NetWorkflowTest {
             try (var live = new Live(browser, id)) {
                 live.until(s -> s.path("net").path("id").asText().equals(id));
                 transport.incoming.add(new Packet("N1ABC", "APRS", List.of(), "!4903.50N/07201.75W-Test"));
-                incoming(transport, "N1ABC", "NET001", "CI{11");
+                incoming(transport, "N1ABC", "NET001", "CI{11\r");
                 JsonNode checkin = live.until(
                         s -> s.path("participants").size() == 1 && !s.path("participants").get(0).path("lat").isNull());
                 assertThat(checkin.path("participants").get(0).path("lat").asDouble()).isCloseTo(49.058333,
                         within(0.00001));
                 await(() -> transport.sent.stream().anyMatch(p -> p.information().contains("ack11")));
+                incoming(transport, "N1ABC", "NET001", "CI{11\r");
+                await(() -> transport.sent.stream().filter(p -> p.information().endsWith(":ack11")).count() == 2);
+                assertThat(transport.sent.stream().filter(p -> p.information().contains("You checked into net")).count()).isEqualTo(1);
                 incoming(transport, "N1ABC", "NET001", "S Ready{12");
                 live.until(s -> s.path("participants").get(0).path("status").asText().equals("Ready"));
                 transport.incoming.add(new Packet("N1ABC", "APRS", List.of(), "!5003.50N/07301.75W-Moved"));
@@ -124,7 +127,7 @@ class NetWorkflowTest {
                     if (message.path("message").asText().equals("Proceed to staging"))
                         number = message.path("ackNumber").asText();
                 assertThat(number).isNotBlank();
-                incoming(transport, "N1ABC", "NET001", "ack" + number);
+                incoming(transport, "N1ABC", "NET001", "S Ready{15}" + number + "\r\n");
                 live.until(s -> {
                     for (JsonNode message : s.path("messages"))
                         if (message.path("message").asText().equals("Proceed to staging"))
@@ -157,6 +160,19 @@ class NetWorkflowTest {
             assertThat(browser.send("DELETE", "/api/v1/nets/" + id + "?version=" + version, Map.of()).statusCode())
                     .isEqualTo(200);
             assertThat(json(browser, browser.get("/api/v1/completedNets")).size()).isEqualTo(1);
+            var archivePage = browser.get("/archives?net=" + id);
+            assertThat(archivePage.statusCode()).isEqualTo(200);
+            assertThat(archivePage.body()).contains("archives.js", "Archived nets", "Participant details")
+                    .doesNotContain("net-monitor.js", "Participant map");
+            assertThat(browser.get("/nets/" + id).headers().firstValue("Location").orElse("")).endsWith("/archives?net=" + id);
+            assertThat(json(browser, browser.get("/api/v1/archiveBrowser?limit=1")).get(0).path("id").asText()).isEqualTo(id);
+            assertThat(json(browser, browser.get("/api/v1/archiveBrowser?offset=1&limit=1"))).isEmpty();
+            var allMessages = json(browser, browser.get("/api/v1/completedNets/" + id + "/messages"));
+            var firstMessage = json(browser, browser.get("/api/v1/completedNets/" + id + "/messagePage?limit=1"));
+            var secondMessage = json(browser, browser.get("/api/v1/completedNets/" + id + "/messagePage?offset=1&limit=1"));
+            assertThat(firstMessage.get(0)).isEqualTo(allMessages.get(0));
+            assertThat(secondMessage.get(0)).isEqualTo(allMessages.get(1));
+
             assertThat(json(browser, browser.get("/api/v1/completedNets/" + id)).path("participantCount").asInt())
                     .isEqualTo(1);
             assertThat(json(browser, browser.get("/api/v1/completedNets/" + id + "/participants")).size()).isEqualTo(1);
@@ -219,6 +235,10 @@ class NetWorkflowTest {
             assertThat(outsider.get("/api/v1/completedNets/" + id + "/participationReports").statusCode())
                     .isEqualTo(403);
             assertThat(outsider.get("/api/v1/completedNets/" + id + "/messages").statusCode()).isEqualTo(403);
+            assertThat(outsider.get("/archives?net=" + id).statusCode()).isEqualTo(403);
+            assertThat(outsider.get("/api/v1/completedNets/" + id + "/messagePage").statusCode()).isEqualTo(403);
+            assertThat(json(outsider, outsider.get("/api/v1/archiveBrowser"))).isEmpty();
+
         }
     }
 

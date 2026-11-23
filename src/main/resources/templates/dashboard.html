@@ -1,6 +1,24 @@
 <!DOCTYPE html><html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Dashboard')}"></head><body><header th:replace="~{fragments/account :: header}"></header>
-<main class="workspace" data-live-index><div class="page-heading"><div><h1>Dashboard</h1><p class="intro">Statistics for Net Central and monitored APRS sources.</p></div><span id="live-status" role="status">Connecting…</span></div>
-<section class="panel"><h2>Nets</h2><div class="summary-cards"><a href="/nets"><strong data-count="activeNets">—</strong>Active nets</a><a href="/archives"><strong data-count="archives">—</strong>Archives</a><a href="/nets#scheduled-nets"><strong data-count="schedules">—</strong>Scheduled Nets</a></div></section>
-<section class="panel"><h2>Stations</h2><div class="summary-cards"><a href="/explorer"><strong data-count="stations">—</strong>Stations</a><a href="/explorer"><strong data-count="objects">—</strong>Objects</a><a href="/explorer?type=CALLSIGN"><strong data-count="callsignsHeard">—</strong>Callsigns heard</a></div></section>
+<main class="workspace" data-live-index><div class="page-heading"><div><h1>Dashboard</h1><p class="intro">Statistics for Net Central and monitored APRS resources.</p></div><span id="live-status" role="status">Connecting…</span></div>
+<div class="dashboard-grid">
+<section class="panel dashboard-column" aria-labelledby="dashboard-nets-title">
+<h2 id="dashboard-nets-title">Nets</h2>
+<div class="dashboard-description">
+<p>Net Central creates nets over APRS.</p>
+<p>Participants can coordinate messaging, status, location and other information across everyone in the net.</p>
+<p>The <a href="/nets">Net Monitor</a> provides a console for viewing and controlling nets, their participants and information.</p>
+<p>Nets can be started immediately or scheduled for the future, and when secured, can provide reports for archiving.</p>
+</div>
+<div class="summary-cards"><a href="/nets"><strong data-count="activeNets">—</strong>Active nets</a><a href="/archives"><strong data-count="archives">—</strong>Archives</a><a href="/nets"><strong data-count="schedules">—</strong>Scheduled Nets</a></div>
+</section>
+<section class="panel dashboard-column" aria-labelledby="dashboard-stations-title">
+<h2 id="dashboard-stations-title">Stations</h2>
+<div class="dashboard-description">
+<p>Net Central listens to APRS traffic across one or more communication connections, providing situational awareness of stations heard.</p>
+<p>Stations, objects and callsigns can be viewed in <a href="/explorer">Explorer</a>, allowing for filtering and messaging with stations.</p>
+</div>
+<div class="summary-cards"><a href="/explorer"><strong data-count="stations">—</strong>Stations</a><a href="/explorer"><strong data-count="objects">—</strong>Objects</a><a href="/explorer?type=CALLSIGN"><strong data-count="callsignsHeard">—</strong>Callsigns heard</a></div>
+</section>
+</div>
 <script type="module" th:src="@{/js/live-index.mjs}"></script></main></body></html>
 

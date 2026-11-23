@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Create a Net Central priority object representing a shelter or emergency operations center (EOC). The object has an APRS identity, symbol, and location, and can beacon through selected communication instances. Its details page stores operational reports and their history.</p>
+<p>Shelter objects track status, population, workers, food, and materiel. EOC objects track contact and mobilization information. These are managed Net Central objects, distinct from generic APRS objects heard from other stations.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central. Use the creating account or an authorized administrator for subsequent management.</li>
+<li>Choose an available object callsign, up to nine characters, and know the facility's latitude and longitude. Avoid conflicts with existing managed objects or running nets.</li>
+<li>Decide whether this is a Shelter or EOC and prepare a concise identifying comment.</li>
+<li>Have an administrator configure and verify the communication instances that will carry the object's beacons and messages.</li>
+<li>Collect the initial operational information you intend to publish. Review which stations should be allowed to update object information through the Object security settings.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/explorer}">Explorer</a> and select <strong>Create object</strong>.</p></li>
+<li><p>Enter the <strong>Callsign</strong>. This identifies the object and is the destination for its directed APRS queries.</p></li>
+<li><p>Choose <strong>Type</strong>:</p><ul>
+<li><strong>Net Central Shelter Object</strong> for shelter status and operational reporting.</li>
+<li><strong>Net Central EOC Object</strong> for emergency operations center contact and mobilization reporting.</li>
+</ul><p>Do not leave the default General Resource type selected when creating a Shelter or EOC.</p></li>
+<li><p>Set <strong>Object location</strong>. Choose <strong>Manual entry</strong> and enter decimal-degree latitude and longitude, or choose <strong>Use map</strong> and click the facility's location. Drag the marker to adjust it. Latitude must be between -90 and 90 and longitude between -180 and 180; south and west use negative values.</p></li>
+<li><p>Enter a <strong>Comment</strong> identifying the facility or its purpose, up to 80 characters, and choose an appropriate <strong>APRS symbol</strong>.</p></li>
+<li><p>Leave <strong>Active (send periodic beacons)</strong> checked if the object should beacon. Choose <strong>Communications</strong>: the default uses all eligible instances, including future ones. To limit the object, choose Selected instances and check the intended connections. An empty selection transmits nowhere.</p></li>
+<li><p>Select <strong>Create</strong>, review the callsign, location, and settings in the creation workflow, and confirm. To abandon creation instead, select <strong>Cancel</strong> and confirm discarding changes.</p></li>
+<li><p>On the object's details page, enter its initial operational information using the <strong>Update</strong> buttons:</p>
+<table><thead><tr><th>Object type</th><th>Information groups</th></tr></thead><tbody>
+<tr><td>EOC</td><td>Contact information and Mobilization information.</td></tr>
+<tr><td>Shelter</td><td>Status information, Population census, Worker census, Food availability and needs, and Materiel availability and needs.</td></tr>
+</tbody></table><p>Open the appropriate group's dialog, fill in the fields, select Update, and confirm the change. For groups with multiple categories, use the Update button for the intended category. Repeat for the remaining information you have available.</p></li>
+<li><p>Review the latest values and history after each update. Shelter status distinguishes Stand-by or Active from Open or Closed; these operational values are separate from the object's beaconing checkbox.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that the object details show the intended callsign, location, status, and symbol description.</li>
+<li>Return to Explorer and select the appropriate resource type. Select the object and use View details to reopen it. Check its location on the map.</li>
+<li>Confirm each submitted report appears in the appropriate latest-information group and its history. An object can exist before any operational reports have been entered.</li>
+<li>Check the selected instances on <a th:href="@{/communications}">Communications</a>, or ask an administrator to check them, and verify reception of the beacon using another APRS client or receiver. A saved object does not by itself prove remote reception.</li>
+<li>From another APRS station, address <code>?INFO</code> to the object's callsign to request its identifying information and supported queries. Use <code>?CMD</code> for the supported command list, <code>?NCPI</code> for its identifying name/comment information, or <code>?APRSP</code> for its position. Verify a reply through an eligible connection.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Object security:</strong> Administrators manage radio update permissions under Settings → Object security. Review those rules before relying on remote updates. Browser management permissions and radio update rules are separate controls.</li>
+<li><strong>Beacon timing:</strong> Settings → Announcements controls Beacon seconds. An eligible connection must be available and allow transmission for outgoing beacons.</li>
+<li><strong>Operational status:</strong> Shelter Active/Stand-by and Open/Closed describe the shelter. They do not replace the object's Active setting, which controls periodic beaconing.</li>
+<li><strong>History:</strong> Update the reporting groups to record changing conditions. Use the displayed histories to review earlier reports rather than assuming a current value describes the entire event.</li>
+<li><strong>Editing:</strong> Use Edit to change the object's configuration. Its callsign is read-only when editing, so choose that identity carefully at creation.</li>
+<li><strong>Withdrawal:</strong> Withdraw object asks for confirmation, sends a withdrawal, and deletes the managed object so its callsign can be reused. It does not wait for remote confirmation. Preserve any operational records you need before withdrawing; this is not the same archival workflow as securing a net.</li>
+<li><strong>Multiple connections:</strong> All eligible instances includes instances added later. Use Selected instances when the facility should be advertised only over specific connections.</li>
+<li><strong>Kenwood:</strong> Kenwood Serial uses its configured MYCALL as the RF source. The object has its own identity within the APRS object information; verify how it appears on the receiving client.</li>
+<li><strong>Missing replies:</strong> Check the exact object callsign, selected instances, connection state, transmission permission, and applicable security rules. Use the supported command list rather than assuming all object types accept the same report commands.</li>
+</ul></section>
+</th:block></body></html>

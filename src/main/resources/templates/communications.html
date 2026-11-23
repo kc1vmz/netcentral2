@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/account :: head('Communications')}"></head>
-<body><header th:replace="~{fragments/account :: header}"></header><main>
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace">
 <h1>Communications</h1>
 <p class="intro">Manage independent APRS-IS, KISS, and TNC2 connections.</p>
 <div class="section-actions account-actions">
@@ -26,6 +26,7 @@
 <label data-types="KISS_SERIAL TNC2_SERIAL">Initialization command 1<input name="initCommand1" maxlength="255"></label>
 <label data-types="KISS_SERIAL TNC2_SERIAL">Initialization command 2<input name="initCommand2" maxlength="255"></label>
 <label data-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Digipeater path<input name="digiPath" placeholder="WIDE1-1,WIDE2-1" maxlength="255"></label>
+<label data-types="KISS_TCP KISS_SERIAL TNC2_TCP TNC2_SERIAL KENWOOD_SERIAL">Transmit spacing (milliseconds)<input name="transmitSpacingMs" type="number" min="0" max="2147483647" step="1" value="1000" required></label>
 <label data-types="KISS_TCP KISS_SERIAL">KISS port/channel<input name="kissPort" type="number" min="0" max="15" required></label>
 <p data-types="KENWOOD_SERIAL">Kenwood command-mode TNC. Startup sets RESET, MYCALL and UNPROTO automatically.</p><div class="dialog-actions"><button type="button" id="cancel-communication">Cancel</button><button type="submit">Save connection</button></div></form></dialog>
 <dialog id="communication-confirm" aria-labelledby="communication-confirm-title"><h2 id="communication-confirm-title"></h2><p id="communication-confirm-description"></p><p id="communication-confirm-error" role="alert"></p><div class="dialog-actions"><button id="cancel-communication-change" type="button">Cancel</button><button id="confirm-communication-change" type="button">Confirm</button></div></dialog>
@@ -35,4 +36,4 @@
 <th:block th:each="route : ${routes}" th:if="${route.owner == 'DEFAULT'}"><form th:replace="~{fragments/communication-route :: form(${route})}"></form></th:block>
 </dialog>
 <dialog id="default-route-confirm" aria-labelledby="default-route-confirm-title"><h2 id="default-route-confirm-title">Confirm default communication selection</h2><p id="default-route-summary"></p><div class="dialog-actions"><button type="button" id="default-route-back">Back</button><button type="button" id="default-route-apply">Confirm selection</button></div></dialog>
-<section class="panel"><h2>Installation messages</h2><p>Messages addressed to a Kenwood instance MYCALL. These are not forwarded to a net or object.</p><div id="installation-messages" class="table-scroll"></div></section></main></body></html>
+</main></body></html>

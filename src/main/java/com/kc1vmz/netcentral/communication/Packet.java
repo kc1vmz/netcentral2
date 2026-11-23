@@ -10,6 +10,8 @@ public record Packet(String source, String destination, List<String> path, Strin
     public Packet {
         if (source == null || destination == null || information == null || path == null)
             throw new IllegalArgumentException("Incomplete packet");
+        if (information.length() >= 11 && information.charAt(0) == ':' && information.charAt(10) == ':')
+            information = AprsMessageProtocol.normalize(information);
         source = source.toUpperCase(Locale.ROOT);
         destination = destination.toUpperCase(Locale.ROOT);
         path = List.copyOf(path);

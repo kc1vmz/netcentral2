@@ -312,7 +312,7 @@ public class ResourceAccessor {
                 return;
             }
             Map<String, String> values = new TreeMap<>();
-            object.data().path("keyValues").fields().forEachRemaining(e -> values.put(e.getKey(), e.getValue().asText()));
+            object.data().path("keyValues").properties().forEach(e -> values.put(e.getKey(), e.getValue().asText()));
             if (pair[1].isBlank()) values.remove(pair[0].strip());
             else values.put(pair[0].strip(), pair[1].strip());
             valuesInternal(object, values);
@@ -331,7 +331,7 @@ public class ResourceAccessor {
     private void valuesReply(OperationsStore.Entry object, String to, String prefix, PacketHub.UniquePacket event) {
         var values = object.data().path("keyValues");
         if (values.isEmpty()) reply(object.id(), to, "No values found", event);
-        else values.fields().forEachRemaining(e -> reply(object.id(), to, prefix + e.getKey() + "=" + e.getValue().asText(), event));
+        else values.properties().forEach(e -> reply(object.id(), to, prefix + e.getKey() + "=" + e.getValue().asText(), event));
     }
 
     private void reportReply(String target, String to, String kind, String query, PacketHub.UniquePacket event) {

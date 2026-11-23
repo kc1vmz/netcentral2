@@ -118,20 +118,11 @@ public class RadioPolicy {
     public Set<String> classify(JsonNode station) {
         Set<String> types = new TreeSet<>();
         types.add("STATION");
-        if (station.path("weatherObserved").asBoolean())
+        if (station.path("weatherObserved").asBoolean()) {
             types.add("WEATHER");
-        String callsign = station.path("callsign").asText();
-        if ("N1ABC-10".equalsIgnoreCase(callsign)) {
-            int c = 0;
-            c += 1;
-        }
-        if ("WINLINK".equalsIgnoreCase(station.path("callsign").asText())) {
-            int c = 0;
-            c += 1;
         }
         for (var entry : store.list("CLASSIFY")) {
             JsonNode r = entry.data();
-            // LOOK HERE
             String value = station.path(r.path("ruleTarget").asText().toLowerCase(Locale.ROOT)).asText("")
                     .toUpperCase(Locale.ROOT), expected = r.path("value").asText().toUpperCase(Locale.ROOT);
             boolean match = switch (r.path("ruleType").asText()) {
@@ -141,7 +132,6 @@ public class RadioPolicy {
                 case "ENDS_WITH" -> value.endsWith(expected);
                 default -> false;
             };
-            // LOOK HERE
             if (match)
                 types.add(r.path("trackedStationType").asText());
         }

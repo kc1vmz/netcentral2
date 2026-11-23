@@ -70,11 +70,6 @@ public class OperationsPageController {
         return "redirect:/stations/" + call;
     }
 
-    @GetMapping("/help")
-    public String help() {
-        return "help";
-    }
-
     @GetMapping("/dashboard")
     public String dashboard() {
         store.authenticated();
@@ -220,7 +215,7 @@ public class OperationsPageController {
             @RequestParam long version, @RequestParam(defaultValue = "false") boolean remove) {
         var old = objects.get(id);
         Map<String, String> values = new TreeMap<>();
-        old.data().path("keyValues").fields().forEachRemaining(e -> values.put(e.getKey(), e.getValue().asText()));
+        old.data().path("keyValues").properties().forEach(e -> values.put(e.getKey(), e.getValue().asText()));
         if (remove)
             values.remove(key);
         else

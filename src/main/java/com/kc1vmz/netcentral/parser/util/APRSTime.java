@@ -104,7 +104,7 @@ public class APRSTime {
                 LocalDateTime l = LocalDateTime.now(ZoneId.of("Z")).withDayOfMonth(dayOfMonth).withHour(hour).withMinute(minute);
                 ldt = l;
             } else {
-                // TODO - how to make right when we don't know the local time zone of the sender?
+                // how to make right when we don't know the local time zone of the sender?
                 int dayOfMonth = buildNumber(time.substring(0, 2));
                 int hour = buildNumber(time.substring(2, 4));
                 int minute = buildNumber(time.substring(4, 6));
@@ -145,7 +145,7 @@ public class APRSTime {
                     ZonedDateTime l = ZonedDateTime.now(ZoneId.of("Z")).withDayOfMonth(dayOfMonth).withHour(hour).withMinute(minute);
                     zdt = l;
                 } else {
-                    // TODO - how to make right when we don't know the local time zone of the sender?
+                    // how to make right when we don't know the local time zone of the sender?
                     int dayOfMonth = buildNumber(time.substring(0, 2));
                     int hour = buildNumber(time.substring(2, 4));
                     int minute = buildNumber(time.substring(4, 6));

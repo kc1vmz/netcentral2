@@ -311,7 +311,7 @@ public class ReportAccessor {
         lines.add(call + " — " + kind + " reports");
         for (var r : reports(call, kind)) {
             lines.add(r.recordedAt() + " " + r.kind());
-            r.data().fields().forEachRemaining(e -> {
+            r.data().properties().forEach(e -> {
                 if (!Set.of("bytes", "reportData", "fullReportData", "reportDataReadable").contains(e.getKey()))
                     lines.add(e.getKey() + ": " + e.getValue().asText(e.getValue().toString()));
             });

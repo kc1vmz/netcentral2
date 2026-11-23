@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Use Net Monitor to send an APRS message from a running net to all checked-in participants or to one participant. Participants can also send messages to the net from their APRS radio or client using the M and MC commands.</p>
+<p>Messages are recorded with the net and remain available in its archive after completion.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>For browser-based sending, sign in as the net owner or an administrator authorized to manage the net.</li>
+<li>Have a running net with at least one checked-in participant. Expected or invited stations must check in before they can receive messages through the net's participant messaging controls.</li>
+<li>Verify that the net selects an available communication instance that allows transmission.</li>
+<li>Ensure the destination has been heard on an eligible connection so Net Central can route a directed message.</li>
+<li>For radio-based sending, know the net callsign and check in by sending CI to it. Restricted nets require your callsign to be expected or invited.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and use the carousel to select the intended <strong>Running net</strong>. Confirm its callsign and name before composing a message. A Scheduled entry is a definition, not a running message destination.</p></li>
+<li><p>In the <strong>Messages</strong> section, select <strong>Send message</strong>.</p></li>
+<li><p>Set <strong>Recipient</strong>:</p><ul>
+<li>Leave <strong>Net</strong>, the default, to send a separate message to every currently checked-in participant.</li>
+<li>Enter a checked-in participant's callsign to send only to that station.</li>
+</ul></li>
+<li><p>Enter the <strong>Message</strong>, up to 67 characters. Use concise wording. In this browser dialog, enter the message text directly; do not prefix it with the radio command M.</p></li>
+<li><p>Leave <strong>Request APRS acknowledgment</strong> checked if you want the receiving APRS client to acknowledge the message, or uncheck it if an acknowledgment is not needed.</p></li>
+<li><p>Review the recipient and text, then select <strong>Send message</strong>. This dialog submits immediately; it does not present a second confirmation. Review its status feedback and the delivery entries in Messages, then select <strong>Close</strong> to leave the dialog.</p></li>
+<li><p>For a single participant, you can instead select the station in Participants and choose <strong>Send Message</strong> in <strong>Participant details</strong>. The sender and recipient are fixed to the net and selected participant. Enter the message, select the acknowledgment option, submit, and confirm the displayed action.</p></li>
+</ol>
+<h3>Sending from a participant's radio or APRS client</h3>
+<p>Address an APRS message to the running net's callsign. After checking in, use one of these commands as the message text:</p>
+<table><thead><tr><th>Command</th><th>Example</th><th>Result</th></tr></thead><tbody>
+<tr><td>M text</td><td><code>M Supplies have arrived</code></td><td>Records the message and forwards it to the other currently checked-in participants, with the sender's callsign identifying its origin.</td></tr>
+<tr><td>MC text</td><td><code>MC Please contact me by voice</code></td><td>Records a message for Net Control in the console without forwarding it to all participants.</td></tr>
+</tbody></table><p>Include the command prefix when composing a radio message, and keep the complete message within your APRS client's supported length.</p></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Review Messages for the expected sender, recipient, text, time, and delivery status. Sending to Net creates individual outgoing entries for the checked-in recipients.</li>
+<li>Check delivery separately for each recipient. One station receiving the message does not prove that every participant received it.</li>
+<li>If an acknowledgment was requested, look for the delivery status to reflect the acknowledgment. ACK and REJ protocol messages are hidden from the displayed message text list; their effect is represented through delivery tracking.</li>
+<li>Ask the recipient to verify the message on their radio or APRS client when practical. A local send or protocol acknowledgment does not prove that a person has read the message.</li>
+<li>For a radio-originated M message, verify the console record and reception by another checked-in participant. For MC, verify it using the net owner's or administrator's console view.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>No route:</strong> Net Central uses a receiving connection or an eligible recently-heard route. Verify the participant has transmitted through an instance selected by the net, that the instance is Active, and that transmission is allowed. Merely adding an expected callsign does not establish a route.</li>
+<li><strong>Participation:</strong> Net-wide sends target currently checked-in stations. Checked-out and expected-only stations are not included. Radio M forwarding does not echo the message back to its sender.</li>
+<li><strong>Net Control:</strong> MC messages are not forwarded to the group and are hidden from non-managing users' message views. This controls application visibility; it does not make the original APRS transmission private.</li>
+<li><strong>Retries and restarts:</strong> Review delivery tracking before manually sending again. Pending outgoing messages are not retained for retransmission after an application restart.</li>
+<li><strong>History:</strong> The running monitor shows the latest 200 message entries. After the net is secured, the archive viewer can load additional history and generate the Message Report.</li>
+<li><strong>Archived nets:</strong> Archives are read-only. Select a running net to send new messages.</li>
+<li><strong>Kenwood source:</strong> Kenwood Serial uses its configured MYCALL as the RF source. Consider that identity when verifying how a transmitted message appears on another station.</li>
+</ul></section>
+</th:block></body></html>

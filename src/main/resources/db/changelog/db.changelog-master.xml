@@ -15,5 +15,9 @@
     <include file="011-participant-status-color.xml" relativeToChangelogFile="true"/>
     <include file="012-net-manager-location.xml" relativeToChangelogFile="true"/>
     <include file="013-position-ambiguity.xml" relativeToChangelogFile="true"/>
+    <changeSet id="014-transmit-spacing" author="netcentral">
+        <sql>UPDATE communication_instance SET configuration = SUBSTRING(RTRIM(configuration), 1, LENGTH(RTRIM(configuration)) - 1) || ',"transmitSpacingMs":1000}' WHERE configuration NOT LIKE '%"transmitSpacingMs"%'</sql>
+    </changeSet>
+    <include file="015-participant-unknown.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
 

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/account :: head('Local accounts')}"></head>
 <body><header th:replace="~{fragments/account :: header}"></header>
-<main><div class="page-heading"><h1>Local Accounts</h1><button type="button" id="account-create">Create Account</button></div>
+<main class="workspace settings-workspace"><h1 id="settings-title">Settings</h1><div class="page-heading"><h2>Local Accounts</h2><button type="button" id="account-create">Create Account</button></div>
     <p class="intro">Manage Net Central users, their attributes and roles.</p>
     <section class="panel" th:each="account : ${accounts}">
         <h2><span th:text="${account.emailAddress}"></span> <span class="account-name" th:if="${!#strings.isEmpty(account.firstName) or !#strings.isEmpty(account.lastName)}" th:text="|(${account.firstName ?: ''} ${account.lastName ?: ''})|"></span> <span class="account-name" th:text="| - ${account.role}|"></span></h2><div class="account-actions">

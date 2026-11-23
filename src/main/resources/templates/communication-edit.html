@@ -32,6 +32,7 @@
     <p>Commands use a carriage-return terminator. Leave blank for a device already in KISS mode. TNC2 uses complete packet lines. For Kenwood, leave initialization commands blank; RESET, MYCALL and UNPROTO are automatic.</p>
   </fieldset>
   <fieldset><legend>Radio routing</legend>
+    <label>Transmit spacing (milliseconds; RF only)<input name="transmitSpacingMs" type="number" min="0" max="2147483647" step="1" th:value="${config.transmitSpacingMs}" required></label>
     <label>Digipeater path <input name="digiPath" th:value="${config.digiPath}" placeholder="WIDE1-1,WIDE2-1" maxlength="255"></label>
     <label>KISS port/channel <input name="kissPort" type="number" th:value="${config.kissPort}" min="0" max="15"></label>
   </fieldset>

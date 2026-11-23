@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Prepare a short NTS radiogram using Net Central's radiogram form and submit it to NTSGTE through APRS. The form arranges the routing information, recipient, message words, and signature in separate areas resembling a radiogram.</p>
+<p>This tool works independently of nets and uses the default communication selection. It submits the radiogram as a group of APRS messages; it does not provide an end-to-end delivery receipt.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central. For a User account, the Station of origin must have the same base callsign as the callsign configured in My account. An administrator can use a different origin callsign.</li>
+<li>Have an administrator configure a communication instance that allows transmission and has an eligible route to NTSGTE. Review Default communication selection on Communications.</li>
+<li>Prepare the radiogram number, precedence, station and place of origin, date filed, recipient information, message text, and signature.</li>
+<li>Use the radiogram conventions appropriate to your traffic-handling operation. This tutorial explains the Net Central form; its validation does not replace a review of the message's handling instructions or address.</li>
+<li>Limit the message body to 25 words for this tool and keep all fields concise enough for APRS transmission.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/tools(section='nts')}">Tools → NTS</a>.</p></li>
+<li><p>Complete the routing information at the top:</p>
+<table><thead><tr><th>Field</th><th>What to enter</th></tr></thead><tbody>
+<tr><td>Number</td><td>The radiogram's identifying number. Required.</td></tr>
+<tr><td>Precedence</td><td>The appropriate precedence for this traffic. Required.</td></tr>
+<tr><td>HX</td><td>Applicable handling instructions, if needed.</td></tr>
+<tr><td>Station of origin</td><td>The originating callsign, also used as the APRS sender. Required.</td></tr>
+<tr><td>Place of origin</td><td>The originating location. Required.</td></tr>
+<tr><td>Check</td><td>A numeric count matching the number of filled message-word fields. Required.</td></tr>
+<tr><td>Time filed</td><td>The filing time, if used by your operation.</td></tr>
+<tr><td>Date filed</td><td>The filing date. Required.</td></tr>
+</tbody></table></li>
+<li><p>Complete the recipient area. Enter the required <strong>To</strong> name and the appropriate <strong>Street address</strong>, <strong>City, State</strong>, <strong>Phone number</strong>, and <strong>Email address</strong>. Supply enough information for the receiving traffic handler to identify and reach the recipient.</p></li>
+<li><p>Enter the message in the numbered <strong>Word</strong> fields, one word per field, in reading order. Use between 1 and 25 fields. A word field cannot contain spaces or a backslash and is limited to 30 characters. Net Central converts the message words to uppercase.</p></li>
+<li><p>Count the filled word fields and enter that number in <strong>Check</strong>. For example, <code>PLEASE CALL HOME WHEN AVAILABLE</code> occupies five fields and requires Check = 5. Do not count the recipient or signature fields as message words.</p></li>
+<li><p>Enter the required <strong>Signature</strong> and an optional <strong>Operator note</strong>. Review the complete radiogram, including spelling, numbers, word order, and the check.</p></li>
+<li><p>Select <strong>Send radiogram</strong>. Submission is immediate; there is no second confirmation dialog. Net Central validates the fields, formats the packet group, and attempts to queue it to NTSGTE.</p></li>
+<li><p>Read the result above the tool. If validation reports a problem, correct the indicated fields before submitting again. If the result is QUEUED, proceed with verification rather than immediately sending a duplicate.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that the form reports QUEUED rather than a validation error or NO_ROUTE. QUEUED means a transmission route accepted the packet group, not that the gateway or final recipient has received it.</li>
+<li>Review the selected connection on <a th:href="@{/communications}">Communications</a>, or ask an administrator to do so. Check outgoing traffic, Queued, Failed, and any displayed error.</li>
+<li>When packet inspection is needed, an administrator can use Tools → Packet logging to enable logging and inspect retained packets. Look for the outgoing exchange addressed to NTSGTE; packet logging must have been enabled to capture it.</li>
+<li>Verify acceptance or delivery through the receiving traffic-handling process when available. The Net Central form does not display live gateway progress or final delivery confirmation.</li>
+<li>Retain the radiogram number and a copy of the submitted information for follow-up. Avoid refreshing the submitted form if the browser offers to resend it.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Check mismatch:</strong> Check must be a plain number equal to the count of nonempty message-word fields. The current tool does not accept a textual prefix in that field.</li>
+<li><strong>APRS length limits:</strong> Each formatted protocol line must fit within 67 characters. Several form fields share one transmitted line, so individually valid fields can still produce a line-length error. Shorten the affected information without losing necessary meaning.</li>
+<li><strong>Protocol formatting:</strong> Net Central generates the QTC and radiogram packet prefixes automatically. Do not enter those prefixes in the form. Backslashes are protocol separators and are rejected in the routing and recipient fields assembled with those separators.</li>
+<li><strong>Telephone formatting:</strong> The tool removes nonnumeric characters from the phone number before transmission. Do not rely on extension labels or punctuation being preserved.</li>
+<li><strong>Routing:</strong> NO_ROUTE calls for checking default selection, a recently heard eligible route to NTSGTE, connection state, and transmission permission. The selected net's communications do not control this standalone tool.</li>
+<li><strong>Identity:</strong> Kenwood Serial uses its configured MYCALL as the RF source. Ensure that identity is appropriate for the Station of origin used in this exchange.</li>
+<li><strong>Retries:</strong> A successful local queue operation is not proof of final delivery. If the outcome is uncertain, investigate before resubmitting to avoid duplicate traffic. Pending transmissions do not survive an application restart.</li>
+<li><strong>Scope:</strong> This form supports short text radiograms, not attachments or an unlimited message body. It does not automatically add the submission to a net's archived reports.</li>
+</ul></section>
+</th:block></body></html>

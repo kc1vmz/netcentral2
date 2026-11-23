@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Connect Net Central to a radio through a terminal node controller (TNC) or compatible packet interface so it can receive APRS traffic and transmit net messages and object beacons. Each connection is a communication instance. You can configure more than one instance and choose which ones each net or object uses.</p>
+<p>This tutorial covers KISS, TNC2, and Kenwood radio connections. APRS-IS Internet connections are a separate configuration activity.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in to Net Central with an Admin or Sysadmin account.</li>
+<li>Have a radio, antenna, and compatible TNC or packet interface connected and configured for your intended APRS channel. Prepare the radio's packet mode, audio levels, and connection settings according to its documentation.</li>
+<li>For a serial connection, connect the device to the computer running Net Central and know its serial device name and baud rate. The port list comes from that computer, even if you use a browser on another computer.</li>
+<li>For a TCP connection, have a reachable KISS or TNC2 service connected to the radio, and know its host address and listening TCP port.</li>
+<li>Know the digipeater path you intend to use, and any KISS channel or device initialization commands required by your interface. For Kenwood Serial, also have the callsign to configure as MYCALL.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/communications}">Communications</a> and select <strong>Add connection</strong>.</p></li>
+<li><p>Select the appropriate <strong>Type</strong>:</p>
+<table><thead><tr><th>Type</th><th>Use when</th></tr></thead><tbody>
+<tr><td>KISS Serial</td><td>Your TNC exchanges KISS frames over a serial connection.</td></tr>
+<tr><td>KISS TCP</td><td>A network-accessible TNC or packet program exposes a KISS TCP endpoint.</td></tr>
+<tr><td>TNC2 Serial</td><td>Your serial interface exchanges complete TNC2 text lines, such as <code>SOURCE&gt;DESTINATION,PATH:payload</code>.</td></tr>
+<tr><td>TNC2 TCP</td><td>Your TCP service exchanges those complete TNC2 text lines.</td></tr>
+<tr><td>Kenwood Serial</td><td>You are using the supported Kenwood command-mode TNC mechanism rather than KISS or a complete-line TNC2 interface.</td></tr>
+</tbody></table><p>TNC2 Serial is not a general command/converse-mode driver. Choose the type that matches the interface's actual protocol.</p></li>
+<li><p>Set <strong>State</strong> and <strong>Transmission</strong>. New connections default to <strong>Active</strong> and <strong>Allow transmission</strong>. To verify reception first, select <strong>Receive only</strong>. Choose <strong>Paused</strong> if you want to save the configuration without opening the connection yet.</p></li>
+<li><p>Enter the connection properties:</p><ul>
+<li><strong>Serial:</strong> Choose the <strong>Serial device</strong> and matching <strong>Baud rate</strong>. Windows devices commonly have names such as COM3; Linux devices may appear as /dev/ttyUSB0 or /dev/ttyACM0. The baud rate is the computer-to-TNC serial speed, not the over-the-air packet speed.</li>
+<li><strong>TCP:</strong> Enter <strong>Host</strong> and <strong>TCP port</strong> for the packet service. Use the port configured in that service; do not assume the displayed default is correct. A host of localhost means the computer running Net Central.</li>
+<li><strong>KISS Serial or TNC2 Serial:</strong> Enter <strong>Initialization command 1</strong> and <strong>Initialization command 2</strong> only when needed. Leave them blank for an already prepared interface. Net Central sends a carriage return after each configured command.</li>
+<li><strong>Kenwood Serial:</strong> Enter <strong>Login callsign / Kenwood MYCALL</strong>. Net Central automatically performs RESET, MYCALL, and UNPROTO setup; there are no manual initialization-command fields for this type.</li>
+</ul></li>
+<li><p>Set the radio routing fields. Enter the <strong>Digipeater path</strong> appropriate for your operation, or leave it empty for direct transmission. For KISS, set <strong>KISS port/channel</strong> to the channel your TNC uses, commonly 0 for a single-channel interface. <strong>Transmit spacing (milliseconds)</strong> defaults to 1000; retain that starting value unless your setup requires different pacing.</p></li>
+<li><p>Select <strong>Save connection</strong>. Net Central derives the instance name from its properties. An Active instance begins connecting; a Paused instance waits until you select <strong>Resume</strong> and confirm.</p></li>
+<li><p>Choose where outgoing traffic should go. Open <strong>Default communication selection</strong> for traffic without an explicit net or object selection. Choose all eligible instances or only selected instances, select <strong>Update</strong>, and confirm. Also review the Communications selection when creating or editing each net or object. A working connection must be included in the applicable selection to carry that traffic.</p></li>
+<li><p>If you started with Receive only, select <strong>Edit</strong>, change Transmission to <strong>Allow transmission</strong>, and save when you are ready to test outgoing traffic.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>On Communications, select <strong>Refresh</strong>. Confirm that the instance is Active and its connection state settles at CONNECTED or RECEIVE_ONLY as appropriate. Review any displayed error if it remains CONNECTING or RETRYING.</li>
+<li>Receive a known APRS transmission. Check that <strong>Received</strong> increases and <strong>Last packet</strong> updates. Open <a th:href="@{/explorer}">Explorer</a> to look for the station or object. A station appears on the map only when a usable position has been received.</li>
+<li>For a transmit test, use a net or object that selects this instance and send a suitable message or beacon. Confirm that <strong>Sent</strong> increases, and verify reception on another station or receiver. A local Sent count alone does not prove reception over the air.</li>
+<li>For a directed message, first hear the destination on an eligible connection. Net Central uses the receiving connection or an eligible recently heard route; a <em>no route</em> result can mean the destination has not been heard, rather than a failed radio interface.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Serial ownership:</strong> Give each serial instance its own port. KISS Serial, TNC2 Serial, and Kenwood Serial instances cannot share the same serial device. Close other programs that have the port open. On Linux, the account running Net Central must have permission to access the device.</li>
+<li><strong>Missing ports:</strong> Check the cable, device power, and driver, then reopen the connection dialog to reload the device list. Device names may change after reconnecting hardware.</li>
+<li><strong>Kenwood identity:</strong> Kenwood transmits using the configured MYCALL as the RF source callsign. Do not assume it can substitute every net or object callsign as the source in the same way as a KISS interface. Verify operation with your particular radio model.</li>
+<li><strong>Multiple connections:</strong> Multiple instances of each transport are supported. Selecting all eligible instances includes future instances too; selecting an empty set allows no transmissions through that selection.</li>
+<li><strong>Pause versus Receive only:</strong> Paused stops the connection. Receive only keeps reception available while disabling outgoing transmissions.</li>
+<li><strong>Packet acknowledgments:</strong> Net Central handles APRS message ACK/REJ consistently across its radio transports. An acknowledgment is different from a successful local write to the TNC.</li>
+<li><strong>Troubleshooting:</strong> Review Failed, Discarded, Queued, and the displayed error on Communications. Check protocol, baud rate or TCP endpoint, radio settings, transmission permission, and routing selection before changing unrelated settings.</li>
+</ul></section>
+</th:block></body></html>

@@ -189,6 +189,17 @@ public class NetApiController {
         return nets.list(true);
     }
 
+    @GetMapping("/archiveBrowser")
+    public List<Net> archivePage(@RequestParam(defaultValue="0") int offset, @RequestParam(defaultValue="50") int limit) {
+        return nets.archivePage(offset, limit);
+    }
+
+    @GetMapping("/completedNets/{id}/messagePage")
+    public List<Message> archiveMessagePage(@PathVariable String id, @RequestParam(defaultValue="0") int offset,
+            @RequestParam(defaultValue="100") int limit) {
+        return nets.archiveMessagePage(id, offset, limit);
+    }
+
     private void archived(String id) {
         if (nets.get(id).endTime() == null)
             throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Archive not found");

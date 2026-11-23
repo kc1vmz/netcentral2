@@ -116,9 +116,11 @@ class ProtocolTest {
                     OutputStream output = socket.getOutputStream();
                     output.write("# fixture\r\n".getBytes(StandardCharsets.US_ASCII));
                     output.flush();
-                    new BufferedReader(new InputStreamReader(socket.getInputStream())).readLine();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    reader.readLine();
                     output.write("# logresp N0CALL unverified, server LOCAL\r\n".getBytes(StandardCharsets.US_ASCII));
                     output.flush();
+                    reader.close();
                 }
                 return true;
             });

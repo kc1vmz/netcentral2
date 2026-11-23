@@ -26,6 +26,9 @@ public class PacketHub {
     public record UniquePacket(Received received) {
     }
 
+    /** Numbered message repeats still need an ACK, but must not execute twice. */
+    public record RepeatedMessage(Received received) {}
+
     private final ApplicationEventPublisher events;
     private final ArrayBlockingQueue<Received> incoming = new ArrayBlockingQueue<>(1000);
     private final Map<String, Instant> duplicates = new LinkedHashMap<>();
@@ -51,6 +54,11 @@ public class PacketHub {
                     events.publishEvent(value);
                     if (record(value))
                         events.publishEvent(new UniquePacket(value));
+                    else if (value.packet().information().startsWith(":")
+                            && value.packet().information().length() >= 11
+                            && value.packet().information().charAt(10) == ':'
+                            && AprsMessageProtocol.parse(value.packet().information().substring(11)).number() != null)
+                        events.publishEvent(new RepeatedMessage(value));
                 } catch (InterruptedException stopped) {
                     Thread.currentThread().interrupt();
                     break;

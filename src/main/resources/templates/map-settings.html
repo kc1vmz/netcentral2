@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Map Cache setup')}"></head>
-<body><header th:replace="~{fragments/account :: header}"></header><main><h1>Map Cache</h1><p class="intro">Choose the external OSM-compatible tile server.</p>
+<body><header th:replace="~{fragments/account :: header}"></header><main class="workspace settings-workspace"><h1 id="settings-title">Settings</h1><h2>Map Cache</h2><p class="intro">Choose the external OSM-compatible tile server.</p>
 <section class="panel">
 <p th:if="${param.saved}" role="status">Map settings saved. Open monitors will update automatically.</p>
 <form th:action="@{/setup/map-cache}" method="post" class="account-form">

@@ -118,6 +118,8 @@ public final class ManagedConnection {
     }
 
     private void writeLoop() {
+        long lastWriteCompleted = 0;
+        long spacingNanos = "APRS_IS".equals(config.type()) ? 0 : TimeUnit.MILLISECONDS.toNanos(config.transmitSpacingMs());
         while (!stopping) {
             Pending pending = null;
             int count = 0;
@@ -126,11 +128,17 @@ public final class ManagedConnection {
                 activeSent = 0;
                 active = pending;
                 for (Packet packet : pending.packets()) {
+                    if (lastWriteCompleted != 0 && spacingNanos > 0) {
+                        long remaining;
+                        while ((remaining = spacingNanos - (System.nanoTime() - lastWriteCompleted)) > 0)
+                            TimeUnit.NANOSECONDS.sleep(remaining);
+                    }
                     if (stopping || pending.connection() != connection || !pending.connection().canTransmit()
                             || !pending.permitted().getAsBoolean())
                         break;
                     writingSince = System.nanoTime();
                     pending.connection().send(packet);
+                    lastWriteCompleted = System.nanoTime();
                     outgoing.accept(packet);
                     writingSince = 0;
                     count++;
@@ -144,6 +152,10 @@ public final class ManagedConnection {
                     pending.result().complete(new Outcome(count == 0 ? "DISCARDED" : "PARTIAL", count));
                 }
             } catch (InterruptedException stop) {
+                if (pending != null) {
+                    discarded.incrementAndGet();
+                    pending.result().complete(new Outcome(count == 0 ? "DISCARDED" : "PARTIAL", count));
+                }
                 Thread.currentThread().interrupt();
                 break;
             } catch (Exception failure) {

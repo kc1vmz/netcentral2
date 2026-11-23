@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Participate in a running net using APRS radio commands: report status and equipment, exchange messages, ask and answer questions, find other participants, and check out when finished.</p>
+<p>Send these commands as APRS message text addressed to the net callsign. They operate on the net, not on a local radio's command prompt. Each command reference below links directly to its entry in Help.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Know the running net's callsign and have a working APRS path to Net Central.</li>
+<li>Check in using CI and continue using the same station callsign and SSID. See <a th:href="@{/help/tutorials/check-in-net}">Checking into a net</a> for admission and check-in instructions.</li>
+<li>Use an APRS radio or client that can address and send text messages and display replies. A web account is not required for radio participation.</li>
+<li>Keep the net's operating instructions handy, including any agreed meanings for Red, Yellow, and Green status.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Set your APRS message destination to the running net's callsign. If you have not joined, send <a href="/help#net-command-ci"><code>CI</code></a> and confirm acceptance.</p></li>
+<li><p>Send <a href="/help#net-command-h"><code>H</code></a> for radio help, <a href="/help#net-command-i"><code>I</code></a> for net information, or <a href="/help#net-command-l"><code>L</code></a> for the active participant list.</p></li>
+<li><p>Report your status and equipment using the examples below. Replace example values with your own information and send the message to the net.</p></li>
+<li><p>Exchange messages and answer questions as needed. Keep free-text commands in separate messages so later command words are not accidentally included in their text.</p></li>
+<li><p>Review replies and, if available, your participant entry in Net Monitor. Correct errors with another appropriate command rather than repeatedly resending an uncertain request.</p></li>
+<li><p>When finished, send <a href="/help#net-command-ci"><code>CO</code></a>. Wait for the checkout reply. This ends your participation, not the whole net.</p></li>
+</ol><h3>Status and equipment</h3><table><thead><tr><th>Command and example</th><th>Effect</th></tr></thead><tbody>
+<tr><td><a href="/help#net-command-stg"><code>STG / STY / STR</code></a></td><td>Set your status color to Green, Yellow, or Red. These are separate from descriptive status text.</td></tr>
+<tr><td><a href="/help#net-command-s"><code>S Ready at staging</code></a></td><td>Set your descriptive status to Ready at staging.</td></tr>
+<tr><td><a href="/help#net-command-t"><code>T STAGING</code></a></td><td>Set a single-word tactical callsign.</td></tr>
+<tr><td><a href="/help#net-command-f"><code>F 146.520</code></a></td><td>Report your monitored voice frequency; this does not tune your radio.</td></tr>
+<tr><td><a href="/help#net-command-x"><code>X 25</code></a></td><td>Report transmit power in watts.</td></tr>
+<tr><td><a href="/help#net-command-e"><code>E BATTERY</code></a></td><td>Report your primary power source.</td></tr>
+<tr><td><a href="/help#net-command-b"><code>B GENERATOR</code></a></td><td>Report backup power.</td></tr>
+<tr><td><a href="/help#net-command-y"><code>Y MOBILE</code></a></td><td>Report your radio style.</td></tr>
+</tbody></table><p>Consult the linked E, B, and Y help entries for supported values. Short, fixed-value commands can be combined, for example <code>STG X 25 E BATTERY Y MOBILE</code>. Send S and other free-text commands separately because they consume the remaining message text.</p>
+<h3>Messages, questions, and coordination</h3><table><thead><tr><th>Command and example</th><th>Effect</th></tr></thead><tbody>
+<tr><td><a href="/help#net-command-m"><code>M Supplies have arrived</code></a></td><td>Record a message and forward it to other checked-in participants; it is not echoed back to its sender.</td></tr>
+<tr><td><a href="/help#net-command-mc"><code>MC Please contact me by voice</code></a></td><td>Record a message for the Net Control console without forwarding it to the group.</td></tr>
+<tr><td><a href="/help#net-command-r"><code>R 5</code></a></td><td>Request replay of the last five recorded incoming net messages.</td></tr>
+<tr><td><a href="/help#net-command-q"><code>Q Can you remain until 1800?</code></a></td><td>Create a numbered question and send it to checked-in participants.</td></tr>
+<tr><td><a href="/help#net-command-ql"><code>QL</code></a></td><td>Request questions you have not answered.</td></tr>
+<tr><td><a href="/help#net-command-a"><code>A 1 Yes, until 1800</code></a></td><td>Record your answer to question 1. A later answer to that same question replaces your earlier answer.</td></tr>
+<tr><td><a href="/help#net-command-qr"><code>QR 1</code></a></td><td>Request question 1 and its recorded answers.</td></tr>
+<tr><td><a href="/help#net-command-p"><code>P N1ABC-7</code></a></td><td>Send a ping notice to that checked-in participant. This is not a guarantee of a response.</td></tr>
+<tr><td><a href="/help#net-command-o"><code>O N1ABC-7</code></a></td><td>Request the last known station status, or Unknown when unavailable.</td></tr>
+<tr><td><a href="/help#net-command-inv"><code>INV N1ABC-7</code></a></td><td>Invite a station when participant invitations are enabled. An invitation adds the station to the expected list but does not check it in.</td></tr>
+<tr><td><a href="/help#net-command-nci"><code>NCI</code></a></td><td>Toggle notifications of participation changes. Sending it again reverses the setting.</td></tr>
+</tbody></table><p>For fuller examples, see <a th:href="@{/help/tutorials/net-messages}">Send messages to a net</a> and <a th:href="@{/help/tutorials/net-questions-and-answers}">Questions and Answers in a net</a>. The <a href="/help#radio-commands">Radio Commands help</a> also contains separate Net Manager and object command groups.</p></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Review the command reply for acceptance or a specific error. An APRS protocol acknowledgment alone does not prove the requested operation was accepted.</li>
+<li>Use L to verify active participation and color letters: (G), (Y), (R), and (U) for Unknown when applicable. Status text and equipment can be reviewed in Net Monitor's Participant details.</li>
+<li>For group messages, ask another participant to verify reception. For questions, use QR with the correct number to review answers; QL should omit questions you have answered.</li>
+<li>After CO, verify the reply says you checked out. The console retains your participation history and sets your color to White/Unknown, while the active participant list no longer includes you.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Command scope:</strong> Always confirm the message destination. A command sent to Net Manager or an object can have different semantics from the same command sent to a net.</li>
+<li><strong>Length:</strong> Keep the complete APRS message, including command and arguments, within your client's supported message limit. Use single-word arguments for T, F, X, E, B, and Y.</li>
+<li><strong>Free text:</strong> S, M, MC, Q, and A include text after the command. Do not append unrelated commands to that text. For A and QR, use a question number belonging to the selected net.</li>
+<li><strong>Privacy:</strong> MC is hidden from non-managing users' console message views, but the APRS transmission itself is not private.</li>
+<li><strong>Routes:</strong> Pings, invitations, and forwarded messages depend on eligible routes and available transmission-enabled connections. A station listed as Expected may not yet have a known route.</li>
+<li><strong>Checkout and rejoining:</strong> CO sets White/Unknown. There is no STW command. Sending CI again rejoins with Green, subject to the net's current admission rules.</li>
+<li><strong>Net completion:</strong> Securing or automatically ending a net ends participation and preserves the last stored colors. You cannot continue operating in the archived net.</li>
+<li><strong>Position:</strong> Status and equipment commands do not send coordinates. Transmit a position from your APRS client if you want the net map to show your station.</li>
+</ul></section>
+</th:block></body></html>

@@ -35,7 +35,7 @@ public final class NetModels {
                         Instant startTime, Instant endTime, Instant lastHeardTime, Double lat, Double lon, long version,
                         String transmitPower, String electricalPowerType, String backupElectricalPowerType, String radioStyle) {
                         this(callsign, status, voiceFrequency, tacticalCallsign, startTime, endTime, lastHeardTime, lat, lon, version,
-                                transmitPower, electricalPowerType, backupElectricalPowerType, radioStyle, endTime == null ? "GREEN" : "RED");
+                                transmitPower, electricalPowerType, backupElectricalPowerType, radioStyle, endTime == null ? "GREEN" : "WHITE");
                 }
         }
 

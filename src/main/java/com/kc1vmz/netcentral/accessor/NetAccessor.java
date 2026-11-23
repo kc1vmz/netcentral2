@@ -1,5 +1,7 @@
 package com.kc1vmz.netcentral.accessor;
 
+import com.kc1vmz.netcentral.communication.AprsMessageProtocol;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.kc1vmz.netcentral.account.Account;
@@ -148,6 +150,19 @@ public class NetAccessor {
                 .stream().filter(n -> !n.privateNet() || manages(n, actor)).toList();
     }
 
+    public List<Net> archivePage(int offset, int limit) {
+        Account actor = accounts.current();
+        return jdbc.query(NET_SELECT + "WHERE n.closed_at IS NOT NULL AND (n.private_net=FALSE OR n.owner_id=? OR ?) ORDER BY n.closed_at DESC,n.id LIMIT ? OFFSET ?",
+                NET, actor.id(), admin(actor), Math.clamp(limit, 1, 100), Math.max(offset, 0));
+    }
+
+    public List<Message> archiveMessagePage(String id, int offset, int limit) {
+        Net n = get(id);
+        if (n.endTime() == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Archive not found");
+        return jdbc.query("SELECT * FROM net_message WHERE net_id=? AND (? OR recipient<>'Net Control') ORDER BY received_at,id LIMIT ? OFFSET ?",
+                MESSAGE, n.id(), manages(n, accounts.current()), Math.clamp(limit, 1, 200), Math.max(offset, 0));
+    }
+
     private void active(Net n) {
         if (n.endTime() != null || !activeInternal(n.id()))
             throw conflict("This net is archived or its scheduled end has passed");
@@ -168,7 +183,7 @@ public class NetAccessor {
     public Net saveConfigured(String id, NetEdit edit, JsonNode values) {
         lock();
         ObjectNode merged = id.isBlank() ? values.deepCopy() : optionsInternal(id).deepCopy();
-        values.fields().forEachRemaining(e -> merged.set(e.getKey(), e.getValue()));
+        values.properties().forEach(e -> merged.set(e.getKey(), e.getValue()));
         ObjectNode clean = NetOptions.validate(merged);
         if (!clean.has("lat") || !clean.has("lon")) throw bad("Net latitude and longitude are required");
         Net saved = id.isBlank() ? create(edit) : update(id, edit);
@@ -302,7 +317,7 @@ public class NetAccessor {
         if (jdbc.update(
                 "UPDATE managed_net SET closed_at=?,active_callsign=NULL,version=version+1 WHERE id=? AND closed_at IS NULL",
                 time, id) > 0) {
-            jdbc.update("UPDATE net_participant SET ended_at=?,status_color='RED',version=version+1 WHERE net_id=? AND ended_at IS NULL",
+            jdbc.update("UPDATE net_participant SET ended_at=?,version=version+1 WHERE net_id=? AND ended_at IS NULL",
                     time, id);
             federate(id, new com.kc1vmz.netcentral.aprsobject.object.reports.APRSNetCentralNetSecureReport(
                     findInternal(id).callsign(), end.atZone(java.time.ZoneOffset.UTC)));
@@ -376,7 +391,7 @@ public class NetAccessor {
 
     private void leave(Net n, String call) {
         if (jdbc.update(
-                "UPDATE net_participant SET ended_at=?,status_color='RED',version=version+1 WHERE net_id=? AND callsign=? AND ended_at IS NULL",
+                "UPDATE net_participant SET ended_at=?,status_color='WHITE',version=version+1 WHERE net_id=? AND callsign=? AND ended_at IS NULL",
                 now(), n.id(), call) > 0) {
             history(n.id(), call, "Net", "Checked out", "EVENT", "RECORDED", null);
             touch(n.id());
@@ -533,6 +548,12 @@ public class NetAccessor {
 
     @EventListener
     @Transactional
+    public void repeated(PacketHub.RepeatedMessage event) {
+        receive(new PacketHub.UniquePacket(event.received()));
+    }
+
+    @EventListener
+    @Transactional
     public void receive(PacketHub.UniquePacket event) {
         var received = event.received();
         Packet packet = received.packet();
@@ -574,21 +595,23 @@ public class NetAccessor {
             return;
         if (!radioPolicy.permits(n.callsign(), call, true))
             return;
-        String body = value.substring(11);
-        if (body.matches("(ack|rej)[A-Za-z0-9]{1,5}")) {
+        var parsed = AprsMessageProtocol.parse(value.substring(11));
+        String body = parsed.body();
+        var control = AprsMessageProtocol.control(body);
+        if (parsed.replyAck() != null && !parsed.replyAck().isEmpty()) {
+            int changed = jdbc.update("UPDATE net_message SET delivery='ACKNOWLEDGED' WHERE net_id=? AND recipient=? AND ack_number=? AND direction='OUT' AND delivery IN ('PENDING','SENT')",
+                    n.id(), call, parsed.replyAck());
+            if (changed > 0) touch(n.id());
+        }
+        if (control != null) {
             int changed = jdbc.update(
                     "UPDATE net_message SET delivery=? WHERE net_id=? AND recipient=? AND ack_number=? AND direction='OUT'",
-                    body.startsWith("ack") ? "ACKNOWLEDGED" : "REJECTED", n.id(), call, body.substring(3));
+                    control.kind().equalsIgnoreCase("ack") ? "ACKNOWLEDGED" : "REJECTED", n.id(), call, control.number());
             if (changed > 0)
                 touch(n.id());
             return;
         }
-        String number = null;
-        int marker = body.lastIndexOf('{');
-        if (marker >= 0 && body.substring(marker + 1).matches("[A-Za-z0-9]{1,5}")) {
-            number = body.substring(marker + 1);
-            body = body.substring(0, marker);
-        }
+        String number = parsed.number();
         String command = body.strip();
         if (command.isEmpty() || command.length() > 67)
             return;
@@ -642,7 +665,7 @@ public class NetAccessor {
                         reply(n, call, "NCGRI:" + n.callsign() + "," + n.description(), receiving);
                     }
                     case "?NCNTP" -> {
-                        var calls = participantsInternal(n.id(), false).stream().map(p -> p.callsign() + " (" + p.statusColor().charAt(0) + ")").toList();
+                        var calls = participantsInternal(n.id(), false).stream().map(p -> p.callsign() + " (" + ("WHITE".equals(p.statusColor()) ? 'U' : p.statusColor().charAt(0)) + ")").toList();
                         for (int offset = 0; offset < calls.size(); offset += 4)
                             reply(n, call, "NCNTP: " + String.join(" ", calls.subList(offset, Math.min(offset + 4, calls.size()))), receiving);
                     }
@@ -698,7 +721,7 @@ public class NetAccessor {
                     }
                     case "L" -> {
                         var labels = participantsInternal(n.id(), false).stream()
-                                .map(p -> p.callsign() + " (" + p.statusColor().charAt(0) + ")").toList();
+                                .map(p -> p.callsign() + " (" + ("WHITE".equals(p.statusColor()) ? 'U' : p.statusColor().charAt(0)) + ")").toList();
                         for (int offset = 0; offset < labels.size(); offset += 4)
                             reply(n, call, String.join(", ", labels.subList(offset, Math.min(offset + 4, labels.size()))), receiving);
                     }

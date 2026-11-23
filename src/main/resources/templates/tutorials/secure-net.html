@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
+<section class="panel"><h2>Description of task</h2>
+<p>Secure a running net when operations are complete. Securing closes the net and preserves its participants, messages, questions, and answers in Archives, where you can review the records and generate reports.</p>
+<p>This ends the selected running net. It does not delete its history or remove the definition of a scheduled net.</p></section>
+<section class="panel"><h2>Prerequisites</h2><ul>
+<li>Sign in as the net owner or an administrator authorized to manage the net.</li>
+<li>Confirm the callsign and name of the running net you intend to close.</li>
+<li>Finish recording participant information and answers, and review any outstanding messages before closing.</li>
+<li>If you want participants to receive a final operational message, send it before securing and check delivery. For a stop bulletin, the net must have Announce start and stop by bulletin enabled and an eligible transmission path.</li>
+</ul></section>
+<section class="panel"><h2>Steps to accomplish</h2><ol>
+<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and use the carousel to select the intended <strong>Running net</strong>. A Scheduled entry is the definition and does not have a Secure Net button.</p></li>
+<li><p>Review the selected callsign and name, participants, messages, questions, and answers. Complete any changes that need to be part of the final record.</p></li>
+<li><p>In <strong>Details</strong>, select <strong>Secure Net</strong>.</p></li>
+<li><p>Read the confirmation identifying the net to close and archive. Confirm with <strong>Secure</strong> to proceed, or select <strong>Cancel</strong> to leave it running. A secured net cannot be reopened.</p></li>
+<li><p>After successful completion, Net Monitor opens the first remaining running or scheduled entry. If none remain, it displays <strong>No nets running or scheduled.</strong> and the Create Net button.</p></li>
+<li><p>Open <a th:href="@{/archives}">Archives</a> and select the completed net from the archive list. Check the callsign, name, and start and end times to distinguish it from earlier nets using the same callsign.</p></li>
+<li><p>In the archive's <strong>Net details</strong> section, choose the report you need:</p>
+<table><thead><tr><th>Button</th><th>Report</th></tr></thead><tbody>
+<tr><td>Generate ICS 309 Report</td><td>The net participation report in ICS 309 format.</td></tr>
+<tr><td>Generate Message Report</td><td>The net's message log, excluding ACK and REJ protocol messages.</td></tr>
+<tr><td>Generate Q&amp;A Report</td><td>The recorded questions and answers.</td></tr>
+</tbody></table><p>Save the generated PDFs as needed for your operating records.</p></li>
+</ol></section>
+<section class="panel"><h2>Verifying success</h2><ol>
+<li>Confirm that the running occurrence no longer appears in Net Monitor's carousel. Its Scheduled definition may still appear, which is expected.</li>
+<li>Select the net in Archives and verify the recorded end time and Archived status.</li>
+<li>Review participants, messages, questions, and answers to confirm the expected records are present. Select individual participants and questions to inspect their details.</li>
+<li>Open a generated report and verify that it identifies the correct net and operating period.</li>
+<li>If a stop bulletin or object withdrawal needs to be verified, check reception through another APRS client or receiver. Successful archiving confirms the local state change, not reception by every remote station.</li>
+</ol></section>
+<section class="panel"><h2>Additional considerations</h2><ul>
+<li><strong>Secure versus closed check-in:</strong> Closed check-in restricts who may join a running net. Secure ends the net and makes its records read-only.</li>
+<li><strong>Participant colors:</strong> Securing ends participation for stations still checked in but preserves their stored status colors. It does not change them to Red or Unknown. A participant who checks out separately is set to White/Unknown.</li>
+<li><strong>Scheduled nets:</strong> A scheduled occurrence also closes automatically at its planned end. Securing it early does not disable future occurrences. To stop future starts, edit the Scheduled entry and clear Enabled, or delete that schedule after confirmation.</li>
+<li><strong>Radio announcements:</strong> Net Central issues the net object withdrawal and, when configured, the stop bulletin. Delivery depends on communication availability and routing; local closure does not wait for every remote station to confirm it.</li>
+<li><strong>Reusing a callsign:</strong> You may create another net using a released callsign, subject to current callsign availability. The new net is a separate record; it does not reopen or modify the archived one.</li>
+<li><strong>Missing controls or errors:</strong> Confirm you are viewing a running net and have permission to manage it. If the record changed before confirmation, refresh, review its current state, and try again only if it is still running.</li>
+<li><strong>Archive navigation:</strong> Old links to the completed net open its selected entry in the archive viewer. Archived history is separate from the active Net Monitor controls.</li>
+</ul></section>
+</th:block></body></html>

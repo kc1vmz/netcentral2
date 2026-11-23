@@ -49,7 +49,10 @@ class Tnc2TransportTest {
                         socket.setSoTimeout(5000);
                         socket.getOutputStream().write("N1ABC>APRS:hello\r".getBytes(StandardCharsets.US_ASCII));
                         socket.getOutputStream().flush();
-                        return new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII)).readLine();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII));
+                        String ret = reader.readLine();
+                        reader.close();
+                        return ret;
                     }
                 });
                 var config = new CommunicationConfig("test",0,"TNC2","TNC2_TCP",true,true,"127.0.0.1",server.getLocalPort(),null,null,null,null,null,null,null,path,null);

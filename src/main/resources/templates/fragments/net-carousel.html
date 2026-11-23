@@ -1,0 +1,11 @@
+<!DOCTYPE html><html xmlns:th="http://www.thymeleaf.org"><body>
+<div th:fragment="carousel" th:if="${monitorEntry != null}">
+<h1>Net Monitor</h1><div class="net-carousel-heading">
+<nav class="net-carousel" aria-label="Choose a net">
+<a class="button-link" data-carousel-link th:if="${monitorPrevious != null}" th:href="${monitorPrevious}" aria-label="Previous net">&#10094;</a><button th:unless="${monitorPrevious != null}" disabled aria-label="Previous net">&#10094;</button>
+<div class="net-carousel-title"><strong th:text="|${monitorEntry.name} (${monitorEntry.callsign})|"></strong><small th:text="${monitorEntry.kind}"></small></div>
+<a class="button-link" data-carousel-link th:if="${monitorNext != null}" th:href="${monitorNext}" aria-label="Next net">&#10095;</a><button th:unless="${monitorNext != null}" disabled aria-label="Next net">&#10095;</button>
+</nav><a class="button-link" data-carousel-link th:href="@{/nets/new}">Create Net</a></div>
+<dialog id="monitor-leave-dialog"><h2>Discard unsaved changes?</h2><p>Leave this net and discard your unsaved input?</p><div class="dialog-actions"><button id="monitor-leave-confirm" type="button">Discard and continue</button><button id="monitor-leave-cancel" type="button">Cancel</button></div></dialog>
+<script defer th:src="@{/js/net-carousel.js}"></script>
+</div></body></html>
