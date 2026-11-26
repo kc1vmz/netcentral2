@@ -125,8 +125,8 @@ public class APRSWeatherReportFactory {
     private static APRSWeatherReport parseCompleteWithTimestampCompressedLocation(byte[] header, byte[] data, APRSWeatherReport ret) {
         // compressed location data
         byte [] compressedData = Arrays.copyOfRange(data, 9, 17);
-        String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitudeShort(compressedData), "NS");
-        String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitudeShort(compressedData), "EW");
+        String lat = CompressedDataFormatUtils.formatLatitude(CompressedDataFormatUtils.getLatitudeShort(compressedData));
+        String lon = CompressedDataFormatUtils.formatLongitude(CompressedDataFormatUtils.getLongitudeShort(compressedData));
         ret.setLat(lat);
         ret.setLon(lon);
 
@@ -195,8 +195,8 @@ public class APRSWeatherReportFactory {
         ret.setSymbolTableCode(StringUtils.stringify(data[10]));
 
         byte [] compressedData = Arrays.copyOfRange(data, 2, 10);
-        String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitudeShort(compressedData), "NS");
-        String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitudeShort(compressedData), "EW");
+        String lat = CompressedDataFormatUtils.formatLatitude(CompressedDataFormatUtils.getLatitudeShort(compressedData));
+        String lon = CompressedDataFormatUtils.formatLongitude(CompressedDataFormatUtils.getLongitudeShort(compressedData));
         ret.setLat(new String(lat));
         ret.setLon(new String(lon));
 

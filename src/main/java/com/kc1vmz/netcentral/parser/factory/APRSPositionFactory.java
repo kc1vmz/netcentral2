@@ -82,8 +82,8 @@ public class APRSPositionFactory {
             ret.setSymbolTableId(StringUtils.stringify(data[messageIndex]));
             ret.setSymbolTableCode(StringUtils.stringify(data[messageIndex+9]));
             byte [] compressedData = Arrays.copyOfRange(data, messageIndex, messageIndex+13);
-            lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitude(compressedData), "NS");
-            lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitude(compressedData), "EW");
+            lat = CompressedDataFormatUtils.formatLatitude(CompressedDataFormatUtils.getLatitude(compressedData));
+            lon = CompressedDataFormatUtils.formatLongitude(CompressedDataFormatUtils.getLongitude(compressedData));
 
             messageIndex += 13; // compressed is 13 bytes
         } else {

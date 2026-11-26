@@ -75,9 +75,9 @@ public class APRSItemFactory {
         if ((data[fixedStart] == '/') || (data[fixedStart] == '\\')) {
             // compressed data format
             byte [] compressedData = Arrays.copyOfRange(data, fixedStart, fixedStart+13); // expecting /YYYYXXXX$csT
-            String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitude(compressedData), "NS");
+            String lat = CompressedDataFormatUtils.formatLatitude(CompressedDataFormatUtils.getLatitude(compressedData));
             ret.setLat(lat);
-            String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitude(compressedData), "EW");
+            String lon = CompressedDataFormatUtils.formatLongitude(CompressedDataFormatUtils.getLongitude(compressedData));
             ret.setLon(lon);
 
             byte [] comment = Arrays.copyOfRange(data, fixedStart+13, data.length);

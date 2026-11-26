@@ -76,9 +76,9 @@ public class APRSObjectFactory {
         if ((data[18] == '/') || (data[18] == '\\')) {
             // compressed data format
             byte [] compressedData = Arrays.copyOfRange(data, 18, 31);
-            String lat = CompressedDataFormatUtils.convertDecimalToDDMMSSx(CompressedDataFormatUtils.getLatitude(compressedData), "NS");
+            String lat = CompressedDataFormatUtils.formatLatitude(CompressedDataFormatUtils.getLatitude(compressedData));
             ret.setLat(lat);
-            String lon = CompressedDataFormatUtils.convertDecimalToDDDMMSSx(CompressedDataFormatUtils.getLongitude(compressedData), "EW");
+            String lon = CompressedDataFormatUtils.formatLongitude(CompressedDataFormatUtils.getLongitude(compressedData));
             ret.setLon(lon);
 
             byte [] comment = Arrays.copyOfRange(data, 31, data.length);
