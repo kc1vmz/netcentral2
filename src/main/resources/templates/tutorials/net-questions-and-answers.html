@@ -1,45 +1,68 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"><body><th:block th:fragment="content">
 <section class="panel"><h2>Description of task</h2>
-<p>Ask a numbered question of a running net and collect answers by participant callsign. Use Net Monitor to ask questions, record answers received through another channel, and review responses. Checked-in participants can also ask and answer questions through APRS messages.</p>
-<p>Questions and answers remain associated with the net and are available in its archive and Q&amp;A Report after completion.</p></section>
+<p>Ask questions in a running net and collect answers by participant callsign. Use Net Monitor to ask questions, record responses received through another channel, and review answers. Checked-in participants can also ask and answer through APRS messages.</p>
+<p>Choose Text for a free-form question or Strip for a structured Request for Information with named fields. For example, <code>BEDS/Facility(X)/Available(NN)//</code> requests a facility name and available-bed count. Strips use masks to validate values and display answers in columns for comparison.</p>
+<p>Questions and answers remain with the net and are available in Archives and the Q&amp;A Report after completion.</p></section>
 <section class="panel"><h2>Prerequisites</h2><ul>
-<li>For browser controls, sign in as the net owner or an administrator authorized to manage the net.</li>
-<li>Select a running net. A scheduled definition or archived net cannot accept new questions or answers.</li>
-<li>Have the intended participants check in. An answer can only be recorded for a currently checked-in callsign.</li>
-<li>Verify that the net's selected communication instances are available and allow transmission, and that destinations have eligible routes.</li>
-<li>Prepare a concise question and know the correct question number when entering an answer.</li>
+<li>For browser controls, sign in as the net owner or an administrator authorized to manage it. Select a running net; scheduled definitions and archived nets cannot accept new questions or answers.</li>
+<li>Have intended participants check in. Answers can only be recorded for currently checked-in callsigns.</li>
+<li>Verify that selected communication instances are available, allow transmission, and have eligible routes to participants.</li>
+<li>Prepare a concise question. For a strip, decide which fields and masks to use. Each definition needs an embedded name, at least one <code>Label(MASK)</code> field, and a final <code>//</code>.</li>
+<li>Administrators and system administrators can maintain reusable strips in Settings. Other signed-in users can view the library; permission to manage a net is still required to ask questions through its browser controls.</li>
 </ul></section>
 <section class="panel"><h2>Steps to accomplish</h2><ol>
-<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and select the intended <strong>Running net</strong> in the carousel. Check its name and callsign.</p></li>
-<li><p>In <strong>Questions</strong>, select <strong>Ask question</strong>. Enter the question text without a radio-command prefix. The browser field accepts up to 500 characters, but short questions are easier to deliver and read over APRS.</p></li>
-<li><p>Select <strong>Ask participants</strong>, review the confirmation dialog, and confirm. Net Central assigns the next question number and sends the question to the currently checked-in participants. Select <strong>Cancel</strong> if you want to leave the question unsent.</p></li>
-<li><p>Select the question in the independently scrollable Questions list. Entries show their number, such as <strong>Q 1</strong>. The <strong>Answers</strong> section displays responses for the selected question.</p></li>
-<li><p>To record a response received by voice or another channel, select <strong>Record answer</strong> in the Answers section. Enter the <strong>Question number</strong>, <strong>Participant callsign</strong>, and <strong>Answer</strong>. Use the checked-in callsign, including its SSID when applicable.</p></li>
-<li><p>Review all three fields and select <strong>Save answer</strong>. This saves immediately without a second confirmation. Select <strong>Close</strong> to leave the dialog, then select the question to review the recorded response.</p></li>
+<li><p>For a reusable strip, open <a th:href="@{/setup/strip-library}">Settings / Strip Library</a>. Select <strong>Create strip</strong>. Enter a unique strip name, such as <strong>Bed availability</strong>, and a definition such as <code>BEDS/Facility(X)/Available(NN)//</code>. Select <strong>Create</strong>. Validation errors appear in the editor; correct them and retry. Use Edit to rename or update an entry. Names are unique regardless of capitalization.</p><p>The strip name is used in the selection list. The embedded name (<strong>BEDS</strong>) appears in brackets on issued questions and answers. These names can differ.</p></li>
+<li><p>Open <a th:href="@{/nets}">Net Monitor</a> and select the intended <strong>Running net</strong> in the carousel. Verify its callsign and name.</p></li>
+<li><p>In Questions, select <strong>Ask question</strong> and choose <strong>Type</strong>:</p><ul>
+<li><strong>Text:</strong> Enter a free-form Question without a radio-command prefix.</li>
+<li><strong>Strip:</strong> Choose a named library entry under Shared template. Request strip becomes read-only. Select <strong>Create ad-hoc request strip</strong> to make that field editable and enter a definition for this question. This does not add an entry to the library.</li>
+</ul><p>Enter only the definition, not <code>QS</code> or an assigned identifier. For example, <code>foo/bar/test//</code> is invalid because its fields lack masks. Use <code>foo/bar(X)/test(X)//</code> for two free-text fields.</p></li>
+<li><p>Select <strong>Ask participants</strong> and confirm sending. Net Central assigns a question number or strip identifier, such as <strong>S1</strong>, and sends it to currently checked-in participants. Cancel leaves the question unsent.</p></li>
+<li><p>Select the question in Questions. Text questions show a number such as <strong>Q 1</strong>; strips show an identifier and embedded name such as <strong>S1 [BEDS]</strong>. Answers displays responses for the selection.</p></li>
+<li><p>To enter a response received by voice or another channel, select <strong>Record answer</strong>. Enter Question number (for example, <strong>1</strong> or <strong>S1</strong>) and Participant callsign, including its SSID. Text questions use a single Answer field. Strip questions present separate inputs for each field with its mask; enter values without labels or slashes. Leave a field empty when unknown; the dialog encodes a single-space placeholder.</p></li>
+<li><p>Review the identifier, callsign, and values, then select <strong>Save answer</strong>. Saving is immediate, without a second confirmation. Close is at the bottom of the dialog. Select the question to review the recorded response.</p></li>
 </ol>
 <h3>Using a radio or APRS client</h3>
-<p>After checking in, address these APRS messages to the running net's callsign:</p>
-<table><thead><tr><th>Command</th><th>Example</th><th>Result</th></tr></thead><tbody>
-<tr><td>Q text</td><td><code>Q Can you operate until 1800?</code></td><td>Creates a numbered question and sends it to checked-in participants.</td></tr>
-<tr><td>A number text</td><td><code>A 1 Yes, available until 1800</code></td><td>Records your answer to question 1.</td></tr>
-<tr><td>QL</td><td><code>QL</code></td><td>Returns questions you have not yet answered.</td></tr>
-<tr><td>QR number</td><td><code>QR 1</code></td><td>Returns question 1 and its recorded answers.</td></tr>
-</tbody></table><p>Use the actual question number from this net. Net Central replies with a thank-you message after accepting a radio question or answer.</p></section>
+<p>After checking in, send these APRS messages to the running net's callsign:</p>
+<table><thead><tr><th>Purpose</th><th>Example</th></tr></thead><tbody>
+<tr><td>Ask a text question</td><td><code>Q Can you operate until 1800?</code></td></tr>
+<tr><td>Answer text question 1</td><td><code>A 1 Yes, available until 1800</code></td></tr>
+<tr><td>Create a strip question</td><td><code>QS BEDS/Facility(X)/Available(NN)//</code></td></tr>
+<tr><td>Answer strip S1</td><td><code>A S1 Lincoln/25//</code></td></tr>
+<tr><td>Retrieve unanswered text and strip questions</td><td><code>QL</code></td></tr>
+<tr><td>Retrieve a question and its answers</td><td><code>QR 1</code> or <code>QR S1</code></td></tr>
+</tbody></table>
+<p>An issued strip looks like <code>QS S1/BEDS/Facility(X)/Available(NN)//</code>. Use its actual assigned identifier in your answer. Include only values in the original field order, separated by slashes and ending in <code>//</code>. Omit BEDS and the field labels. For an unknown value, use exactly one space: <code>A S1 Lincoln/ //</code>. Do not omit its separator.</p>
+<p>For <code>BEDS/Meals(#)//</code>, answer with <code>A S1 5//</code> using the actual identifier. The # mask permits exactly one digit. Use NNN in a new definition when counts from one to three digits are needed. Net Central sends a thank-you response after accepting a radio question or answer.</p></section>
 <section class="panel"><h2>Verifying success</h2><ol>
-<li>Confirm the new question appears once in Questions with the expected text and number.</li>
-<li>Have a checked-in participant verify reception of the numbered question on their APRS client. A question appearing in the browser proves it was recorded, not that every transmission reached its destination.</li>
-<li>After a response, select the question and check that Answers shows the correct callsign and text. The answer also produces a recorded event in the net's message history.</li>
-<li>From a participant's radio, use QR with the question number to retrieve the recorded responses. QL should no longer include a question that participant has answered.</li>
-<li>If updates are paused, resume them to see incoming responses. Confirm that you selected the correct question before treating an empty Answers section as a missing response.</li>
+<li>Confirm the question appears once with the expected text and identifier. For strips, check the embedded name in brackets.</li>
+<li>Have a checked-in participant verify reception on their APRS client. Browser visibility proves the question was recorded, not that every transmission arrived.</li>
+<li>Select the question and verify the responding callsign and values in Answers. For strips, check each field column and the original response string. Unknown values appear as <strong>(blank)</strong>; confirm these are intentional.</li>
+<li>Retrieve responses by radio with <code>QR 1</code> or <code>QR S1</code>. QL should no longer include a question that participant has answered.</li>
+<li>Resume updates if paused. Check the selected question before treating an empty Answers section as a missing response. After securing the net, verify its questions and responses in Archives or Generate Q&amp;A Report.</li>
 </ol></section>
-<section class="panel"><h2>Additional considerations</h2><ul>
-<li><strong>One answer per callsign:</strong> Recording another answer from the same callsign to the same question replaces its previous answer. Review the callsign and question number before saving a correction.</li>
-<li><strong>Answer delivery:</strong> Answers are stored for review; they are not automatically broadcast to every participant. Use the console or QR to review the responses.</li>
-<li><strong>Question scope:</strong> Numbers belong to a specific net. Question 1 in one net is unrelated to question 1 in another net or a later scheduled occurrence.</li>
-<li><strong>Length:</strong> Browser question and answer fields accept up to 500 characters, but APRS messages have shorter transport limits and include command or question-number prefixes. Keep operational text brief rather than assuming a long browser entry will arrive intact in one radio message.</li>
-<li><strong>Late arrivals:</strong> The initial question transmission targets participants checked in at that time. A participant who checks in later can request unanswered questions using QL. The net's Question reminder option can also be managed through Edit Net.</li>
-<li><strong>Missing responses:</strong> Check participation, the question number, route availability, and communication status. A station must be checked in when its answer is recorded.</li>
-<li><strong>Archives:</strong> After the net is secured, open <a th:href="@{/archives}">Archives</a>, select the net, and review Questions and Answers or choose <strong>Generate Q&amp;A Report</strong>. Archived records are read-only.</li>
+<section class="panel"><h2>Additional considerations</h2>
+<h3>Choosing strip masks</h3>
+<table><thead><tr><th>Mask</th><th>Accepted value</th></tr></thead><tbody>
+<tr><td>X</td><td>Free text within the strip's character and length limits.</td></tr>
+<tr><td>A, AAA</td><td>Exactly one or three uppercase letters, respectively.</td></tr>
+<tr><td>N, NNN</td><td>One digit, or one to three digits, respectively.</td></tr>
+<tr><td>#, ###</td><td>Exactly one or three digits, respectively.</td></tr>
+<tr><td>-##.##</td><td>Two digits on each side of a literal decimal point, with an optional minus sign.</td></tr>
+<tr><td>Y,N</td><td>Y or N.</td></tr>
+<tr><td>DDHHMM</td><td>Day, hour, and minute in UTC.</td></tr>
+<tr><td>DDHHMMZ, DDHHMML</td><td>Day, hour, and minute with the matching Z (UTC) or L (local) suffix.</td></tr>
+<tr><td>MM-DD-YYYY</td><td>A valid date in the specified format.</td></tr>
+</tbody></table><ul>
+<li><strong>Strip characters:</strong> Slashes separate fields and cannot appear inside values. Line breaks, non-ASCII text, and APRS-reserved characters <code>{ } | ~</code> are not allowed.</li>
+<li><strong>Strip length:</strong> Each request and response must fit one 67-character APRS message, including its command and identifier. Retrieval also needs room for the responding callsign. Oversized strips are rejected, not split or truncated. Keep embedded names, labels, and values concise.</li>
+<li><strong>Text length:</strong> Browser text-question and answer fields accept up to 500 characters, but APRS has shorter transport limits. Keep operational text brief.</li>
+<li><strong>Library changes:</strong> Editing or removing a library entry does not change issued questions. To change an issued strip's fields or masks, ask a new question. Strip identifiers belong to the net and survive a restart.</li>
+<li><strong>Partial and invalid answers:</strong> An accepted partial answer counts as answered and stops unanswered-question reminders for that participant. Invalid answers do not replace a valid answer. Correct the reported problem and submit again.</li>
+<li><strong>One answer per callsign:</strong> Another valid answer to the same question replaces that callsign's current answer. Answer events remain in net history. Review the callsign and identifier before correcting a response.</li>
+<li><strong>Answer delivery:</strong> Answers are stored for review, not automatically broadcast to every participant. Use Answers or QR to review them.</li>
+<li><strong>Late arrivals and missing responses:</strong> Initial delivery targets participants checked in at that time. Later arrivals can use QL. Question reminder settings apply to strips as well as text questions. Check participation, the identifier, route availability, and communication status if a response is missing.</li>
+<li><strong>Archives:</strong> After securing the net, select it in <a th:href="@{/archives}">Archives</a> to review Questions and Answers or Generate Q&amp;A Report. Archived records are read-only.</li>
 </ul></section>
 </th:block></body></html>

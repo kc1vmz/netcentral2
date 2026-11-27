@@ -33,6 +33,9 @@ public class NetPageController {
         this.schedules = schedules;
     }
 
+    @GetMapping("/strip-library")
+    public String stripLibrary() { return "redirect:/setup/strip-library"; }
+
     @GetMapping("/nets")
     public String list(Model model) {
         var entries = NetMonitorNavigation.entries(nets, schedules);

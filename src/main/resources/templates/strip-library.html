@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/account :: head('Strip Library')}"></head><body>
+<header th:replace="~{fragments/account :: header}"></header><main class="workspace settings-workspace">
+<h1 id="settings-title">Settings</h1>
+<h2>Strip Library</h2><p class="intro">Manage named request strips for asking questions in a net.</p>
+<section class="panel">
+<meta name="csrf-token" th:content="${_csrf.token}"><meta name="csrf-header" th:content="${_csrf.headerName}">
+
+<div class="section-actions"><button type="button" id="strip-template-new" hidden>Create strip</button></div>
+<p id="strip-library-status" role="alert"></p>
+<div class="classification-scroll" tabindex="0" role="region" aria-label="Strip library"><ul id="strip-library-list" class="classification-list"></ul></div>
+<dialog id="strip-template-editor" aria-labelledby="strip-template-heading"><h2 id="strip-template-heading">Create strip</h2>
+<form id="strip-template-form" class="account-form">
+<label>Name<input name="name" maxlength="120" required></label>
+<label>Request strip<input name="definition" maxlength="61" required placeholder="BEDS/Facility(X)/Available(NN)//"></label>
+<p>Each field requires a mask, for example <code>foo/bar(X)/test(X)//</code>. The library name is separate from the name inside the strip.</p>
+<p>Masks: X, A, N, #, Y,N, DDHHMM (UTC), DDHHMMZ, DDHHMML, MM-DD-YYYY. / separates fields; // ends a strip.</p>
+<p id="strip-editor-error" role="alert"></p><div class="dialog-actions"><button type="button" data-strip-cancel data-dialog-cancel>Cancel</button><button type="submit" id="strip-save">Create</button></div></form></dialog>
+<dialog id="strip-confirm" aria-labelledby="strip-confirm-title"><h2 id="strip-confirm-title">Confirm strip change</h2><p id="strip-confirm-summary"></p><p id="strip-confirm-error" role="alert"></p><div class="dialog-actions"><button type="button" data-strip-cancel data-dialog-cancel>Cancel</button><button type="button" id="strip-confirm-apply">Confirm</button></div></dialog>
+<script defer th:src="@{/js/strip-library.js}"></script>
+</section></main></body></html>

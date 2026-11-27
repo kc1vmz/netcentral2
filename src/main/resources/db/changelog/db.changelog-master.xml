@@ -19,5 +19,24 @@
         <sql>UPDATE communication_instance SET configuration = SUBSTRING(RTRIM(configuration), 1, LENGTH(RTRIM(configuration)) - 1) || ',"transmitSpacingMs":1000}' WHERE configuration NOT LIKE '%"transmitSpacingMs"%'</sql>
     </changeSet>
     <include file="015-participant-unknown.xml" relativeToChangelogFile="true"/>
+    <changeSet id="016-rfi-strips" author="netcentral">
+        <sql>
+            ALTER TABLE net_question ADD COLUMN strip BOOLEAN DEFAULT FALSE NOT NULL;
+            ALTER TABLE net_question ADD COLUMN strip_number INTEGER;
+            CREATE UNIQUE INDEX net_strip_number ON net_question(net_id,strip_number);
+            CREATE TABLE strip_template(id VARCHAR(36) PRIMARY KEY, version BIGINT NOT NULL,
+                definition VARCHAR(500) NOT NULL, updated_at TIMESTAMP WITH TIME ZONE NOT NULL);
+        </sql>
+    </changeSet>
+    <changeSet id="017-strip-names" author="netcentral">
+        <sql>
+            ALTER TABLE strip_template ADD COLUMN name VARCHAR(120);
+            ALTER TABLE strip_template ADD COLUMN name_key VARCHAR(120);
+            UPDATE strip_template SET name='Strip ' || id, name_key=UPPER('Strip ' || id);
+            ALTER TABLE strip_template ALTER COLUMN name SET NOT NULL;
+            ALTER TABLE strip_template ALTER COLUMN name_key SET NOT NULL;
+            CREATE UNIQUE INDEX strip_template_name ON strip_template(name_key);
+        </sql>
+    </changeSet>
 </databaseChangeLog>
 

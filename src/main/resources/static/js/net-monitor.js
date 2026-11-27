@@ -177,8 +177,11 @@
     const questions=document.getElementById('questions'),allQuestions=snapshot.questions||[];
     if(!allQuestions.some(q=>q.id===selectedQuestion))selectedQuestion=allQuestions[0]?.id??null;
     const keys=new Set(allQuestions.map(q=>q.id));for(const child of [...questions.children])if(!keys.has(child.dataset.id))child.remove();
-    for(const question of allQuestions){let button=[...questions.children].find(b=>b.dataset.id===question.id);if(!button){button=document.createElement('button');button.type='button';button.dataset.id=question.id;button.className='row-select';button.addEventListener('click',()=>{selectedQuestion=question.id;saveView();render(current);});questions.append(button);}button.textContent='Q '+question.number+': '+question.question;button.setAttribute('aria-pressed',String(question.id===selectedQuestion));}
-    const answers=document.getElementById('question-answers');if(answers){answers.replaceChildren();for(const answer of snapshot.answers||[])if(answer.questionId===selectedQuestion){const p=document.createElement('p');p.textContent=answer.callsign+': '+answer.answer;answers.append(p);}if(!answers.children.length)answers.textContent=selectedQuestion?'No answers yet.':'Select a question.';}
+    for(const question of allQuestions){let button=[...questions.children].find(b=>b.dataset.id===question.id);if(!button){button=document.createElement('button');button.type='button';button.dataset.id=question.id;button.className='row-select';button.addEventListener('click',()=>{selectedQuestion=question.id;const form=document.getElementById('answer-question');if(form)form.elements.number.value=question.identifier;saveView();render(current);});questions.append(button);}button.textContent=StripUi.label(question);button.setAttribute('aria-pressed',String(question.id===selectedQuestion));}
+    const answers=document.getElementById('question-answers');
+    if(answers)StripUi.answers(answers,allQuestions.find(q=>q.id===selectedQuestion),(snapshot.answers||[]).filter(a=>a.questionId===selectedQuestion));
+    const answerForm=document.getElementById('answer-question');
+    if(answerForm)StripUi.editor(answerForm,allQuestions.find(q=>q.identifier.toUpperCase()===answerForm.elements.number.value.toUpperCase()));
     live.textContent = paused?'Paused':'Live';
   }
   async function snapshot() {
@@ -218,11 +221,22 @@
       await request('POST','/participants/' + url(callsign));form.reset();
     }, 'Checked in', document.getElementById('check-in-dialog'), 'Check in');
   });
+  const stripQuestionForm=document.getElementById('ask-question');
+  function questionPreview(){if(!stripQuestionForm)return;const strip=stripQuestionForm.elements.strip.value==='true';stripQuestionForm.elements.question.readOnly=strip && stripQuestionForm.elements.template.value!=='';document.getElementById('strip-library-choice').hidden=!strip;document.getElementById('question-input-label').textContent=strip?'Request strip':'Question';document.getElementById('strip-question-error').textContent='';}
+  stripQuestionForm?.addEventListener('input',questionPreview);
+  stripQuestionForm?.elements.strip.addEventListener('change',async()=>{
+    questionPreview();if(stripQuestionForm.elements.strip.value!=='true')return;
+    try{const response=await fetch('/api/v1/strip-library');if(!response.ok)throw Error('Could not load strip library');const data=await response.json();const select=stripQuestionForm.elements.template;select.replaceChildren(new Option('Create ad-hoc request strip',''));for(const template of data.templates)select.add(new Option(template.name,template.definition));questionPreview();}catch(e){status.textContent=e.message;document.getElementById('strip-question-error').textContent=e.message;}
+  });
+  stripQuestionForm?.elements.template.addEventListener('change',()=>{if(stripQuestionForm.elements.template.value)stripQuestionForm.elements.question.value=stripQuestionForm.elements.template.value;questionPreview();});
+  document.getElementById('answer-question')?.elements.number.addEventListener('input',()=>{
+    const form=document.getElementById('answer-question');StripUi.editor(form,(current?.questions||[]).find(q=>q.identifier.toUpperCase()===form.elements.number.value.toUpperCase()));
+  });
   document.getElementById('ask-question')?.addEventListener('submit', event => {
     event.preventDefault(); const form = event.currentTarget;
     const question=form.elements.question.value;
     confirmAction('Ask a question', 'Confirm sending this question to participants: ' + question, async () => {
-      await request('POST','/questions',{question});form.reset();
+      await request('POST','/questions',{question,strip:form.elements.strip.value==='true'});form.reset();questionPreview();
     }, 'Question sent', document.getElementById('ask-question-dialog'), 'Ask participants');
   });
   document.getElementById('answer-question')?.addEventListener('submit', event => {

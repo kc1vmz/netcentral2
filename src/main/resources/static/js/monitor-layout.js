@@ -26,8 +26,8 @@
     for(const [id,label] of [['check-in','Check in station'],['participant-edit','Participant details'],['participant-equipment','Participant equipment'],['send-message','Send message'],['ask-question','Ask question'],['answer-question','Record answer'],['invite-stations','Invite stations']]){
       const form=document.getElementById(id);if(!form)continue;const dialog=document.createElement('dialog');dialog.id=id+'-dialog';dialog.setAttribute('aria-label',label);
       const close=document.createElement('button');close.type='button';close.className='dialog-close';close.textContent='Close';close.addEventListener('click',()=>dialog.close());
-      if(id.startsWith('participant-') || id==='ask-question' || id==='invite-stations' || id==='check-in'){
-        close.className='';close.textContent=id==='invite-stations'?'Close':'Cancel';close.dataset.dialogCancel='';
+      if(id.startsWith('participant-') || id==='ask-question' || id==='invite-stations' || id==='check-in' || id==='answer-question'){
+        close.className='';close.textContent=(id==='invite-stations'||id==='answer-question')?'Close':'Cancel';close.dataset.dialogCancel='';
         const buttons=document.createElement('div');buttons.className='dialog-actions';
         const update=form.querySelector('button');if(id.startsWith('participant-'))update.textContent='Update';buttons.append(update,close);form.append(buttons);dialog.append(form);
       }else{

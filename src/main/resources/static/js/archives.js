@@ -92,11 +92,11 @@
       }
       if(!participants.length) {const row=document.createElement('tr'),td=text('td','No participants.');td.colSpan=4;row.append(td);el('participants').append(row);}
       for(const q of s.questions || []) {
-        const button=text('button','Q '+q.number+': '+q.question);button.className='row-select';button.type='button';button.setAttribute('aria-pressed','false');
+        const button=text('button',StripUi.label(q));button.className='row-select';button.type='button';button.setAttribute('aria-pressed','false');
         button.addEventListener('click',()=>{
           for(const b of el('questions').children)b.setAttribute('aria-pressed',String(b===button));
           el('answers').replaceChildren();
-          for(const a of s.answers || [])if(a.questionId===q.id)el('answers').append(text('p',a.callsign+': '+a.answer));
+          StripUi.answers(el('answers'),q,(s.answers||[]).filter(a=>a.questionId===q.id));
           if(!el('answers').children.length)el('answers').textContent='No answers recorded.';
         });el('questions').append(button);
       }

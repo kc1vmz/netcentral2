@@ -11,6 +11,10 @@ import com.kc1vmz.netcentral.communication.PacketHub;
 import com.kc1vmz.netcentral.communication.RoutingService;
 import com.kc1vmz.netcentral.communication.TransmissionRouter;
 import com.kc1vmz.netcentral.net.NetModels.*;
+import com.kc1vmz.netcentral.net.NetQuestionModels;
+import com.kc1vmz.netcentral.net.StripFormat;
+import com.kc1vmz.netcentral.aprsobject.object.reports.APRSNetCentralNetQuestionReport;
+import com.kc1vmz.netcentral.aprsobject.object.reports.APRSNetCentralNetQuestionAnswerReport;
 import com.kc1vmz.netcentral.operations.NetOptions;
 import com.kc1vmz.netcentral.operations.RadioDispatch;
 
@@ -20,6 +24,8 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
@@ -639,10 +645,14 @@ public class NetAccessor {
     }
 
     private void executeCommands(Net n, String call, String command, String receiving) {
-        String[] words = command.split("\\s+");
+        var tokens = Pattern.compile("\\S+").matcher(command);
+        List<String> tokenValues = new ArrayList<>();
+        List<Integer> tokenEnds = new ArrayList<>();
+        while (tokens.find()) { tokenValues.add(tokens.group()); tokenEnds.add(tokens.end()); }
+        String[] words = tokenValues.toArray(String[]::new);
         for (int i = 0; i < words.length; i++) {
             String op = words[i].toUpperCase(Locale.ROOT);
-            String rest = String.join(" ", java.util.Arrays.copyOfRange(words, i + 1, words.length));
+            String rest = command.substring(tokenEnds.get(i)).replaceFirst("^\\s", "");
             if (op.equals("CI")) {
                 join(n, call);
                 reply(n, call, "You checked into net " + n.callsign() + " - send H for help", receiving);
@@ -652,7 +662,7 @@ public class NetAccessor {
                 continue;
             }
             if (op.equals("H")) {
-                reply(n, call, "CI CO STG STY STR T M MC R L P I S O F X E B Y Q QL QR A INV NCI H", receiving);
+                reply(n, call, "CI CO STG STY STR T M MC R L P I S O F X E B Y Q QS QL QR A INV NCI H", receiving);
                 continue;
             }
             if (op.startsWith("?")) {
@@ -730,7 +740,12 @@ public class NetAccessor {
                             if (jdbc.queryForObject(
                                     "SELECT COUNT(*) FROM net_answer WHERE question_id=? AND callsign=?", Integer.class,
                                     q.id(), call) == 0)
-                                reply(n, call, "Q " + q.number() + " " + q.question(), receiving);
+                                reply(n, call, q.wireText(), receiving);
+                    }
+                    case "QS" -> {
+                        var strip = askInternal(n, call, rest, true);
+                        reply(n, call, "Strip " + strip.getIdentifier() + " issued", receiving);
+                        return;
                     }
                     case "Q" -> {
                         askInternal(n, call, rest);
@@ -738,7 +753,7 @@ public class NetAccessor {
                         return;
                     }
                     case "A" -> {
-                        String[] answer = rest.split("\\s+", 2);
+                        String[] answer = rest.split("\\s", 2);
                         if (answer.length != 2)
                             throw bad("Use A number answer");
                         answerInternal(n, answer[0], call, answer[1]);
@@ -763,9 +778,9 @@ public class NetAccessor {
                         if (++i >= words.length)
                             throw bad("Use QR number");
                         var q = questionInternal(n.id(), words[i]);
-                        reply(n, call, "Q " + q.number() + " " + q.question(), receiving);
+                        reply(n, call, q.wireText(), receiving);
                         for (var a : answersInternal(q.id()))
-                            reply(n, call, a.callsign() + ": " + a.answer(), receiving);
+                            reply(n, call, q.strip() ? q.getIdentifier() + " " + a.callsign() + " " + a.answer() : a.callsign() + ": " + a.answer(), receiving);
                     }
                     case "P", "O" -> {
                         if (++i >= words.length)
@@ -843,38 +858,38 @@ public class NetAccessor {
             throw bad("Invalid radio style");
     }
 
-    public java.util.List<com.kc1vmz.netcentral.net.NetQuestionModels.Question> questions(String id) {
+    public List<NetQuestionModels.Question> questions(String id) {
         return questionsInternal(get(id).id());
     }
 
-    private java.util.List<com.kc1vmz.netcentral.net.NetQuestionModels.Question> questionsInternal(String id) {
+    private List<NetQuestionModels.Question> questionsInternal(String id) {
         return jdbc.query("SELECT * FROM net_question WHERE net_id=? ORDER BY number",
-                (r, k) -> new com.kc1vmz.netcentral.net.NetQuestionModels.Question(r.getString("id"),
-                        r.getInt("number"), r.getString("callsign"), r.getString("question"),
-                        instant(r.getObject("asked_at", OffsetDateTime.class))),
+                (r, k) -> new NetQuestionModels.Question(r.getString("id"),
+                        r.getBoolean("strip") ? r.getInt("strip_number") : r.getInt("number"), r.getString("callsign"), r.getString("question"),
+                        instant(r.getObject("asked_at", OffsetDateTime.class)), r.getBoolean("strip")),
                 id);
     }
 
-    private com.kc1vmz.netcentral.net.NetQuestionModels.Question questionInternal(String id, String question) {
+    private NetQuestionModels.Question questionInternal(String id, String question) {
         return questionsInternal(id).stream()
-                .filter(q -> q.id().equals(question) || Integer.toString(q.number()).equals(question)).findFirst()
+                .filter(q -> q.id().equals(question) || q.getIdentifier().equalsIgnoreCase(question)).findFirst()
                 .orElseThrow(() -> bad("Question not found"));
     }
 
-    public java.util.List<com.kc1vmz.netcentral.net.NetQuestionModels.Answer> answers(String id, String question) {
+    public List<NetQuestionModels.Answer> answers(String id, String question) {
         return answersInternal(questionInternal(get(id).id(), question).id());
     }
 
-    private java.util.List<com.kc1vmz.netcentral.net.NetQuestionModels.Answer> answersInternal(String id) {
+    private List<NetQuestionModels.Answer> answersInternal(String id) {
         return jdbc.query("SELECT * FROM net_answer WHERE question_id=? ORDER BY callsign",
-                (r, k) -> new com.kc1vmz.netcentral.net.NetQuestionModels.Answer(r.getString("question_id"),
+                (r, k) -> new NetQuestionModels.Answer(r.getString("question_id"),
                         r.getString("callsign"), r.getString("answer"),
                         instant(r.getObject("answered_at", OffsetDateTime.class))),
                 id);
     }
 
     @Transactional
-    public java.util.List<com.kc1vmz.netcentral.net.NetQuestionModels.Question> ask(String id, String question) {
+    public List<NetQuestionModels.Question> ask(String id, String question) {
         lock();
         Net n = findInternal(id);
         manageable(n);
@@ -883,21 +898,44 @@ public class NetAccessor {
         return questionsInternal(n.id());
     }
 
+    @Transactional
+    public List<NetQuestionModels.Question> askStrip(String id, String question) {
+        lock();
+        Net n = findInternal(id);
+        manageable(n);
+        active(n);
+        askInternal(n, n.callsign(), question, true);
+        return questionsInternal(n.id());
+    }
+
     private void askInternal(Net n, String call, String question) {
+        askInternal(n, call, question, false);
+    }
+
+    private NetQuestionModels.Question askInternal(Net n, String call, String question, boolean strip) {
+        if (strip) StripFormat.wire(question);
         question = text(question, 500, true);
         int number = jdbc.queryForObject("SELECT COALESCE(MAX(number),0)+1 FROM net_question WHERE net_id=?",
                 Integer.class, n.id());
-        jdbc.update("INSERT INTO net_question VALUES(?,?,?,?,?,?)", UUID.randomUUID().toString(), n.id(), number, call,
-                question, now());
+        int stripNumber = strip ? jdbc.queryForObject("SELECT COALESCE(MAX(strip_number),0)+1 FROM net_question WHERE net_id=?", Integer.class, n.id()) : 0;
+        var issued = new NetQuestionModels.Question(UUID.randomUUID().toString(), strip ? stripNumber : number,
+                call, question, now().toInstant(), strip);
+        if (strip) {
+            StripFormat.definition(question);
+            StripFormat.wire(issued.wireText());
+        }
+        jdbc.update("INSERT INTO net_question(id,net_id,number,callsign,question,asked_at,strip,strip_number) VALUES(?,?,?,?,?,?,?,?)",
+                issued.id(), n.id(), number, call, question, now(), strip, strip ? stripNumber : null);
         touch(n.id());
-        federate(n.id(), new com.kc1vmz.netcentral.aprsobject.object.reports.APRSNetCentralNetQuestionReport(
-                n.callsign(), Integer.toString(number), question));
+        federate(n.id(), new APRSNetCentralNetQuestionReport(
+                n.callsign(), issued.getIdentifier(), question));
         for (var participant : participantsInternal(n.id(), false))
-            reply(n, participant.callsign(), "Q " + number + " " + question, null);
+            reply(n, participant.callsign(), issued.wireText(), null);
+        return issued;
     }
 
     @Transactional
-    public java.util.List<com.kc1vmz.netcentral.net.NetQuestionModels.Answer> answer(String id, String question,
+    public List<NetQuestionModels.Answer> answer(String id, String question,
             String call, String answer) {
         lock();
         Net n = findInternal(id);
@@ -911,13 +949,14 @@ public class NetAccessor {
         var q = questionInternal(n.id(), question);
         if (!participating(n, call))
             throw bad("Station is not checked in");
+        if (q.strip()) answer = StripFormat.answer(q.question(), q.getIdentifier(), call, answer);
         jdbc.update("MERGE INTO net_answer KEY(question_id,callsign) VALUES(?,?,?,?)", q.id(), call,
-                text(answer, 500, true), now());
+                q.strip() ? answer : text(answer, 500, true), now());
         touch(n.id());
-        federate(n.id(), new com.kc1vmz.netcentral.aprsobject.object.reports.APRSNetCentralNetQuestionAnswerReport(
-                n.callsign(), call, Integer.toString(q.number()), answer));
+        federate(n.id(), new APRSNetCentralNetQuestionAnswerReport(
+                n.callsign(), call, q.getIdentifier(), answer));
         history(n.id(), call, "Net",
-                "Answer " + q.number() + ": " + answer.substring(0, Math.min(480, answer.length())), "EVENT",
+                "Answer " + q.getIdentifier() + ": " + answer.substring(0, Math.min(480, answer.length())), "EVENT",
                 "RECORDED", null);
     }
 
@@ -1057,7 +1096,7 @@ public class NetAccessor {
                     for (var p : participantsInternal(n.id(), false))
                         if (jdbc.queryForObject("SELECT COUNT(*) FROM net_answer WHERE question_id=? AND callsign=?",
                                 Integer.class, q.id(), p.callsign()) == 0)
-                            reply(n, p.callsign(), "Q " + q.number() + " " + q.question(), null);
+                            reply(n, p.callsign(), q.wireText(), null);
         }
     }
 

@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.kc1vmz.netcentral.accessor.NetAccessor;
 import com.kc1vmz.netcentral.account.LocalPrincipal;
 import com.kc1vmz.netcentral.net.NetEventStream;
+import com.kc1vmz.netcentral.net.NetQuestionModels;
 import com.kc1vmz.netcentral.net.NetReport;
 import com.kc1vmz.netcentral.net.NetModels.*;
 
@@ -121,8 +122,8 @@ public class NetApiController {
 
     @PostMapping("/nets/{id}/questions")
     public Object question(@PathVariable String id,
-            @RequestBody com.kc1vmz.netcentral.net.NetQuestionModels.QuestionRequest input) {
-        return nets.ask(id, input.question());
+            @RequestBody NetQuestionModels.QuestionRequest input) {
+        return input.strip() ? nets.askStrip(id, input.question()) : nets.ask(id, input.question());
     }
 
     @GetMapping({ "/nets/{id}/questions/{question}/answers", "/completedNets/{id}/questions/{question}/answers" })
@@ -132,7 +133,7 @@ public class NetApiController {
 
     @PostMapping("/nets/{id}/questions/{question}/answers")
     public Object answer(@PathVariable String id, @PathVariable String question,
-            @RequestBody com.kc1vmz.netcentral.net.NetQuestionModels.AnswerRequest input) {
+            @RequestBody NetQuestionModels.AnswerRequest input) {
         return nets.answer(id, question, input.callsign(), input.answer());
     }
 

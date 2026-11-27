@@ -134,7 +134,7 @@ public class ToolsAccessor {
     @EventListener
     public synchronized void receive(PacketHub.UniquePacket event) {
         var p = event.received().packet();
-        if (!p.source().equals("WLNK-1") || p.information().length() < 11 || p.information().charAt(0) != ':')
+        if ((!p.source().equals("WLNK") && (!p.source().equals("WLNK-1"))) || p.information().length() < 11 || p.information().charAt(0) != ':')
             return;
         var session = sessions.get(p.information().substring(1, 10).strip());
         if (session == null || session.expires.isBefore(Instant.now()))
@@ -144,7 +144,7 @@ public class ToolsAccessor {
         if (ack >= 0) {
             String number = body.substring(ack + 1);
             if (number.matches("[A-Za-z0-9]{1,5}"))
-                router.sendMessage("DEFAULT", session.call, "WLNK-1", "ack" + number, false,
+                router.sendMessage("DEFAULT", session.call, "WLNK", "ack" + number, false,
                         event.received().instanceId());
             body = body.substring(0, ack);
         }
@@ -191,7 +191,7 @@ public class ToolsAccessor {
 
     private void send(Session session, List<String> lines, String receiving, boolean finish) {
         try {
-            var result = router.sendGroup("DEFAULT", session.call, "WLNK-1", lines, false, receiving);
+            var result = router.sendGroup("DEFAULT", session.call, "WLNK", lines, false, receiving);
             if (result.isEmpty()) {
                 session.state = "NO_ROUTE";
                 session.clear();

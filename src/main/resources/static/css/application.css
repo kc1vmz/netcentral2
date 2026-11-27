@@ -293,3 +293,6 @@ dialog h2 { margin-top:0; }
 @media(max-width:1000px) { .archive-columns { grid-template-columns:1fr; } }
 
 .participant-color-white { color:#444; } .participant-color-white::before { background:#fff; border-color:#555; }
+
+#strip-library-list li { display:grid; grid-template-columns:minmax(8rem,1fr) minmax(12rem,2fr) auto; }
+#strip-library-list li strong { overflow-wrap:anywhere; }

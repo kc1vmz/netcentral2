@@ -14,7 +14,7 @@
   const setup=location.pathname.startsWith('/setup/')||['/users'].includes(location.pathname);
   if(setup){
     const tabs=document.createElement('nav');tabs.className='setup-tabs';tabs.setAttribute('aria-label','Setup');
-    for(const [label,url] of [['Announcements','/setup/operations?section=announcements'],['Federation','/setup/operations?section=federation'],['Ignored','/setup/radio?section=ignored'],['Map Cache','/setup/map-cache'],['Net Manager','/setup/operations?section=net-manager'],['Classification','/setup/radio?section=classification'],['Object security','/setup/radio?section=access'],['Users','/users'],['Timers','/setup/operations?section=timers']]){
+    for(const [label,url] of [['Announcements','/setup/operations?section=announcements'],['Federation','/setup/operations?section=federation'],['Ignored','/setup/radio?section=ignored'],['Strip Library','/setup/strip-library'],['Map Cache','/setup/map-cache'],['Net Manager','/setup/operations?section=net-manager'],['Classification','/setup/radio?section=classification'],['Object security','/setup/radio?section=access'],['Users','/users'],['Timers','/setup/operations?section=timers']]){
       const a=document.createElement('a');a.textContent=label;a.href=url;if(a.pathname===location.pathname&&(new URL(a.href).searchParams.get('section')===new URLSearchParams(location.search).get('section')||(!location.search&&((location.pathname==='/setup/operations'&&label==='Announcements')||(location.pathname==='/setup/radio'&&label==='Classification')))))a.setAttribute('aria-current','page');tabs.append(a);
     }
     if(document.querySelector('.site-header')?.dataset.systemAdministrator==='true'){

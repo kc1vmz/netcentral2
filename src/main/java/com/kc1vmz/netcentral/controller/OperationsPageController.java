@@ -371,9 +371,16 @@ public class OperationsPageController {
         return "redirect:/nets/" + id + "/edit";
     }
 
+    @GetMapping("/setup/strip-library")
+    public String stripLibrarySettings() {
+        store.authenticated();
+        return "strip-library";
+    }
+
     @GetMapping("/tools")
     public String tools(@RequestParam(defaultValue = "winlink") String section, Model model) {
         store.authenticated();
+        if (section.equals("strip-library")) return "redirect:/setup/strip-library";
         if (!Set.of("winlink", "nts", "packet-logging").contains(section))
             throw OperationsStore.bad("Unknown tool section");
         model.addAttribute("section", section);

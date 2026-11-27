@@ -5,7 +5,7 @@
 <meta name="csrf-token" th:content="${_csrf.token}"><meta name="csrf-header" th:content="${_csrf.headerName}">
 <title th:text="${snapshot.net.callsign + ' | Net Central'}"></title>
 <link rel="stylesheet" th:href="@{/css/application.css}"><link rel="stylesheet" th:href="@{/webjars/leaflet/1.9.4/leaflet.css}">
-<script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script defer th:src="@{/js/monitor-layout.js}"></script><script defer th:src="@{/js/net-participants.js}"></script><script defer th:src="@{/js/net-monitor.js}"></script>
+<script defer th:src="@{/webjars/leaflet/1.9.4/leaflet.js}"></script><script defer th:src="@{/js/monitor-layout.js}"></script><script defer th:src="@{/js/net-participants.js}"></script><script defer th:src="@{/js/strip-ui.js}"></script><script defer th:src="@{/js/net-monitor.js}"></script>
 </head><body><header th:replace="~{fragments/account :: header}"></header>
 <main id="net-monitor" class="monitor" th:attr="data-net-id=${snapshot.net.id}">
 <div th:replace="~{fragments/net-carousel :: carousel}"></div>
@@ -38,8 +38,11 @@
 <label>Recipient <input name="recipient" value="Net" required maxlength="9" list="recipient-list"><datalist id="recipient-list"></datalist></label>
 <p>Use Net for all checked-in participants, or enter one participant callsign.</p>
 <label>Message <input name="message" required maxlength="67"></label><label class="check"><input type="checkbox" name="acknowledgementRequested" checked> Request APRS acknowledgment</label><button>Send message</button></form>
-<form id="ask-question" class="account-form"><h3>Ask a question</h3><label>Question <input name="question" required maxlength="500"></label><button>Ask participants</button></form>
-<form id="answer-question" class="account-form"><h3>Record an answer</h3><label>Question number <input name="number" type="number" min="1" required></label><label>Participant callsign <input name="callsign" required maxlength="9"></label><label>Answer <input name="answer" required maxlength="500"></label><button>Save answer</button></form>
+<form id="ask-question" class="account-form"><h3>Ask a question</h3><label>Type<select name="strip"><option value="false">Text</option><option value="true">Strip</option></select></label>
+<label id="strip-library-choice" hidden>Shared template<select name="template"><option value="">Create ad-hoc request strip</option></select></label>
+<label><span id="question-input-label">Question</span><input name="question" required maxlength="500" placeholder="BEDS/Facility(X)/Available(NN)//"></label>
+<p id="strip-question-error" role="alert"></p><button>Ask participants</button></form>
+<form id="answer-question" class="account-form"><h3>Record an answer</h3><label>Question number <input name="number" required placeholder="1 or S1"></label><label>Participant callsign <input name="callsign" required maxlength="9"></label><label id="answer-text-label">Answer <input name="answer" required maxlength="500"></label><div id="strip-answer-fields"></div><p id="strip-answer-preview" role="status"></p><button>Save answer</button></form>
 <form id="invite-stations" class="account-form"><h3>Invite stations</h3><label>Callsigns <input name="callsigns" required placeholder="N1ABC N2ABC"></label><button>Invite</button></form>
 </section>
 <section class="panel"><h2>Messages</h2><p>Live view shows the latest 200 entries.</p><div class="table-scroll"><table><thead><tr><th>Time</th><th>From</th><th>To</th><th>Message</th><th>Delivery</th></tr></thead><tbody id="messages"></tbody></table></div></section>

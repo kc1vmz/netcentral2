@@ -31,12 +31,12 @@ public final class NetQuestionReport {
         var questions = snapshot.questions().stream().sorted(Comparator.comparing(NetQuestionModels.Question::askedAt)
                 .thenComparingInt(NetQuestionModels.Question::number)).toList();
         for (var question : questions) {
-            entries.add(new String[]{"Q" + question.number(), eventTime.format(question.askedAt()), text(question.callsign()), text(question.question())});
+            entries.add(new String[]{(question.strip() ? "" : "Q") + question.getIdentifier(), eventTime.format(question.askedAt()), text(question.callsign()), text(question.question())});
             var answers = snapshot.answers().stream().filter(answer -> answer.questionId().equals(question.id()))
                     .sorted(Comparator.comparing(NetQuestionModels.Answer::answeredAt).thenComparing(NetQuestionModels.Answer::callsign)).toList();
             for (var answer : answers)
-                entries.add(new String[]{"A" + question.number(), eventTime.format(answer.answeredAt()), text(answer.callsign()), text(answer.answer())});
-            if (answers.isEmpty()) entries.add(new String[]{"A" + question.number(), "", "", "No answers provided"});
+                entries.add(new String[]{"A" + question.getIdentifier(), eventTime.format(answer.answeredAt()), text(answer.callsign()), text(answer.answer())});
+            if (answers.isEmpty()) entries.add(new String[]{"A" + question.getIdentifier(), "", "", "No answers provided"});
         }
         try (PDDocument document = new PDDocument();
                 var input = PDDocument.class.getResourceAsStream("/org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf")) {

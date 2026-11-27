@@ -287,7 +287,8 @@ class LiveViewWorkflowTest {
                             .doesNotContain("This tutorial is coming soon.");
                 } else if (slug.equals("net-questions-and-answers")) {
                     assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
-                            "Verifying success", "Additional considerations", "Ask participants", "Record answer", "QR number")
+                            "Verifying success", "Additional considerations", "Ask participants", "Record answer", "QR S1", "Create ad-hoc request strip",
+                            "BEDS/Meals(#)//", "A S1 5//", "/setup/strip-library", "Choosing strip masks")
                             .doesNotContain("This tutorial is coming soon.");
                 } else if (slug.equals("secure-net")) {
                     assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
@@ -303,7 +304,7 @@ class LiveViewWorkflowTest {
                             .doesNotContain("This tutorial is coming soon.");
                 } else if (slug.equals("winlink-messages")) {
                     assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",
-                            "Verifying success", "Additional considerations", "Send via Winlink", "WLNK-1", "Winlink password")
+                            "Verifying success", "Additional considerations", "Send via Winlink", "WLNK", "Winlink password")
                             .doesNotContain("This tutorial is coming soon.");
                 } else if (slug.equals("nts-radiograms")) {
                     assertThat(tutorial.body()).contains("Description of task", "Prerequisites", "Steps to accomplish",

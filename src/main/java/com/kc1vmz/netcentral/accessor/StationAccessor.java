@@ -86,7 +86,8 @@ public class StationAccessor {
         }
         String call;
         // Exclude gateway challenge responses heard again through another radio.
-        if (p.source().equals("WLNK-1") || p.information().startsWith(":WLNK-1"))
+        if (p.source().equals("WLNK") || p.information().startsWith(":WLNK") || 
+            p.source().equals("WLNK-1") || p.information().startsWith(":WLNK-1"))
             return;
         try {
             call = NetAccessor.callsign(p.source());
@@ -175,7 +176,8 @@ public class StationAccessor {
         Packet p = event.packet();
         // Gateway login challenges/responses and message bodies must not enter durable
         // packet exports.
-        if (p.source().equals("WLNK-1") || p.information().startsWith(":WLNK-1"))
+        if (p.source().equals("WLNK") || p.information().startsWith(":WLNK") || 
+            p.source().equals("WLNK-1") || p.information().startsWith(":WLNK-1"))
             return;
         String raw = p.source() + ">" + p.destination() + (p.path().isEmpty() ? "" : "," + String.join(",", p.path()))
                 + ":" + p.information();

@@ -85,6 +85,76 @@ class NetWorkflowTest {
     }
 
     @Test
+    void stripWorkflowLibraryPermissionsRadioAndArchive() throws Exception {
+        String id;
+        try (var app = start()) {
+            var admin = user(app, "stripadmin");
+            var reader = user(app, "stripreader");
+            var jdbc = app.getBean(JdbcTemplate.class);
+            String definition = "BEDS/Facility(X)/Available(NN)//";
+            var library = json(admin, admin.send("POST", "/api/v1/strip-library", Map.of("name","Bed availability","definition",definition,"version",0)));
+            String template = library.path("templates").get(0).path("id").asText();
+            assertThat(reader.get("/strip-library").statusCode()).isEqualTo(302);
+            assertThat(reader.get("/setup/strip-library").body()).contains("strip-template-editor", "classification-scroll");
+            assertThat(admin.send("POST", "/api/v1/strip-library", Map.of("name","bed availability","definition",definition,"version",0)).statusCode()).isEqualTo(409);
+
+            assertThat(json(reader,reader.get("/api/v1/strip-library")).path("canManage").asBoolean()).isFalse();
+            assertThat(reader.send("POST","/api/v1/strip-library",Map.of("name","Bed availability","definition",definition,"version",0)).statusCode()).isEqualTo(403);
+            assertThat(reader.send("PUT","/api/v1/strip-library/"+template,Map.of("name","Bed availability","definition",definition,"version",0)).statusCode()).isEqualTo(403);
+            String connection=instance(admin);
+            id=net(admin,"STRIP1",connection,false,true);
+            app.getBean(CommunicationManager.class).reconcile();
+            await(() -> app.getBean(CommunicationManager.class).available(connection));
+            var transport=app.getBean(CommunicationIntegrationTest.FakeFactory.class).transports.get(connection);
+            incoming(transport,"N1ABC","STRIP1","CI{S0");
+            await(()->jdbc.queryForObject("SELECT COUNT(*) FROM net_participant WHERE net_id=?",Integer.class,id)==1);
+            incoming(transport,"N1ABC","STRIP1","QS "+definition+"{S1");
+            await(()->jdbc.queryForObject("SELECT COUNT(*) FROM net_question WHERE net_id=?",Integer.class,id)==1);
+            incoming(transport,"N1ABC","STRIP1","QS "+definition+"{S1");
+            incoming(transport,"N1ABC","STRIP1","A S1  /25//{S2");
+            await(()->jdbc.queryForObject("SELECT COUNT(*) FROM net_answer a JOIN net_question q ON a.question_id=q.id WHERE q.net_id=?",Integer.class,id)==1);
+            var q=json(admin,admin.get("/api/v1/nets/"+id+"/questions")).get(0);
+            assertThat(q.path("identifier").asText()).isEqualTo("S1");
+            assertThat(q.path("strip").asBoolean()).isTrue();
+            assertThat(q.path("fields").size()).isEqualTo(2);
+            assertThat(json(admin,admin.get("/api/v1/nets/"+id+"/questions/S1/answers")).get(0).path("answer").asText()).isEqualTo(" /25//");
+            assertThat(admin.send("POST","/api/v1/nets/"+id+"/questions/S1/answers",Map.of("callsign","N1ABC","answer","Lincoln/999//")).statusCode()).isEqualTo(400);
+            json(admin,admin.send("POST","/api/v1/nets/"+id+"/questions/S1/answers",Map.of("callsign","N1ABC","answer","Lincoln/ //")));
+            json(admin,admin.send("PUT","/api/v1/strip-library/"+template,Map.of("name","Updated availability","definition","BEDS/Other(X)//","version",0)));
+            assertThat(json(admin,admin.get("/api/v1/nets/"+id+"/questions")).get(0).path("question").asText()).isEqualTo(definition);
+            assertThat(admin.send("PUT","/api/v1/strip-library/"+template,Map.of("name","Bed availability","definition",definition,"version",0)).statusCode()).isEqualTo(409);
+            incoming(transport,"N1ABC","STRIP1","QR S1{S3");
+            await(()->jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"S1 N1ABC Lincoln/ //")>0);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM net_question WHERE net_id=?",Integer.class,id)).isEqualTo(1);
+            json(admin,admin.send("POST","/api/v1/nets/"+id+"/questions",Map.of("question","TEXT?")));
+            assertThat(json(admin,admin.get("/api/v1/nets/"+id+"/questions")).size()).isEqualTo(2);
+            json(admin,admin.send("POST","/api/v1/nets/"+id+"/questions",Map.of("question","READY/Status(Y,N)//","strip",true)));
+            long version=json(admin,admin.get("/api/v1/nets/"+id)).path("version").asLong();
+            json(admin,admin.send("PUT","/api/v1/nets/"+id+"/options?version="+version,Map.of("questionReminder",true)));
+            int answeredCount=jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"QS S1/"+definition);
+            app.getBean(NetAccessor.class).reminders();
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"QS S1/"+definition)).isEqualTo(answeredCount);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"QS S2/READY/Status(Y,N)//")).isGreaterThanOrEqualTo(2);
+            int unAnsweredCount=jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"QS S2/READY/Status(Y,N)//");
+            incoming(transport,"N1ABC","STRIP1","QL{S4");
+            await(()->jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"QS S2/READY/Status(Y,N)//")>unAnsweredCount);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM net_message WHERE net_id=? AND message=?",Integer.class,id,"QS S1/"+definition)).isEqualTo(answeredCount);
+            version=json(admin,admin.get("/api/v1/nets/"+id)).path("version").asLong();
+            assertThat(admin.send("DELETE","/api/v1/nets/"+id+"?version="+version,Map.of()).statusCode()).isEqualTo(200);
+            var pdf=admin.client.send(HttpRequest.newBuilder(admin.base.resolve("/api/v1/completedNets/"+id+"/questionAnswerReports")).GET().build(),HttpResponse.BodyHandlers.ofByteArray());
+            try(var document=Loader.loadPDF(pdf.body())){ assertThat(new PDFTextStripper().getText(document)).contains("S1","BEDS/Facility(X)/Available(NN)//","Lincoln/ //"); }
+
+        }
+        try(var app=start()) {
+            var admin=new CommunicationIntegrationTest.Browser(app);
+            assertThat(admin.send("POST","/api/v1/login",Map.of("username","stripadmin","password",PASSWORD)).statusCode()).isEqualTo(200);
+            var q=json(admin,admin.get("/api/v1/nets/"+id+"/questions")).get(0);
+            assertThat(q.path("identifier").asText()).isEqualTo("S1");
+            assertThat(json(admin,admin.get("/api/v1/nets/"+id+"/questions/S1/answers")).get(0).path("answer").asText()).isEqualTo("Lincoln/ //");
+        }
+    }
+
+    @Test
     void radioToLiveMonitorThroughRestartArchiveAndPdf() throws Exception {
         String id, connection;
         try (var app = start()) {

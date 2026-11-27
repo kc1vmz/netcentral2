@@ -1199,16 +1199,16 @@ class OperationsWorkflowTest {
             app.getBean(CommunicationManager.class).reconcile();
             await(() -> app.getBean(CommunicationManager.class).available(instance));
             var transport = app.getBean(CommunicationIntegrationTest.FakeFactory.class).transports.get(instance);
-            packet(app, instance, "WLNK-1", ">Gateway ready");
-            await(() -> !app.getBean(PacketHub.class).recent("WLNK-1").isEmpty());
+            packet(app, instance, "WLNK", ">Gateway ready");
+            await(() -> !app.getBean(PacketHub.class).recent("WLNK").isEmpty());
             var response = ok(b,
                     b.send("POST", "/api/v1/tools/winlink/requests",
                             Map.of("callsign", "N1ABC", "password", "Secret123", "recipient", "user@example.test",
                                     "subject", "Status", "message", "All supplies ready")));
             assertThat(response.path("success").asBoolean()).isTrue();
-            command(app, instance, "WLNK-1", "N1ABC", "Login challenge: 123");
+            command(app, instance, "WLNK", "N1ABC", "Login challenge: 123");
             await(() -> get(b, "/api/v1/tools/winlink/requests/N1ABC").path("status").asText().equals("CHALLENGING"));
-            command(app, instance, "WLNK-1", "N1ABC", "Hello N1ABC");
+            command(app, instance, "WLNK", "N1ABC", "Hello N1ABC");
             await(() -> get(b, "/api/v1/tools/winlink/requests/N1ABC").path("status").asText().equals("SENT"));
             assertThat(transport.sent.stream().map(Packet::information).toList().toString()).contains("/EX", "BYE")
                     .doesNotContain("Secret123");
