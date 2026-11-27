@@ -8,6 +8,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.kc1vmz.netcentral.accessor.LiveViewAccessor;
 import com.kc1vmz.netcentral.account.LocalPrincipal;
 import com.kc1vmz.netcentral.operations.LiveEventStream;
+import com.kc1vmz.netcentral.operations.LiveDisconnectHandler;
 
 @RestController
 @RequestMapping("/api/v1/live")
@@ -27,6 +28,8 @@ public class LiveViewController {
 
     @GetMapping(value = "/events", produces = "text/event-stream")
     public SseEmitter events(@AuthenticationPrincipal LocalPrincipal principal, HttpServletRequest request) {
-        return events.open(principal, request.getSession(false));
+        var emitter = events.open(principal, request.getSession(false));
+        request.setAttribute(LiveDisconnectHandler.LIVE_STREAM, true);
+        return emitter;
     }
 }

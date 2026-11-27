@@ -1,6 +1,10 @@
 package com.kc1vmz.netcentral.operations;
 
 import jakarta.annotation.PreDestroy;
+import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import jakarta.servlet.http.HttpSession;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -16,6 +20,7 @@ import com.kc1vmz.netcentral.account.LocalPrincipal;
 /** Bounded, coalesced current-state delivery, isolated from radio ingestion. */
 @Component
 public class LiveEventStream {
+    private static final Logger log = LoggerFactory.getLogger(LiveEventStream.class);
     private final LiveViewAccessor views;
     private final Set<Client> clients = ConcurrentHashMap.newKeySet();
     private final ScheduledExecutorService timer = Executors
@@ -58,21 +63,47 @@ public class LiveEventStream {
     }
 
     private void submit(Client client) {
-        if (!client.busy.compareAndSet(false, true))
+        if (!clients.contains(client) || !client.busy.compareAndSet(false, true))
             return;
         try {
             writers.execute(() -> {
                 try {
-                    int idle = client.session.getMaxInactiveInterval();
-                    if (idle > 0 && System.currentTimeMillis() - client.session.getLastAccessedTime() >= idle * 1000L) {
+                    if (!clients.contains(client)) return;
+                    try {
+                        int idle = client.session.getMaxInactiveInterval();
+                        if (idle > 0 && System.currentTimeMillis() - client.session.getLastAccessedTime() >= idle * 1000L) {
+                            close(client);
+                            return;
+                        }
+                    } catch (IllegalStateException expiredSession) {
                         close(client);
                         return;
                     }
-                    var snapshot = views.snapshot(client.principal);
-                    client.emitter.send(SseEmitter.event().name("snapshot")
-                            .id(snapshot.epoch() + ":" + snapshot.revision()).data(snapshot));
-                } catch (Exception disconnected) {
-                    close(client);
+                    LiveViewAccessor.Snapshot snapshot;
+                    try {
+                        snapshot = views.snapshot(client.principal);
+                    } catch (AccessDeniedException revoked) {
+                        close(client);
+                        return;
+                    } catch (Exception failure) {
+                        log.error("Unable to generate live-view snapshot", failure);
+                        close(client);
+                        return;
+                    }
+                    if (!clients.contains(client)) return;
+                    try {
+                        client.emitter.send(SseEmitter.event().name("snapshot")
+                                .id(snapshot.epoch() + ":" + snapshot.revision()).data(snapshot));
+                    } catch (IOException failure) {
+                        // Spring/Tomcat owns completion after a failed socket write.
+                        clients.remove(client);
+                        if (LiveDisconnectHandler.disconnected(failure))
+                            log.debug("Live-view client disconnected: {}", failure.toString());
+                        else log.error("Unable to write live-view event", failure);
+                    } catch (Exception failure) {
+                        if (clients.contains(client)) log.error("Unable to send live-view event", failure);
+                        close(client);
+                    }
                 } finally {
                     client.busy.set(false);
                 }
@@ -84,8 +115,7 @@ public class LiveEventStream {
     }
 
     private void close(Client client) {
-        clients.remove(client);
-        client.emitter.complete();
+        if (clients.remove(client)) client.emitter.complete();
     }
 
     @PreDestroy

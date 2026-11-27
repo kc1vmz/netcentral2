@@ -119,7 +119,8 @@ public class StationAccessor {
             data.put("weatherObserved", true);
         if (decoded != null && !objectPacket) {
             JsonNode properties = store.mapper().valueToTree(decoded);
-            data.put("symbol",
+            if (properties.hasNonNull("symbolTableId") && properties.hasNonNull("symbolTableCode"))
+                data.put("symbol",
                     properties.path("symbolTableId").asText("") + properties.path("symbolTableCode").asText(""));
             if (properties.hasNonNull("comment"))
                 data.put("comment", properties.path("comment").asText());

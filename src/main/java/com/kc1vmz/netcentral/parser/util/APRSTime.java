@@ -130,47 +130,41 @@ public class APRSTime {
     }
 
     public static ZonedDateTime convertAPRSTimeToZonedDateTime(String time) throws APRSTimeConversionException {
-        ZonedDateTime zdt = null;
-        if (!isTime(time)) {
-            throw new APRSTimeConversionException("Not a valid APRS time: " + time);
-        }
-        try {
-            if (isDHMTime(time)) {
-                // DDHHMM - DD day of month, HH hours, MM minutes
-                if (time.endsWith("z")) {
-                    // month boundaries gets tricky - NOVEMBER 31 problem
-                    int dayOfMonth = buildNumber(time.substring(0, 2));
-                    int hour = buildNumber(time.substring(2, 4));
-                    int minute = buildNumber(time.substring(4, 6));
-                    ZonedDateTime l = ZonedDateTime.now(ZoneId.of("Z")).withDayOfMonth(dayOfMonth).withHour(hour).withMinute(minute);
-                    zdt = l;
-                } else {
-                    // how to make right when we don't know the local time zone of the sender?
-                    int dayOfMonth = buildNumber(time.substring(0, 2));
-                    int hour = buildNumber(time.substring(2, 4));
-                    int minute = buildNumber(time.substring(4, 6));
-                    ZonedDateTime l = ZonedDateTime.now(ZoneId.of("Z")).withDayOfMonth(dayOfMonth).withHour(hour).withMinute(minute);
-                    zdt = l;
-                }
+        return convertAPRSTimeToZonedDateTime(time, ZonedDateTime.now(ZoneId.of("Z")));
+    }
 
-            } else if (isHMSTime(time)) {
-                    int hour = buildNumber(time.substring(0, 2));
-                    int minute = buildNumber(time.substring(2, 4));
-                    int second = buildNumber(time.substring(4, 6));
-                    ZonedDateTime l = ZonedDateTime.now(ZoneId.of("Z")).withHour(hour).withMinute(minute).withSecond(second);
-                    zdt = l;
-            } else if (isMDHMTime(time)) {
-                    int month = buildNumber(time.substring(0, 2));
-                    int day = buildNumber(time.substring(2, 4));
-                    int hour = buildNumber(time.substring(4, 6));
-                    int minute = buildNumber(time.substring(6, 8));
-                    ZonedDateTime l = ZonedDateTime.now(ZoneId.of("Z")).withMonth(month).withDayOfMonth(day).withHour(hour).withMinute(minute);
-                    zdt = l;
+    public static ZonedDateTime convertAPRSTimeToZonedDateTime(String time, ZonedDateTime reference)
+            throws APRSTimeConversionException {
+        if (!isTime(time)) throw new APRSTimeConversionException("Not a valid APRS time: " + time);
+        ZonedDateTime now = reference.withZoneSameInstant(ZoneId.of("Z"));
+        var candidates = new java.util.ArrayList<ZonedDateTime>();
+        for (int offset = -1; offset <= 1; offset++) {
+            try {
+                ZonedDateTime candidate;
+                if (isMDHMTime(time)) {
+                    candidate = now.plusYears(offset).withDayOfMonth(1)
+                        .withMonth(buildNumber(time.substring(0, 2)))
+                        .withDayOfMonth(buildNumber(time.substring(2, 4)))
+                        .withHour(buildNumber(time.substring(4, 6)))
+                        .withMinute(buildNumber(time.substring(6, 8))).withSecond(0);
+                } else if (isDHMTime(time)) {
+                    candidate = now.withDayOfMonth(1).plusMonths(offset)
+                        .withDayOfMonth(buildNumber(time.substring(0, 2)))
+                        .withHour(buildNumber(time.substring(2, 4)))
+                        .withMinute(buildNumber(time.substring(4, 6))).withSecond(0);
+                } else {
+                    candidate = now.plusDays(offset).withHour(buildNumber(time.substring(0, 2)))
+                        .withMinute(buildNumber(time.substring(2, 4)))
+                        .withSecond(buildNumber(time.substring(4, 6)));
+                }
+                candidates.add(candidate.withNano(0));
+            } catch (java.time.DateTimeException invalidDate) {
+                // A neighboring month/year may be valid (e.g. day 31 or leap day).
             }
-        } catch (Exception e) {
-            throw new APRSTimeConversionException("Could not convert time - "+time, e);
         }
-        return zdt;
+        return candidates.stream().min(java.util.Comparator.comparingLong(candidate ->
+                Math.abs(java.time.Duration.between(now, candidate).getSeconds())))
+            .orElseThrow(() -> new APRSTimeConversionException("Could not convert time - " + time));
     }
 
     private static int buildNumber(String value) {

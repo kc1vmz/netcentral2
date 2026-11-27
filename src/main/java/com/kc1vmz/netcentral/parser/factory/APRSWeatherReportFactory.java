@@ -32,7 +32,6 @@ import com.kc1vmz.netcentral.parser.exception.ParserException;
 import com.kc1vmz.netcentral.parser.util.APRSTime;
 import com.kc1vmz.netcentral.parser.util.PacketIdentity;
 import com.kc1vmz.netcentral.parser.util.StringUtils;
-import com.kc1vmz.netcentral.parser.util.WeatherReportParser;
 
 import org.slf4j.Logger;
 
@@ -43,8 +42,8 @@ public class APRSWeatherReportFactory {
         logger.debug("Parsing APRSWeatherReport object");
         APRSWeatherReport ret = new APRSWeatherReport();
 
-        if (data == null) {
-            throw new NullPointerException();
+        if (data == null || data.length == 0) {
+            return null;
         }
 
         ret.setHeader(header);
@@ -73,19 +72,21 @@ public class APRSWeatherReportFactory {
     private static APRSWeatherReport parseCompleteWithTimestamp(byte[] header, byte[] data, APRSWeatherReport ret) {
         int messageIndex = 0;
 
+        if (data.length < 21) return null;
         // time is the same in both
         byte [] time_bytes = Arrays.copyOfRange(data, 1, 8);
         ret.setTime(new String(time_bytes));
         try {
             ret.setLdtime(APRSTime.convertAPRSTimeToZonedDateTime(ret.getTime()));
         } catch (APRSTimeConversionException e) {
-            logger.error("Exception caught", e);
+            logger.debug("Invalid weather timestamp from {}: {}", ret.getCallsignFrom(), ret.getTime());
         }
 
-        if (data.length <= 27) {
+        if (data.length > 17 && data[17] == '_') {
             return parseCompleteWithTimestampCompressedLocation(header, data, ret);
         }
 
+        if (data.length < 34) return null;
         // uncompressed location
 
         ret.setSymbolTableId(StringUtils.stringify(data[16]));
@@ -108,11 +109,7 @@ public class APRSWeatherReportFactory {
 
         byte [] directionAndSpeed_bytes = Arrays.copyOfRange(data, messageIndex, messageIndex+7);
         String directionAndSpeed = new String(directionAndSpeed_bytes);
-        String [] dsArray = directionAndSpeed.split("/");
-        if ((dsArray != null) && (dsArray.length == 2)) {
-            ret.setWindDirection(Integer.parseInt(dsArray[0]));
-            ret.setWindSpeed(Integer.parseInt(dsArray[1]));
-        }
+        if (!parseWind(directionAndSpeed, ret)) return null;
 
         messageIndex += 7; // skip wind speed and direction
 
@@ -147,10 +144,12 @@ public class APRSWeatherReportFactory {
     private static APRSWeatherReport parseCompleteWithoutTimestamp(byte[] header, byte[] data, APRSWeatherReport ret) {
         int messageIndex = 0;
 
+        if (data.length < 14) return null;
         if (data[10] == '_') {
             return parseCompleteWithoutTimestampCompressedLocation(header, data, ret);
         }
 
+        if (data.length < 26) return null;
         byte [] lat = Arrays.copyOfRange(data, 1, 9);
         ret.setLat(new String(lat));
         ret.setSymbolTableId(StringUtils.stringify(data[9]));
@@ -177,11 +176,7 @@ public class APRSWeatherReportFactory {
         // next is 7 bytes for wind speed/direction
         byte [] directionAndSpeed_bytes = Arrays.copyOfRange(data, messageIndex, messageIndex+7);
         String directionAndSpeed = new String(directionAndSpeed_bytes);
-        String [] dsArray = directionAndSpeed.split("/");
-        if ((dsArray != null) && (dsArray.length == 2)) {
-            ret.setWindDirection(Integer.parseInt(dsArray[0]));
-            ret.setWindSpeed(Integer.parseInt(dsArray[1]));
-        }
+        if (!parseWind(directionAndSpeed, ret)) return null;
         messageIndex += 7;
 
         byte [] weatherData_bytes = Arrays.copyOfRange(data, messageIndex, data.length);
@@ -227,7 +222,7 @@ public class APRSWeatherReportFactory {
             ret.setWindDirection(cInt*4);
 
             char s = directionAndSpeed.charAt(1);
-            int sInt = (int) s;
+            int sInt = (int) s - 33;
             double base = 1.08;
             double result = Math.pow(base, sInt) - 1;
             ret.setWindSpeed((int) Math.round(result));
@@ -237,13 +232,14 @@ public class APRSWeatherReportFactory {
     }
 
     private static APRSWeatherReport parsePositionless(byte[] header, byte[] data, APRSWeatherReport ret) {
+        if (data.length < 9) return null;
         // positionless weather data
         byte [] time_bytes = Arrays.copyOfRange(data, 1, 9);
         ret.setTime(new String(time_bytes));
         try {
             ret.setLdtime(APRSTime.convertAPRSTimeToZonedDateTime(ret.getTime()));
         } catch (APRSTimeConversionException e) {
-            logger.error("Exception caught", e);
+            logger.debug("Invalid weather timestamp from {}: {}", ret.getCallsignFrom(), ret.getTime());
         }
 
         byte [] weatherData_bytes = Arrays.copyOfRange(data, 9, data.length);
@@ -252,226 +248,52 @@ public class APRSWeatherReportFactory {
         return ret;
     }
 
-    private static void parseWeatherData(byte[] weatherData_bytes, APRSWeatherReport ret) {
-        if (ultPacket(weatherData_bytes)) {
-            return;
-        }
+    private static void parseWeatherData(byte[] bytes, APRSWeatherReport report) {
+        String text = new String(bytes, java.nio.charset.StandardCharsets.ISO_8859_1);
+        var seen = new java.util.HashSet<Character>();
         int index = 0;
-        boolean seenS = false;
-        boolean stop = false;
-        boolean [] lettersProcessed = WeatherReportParser.createBitmask();
-
-        while ((index < weatherData_bytes.length) && (!stop)) {
-            char type = (char) weatherData_bytes[index];
-            byte [] value_bytes;
-
-            try {
-                switch (type) {
-                    case WeatherReportParser.WEATHERREPORT_FIELD_WIND_DIRECTION: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_WIND_DIRECTION]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setWindDirection(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_WIND_DIRECTION] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_WIND_SPEED: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_WIND_SPEED]) {
-                            stop = true;
-                            break;
-                        }
-                        if (!seenS) {
-                            // first time through - wind speed
-                            value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                            index += 4;
-                            if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                                // get the value
-                                String value = new String(value_bytes);
-                                ret.setWindSpeed(Integer.parseInt(value));
-                            }
-                        } else {
-                            // if seen again, maybe it is snow. APRS spec shows used for both
-                            value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                            index += 4;
-                            if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                                // get the value
-                                String value = new String(value_bytes);
-                                if (value.contains(".")) {
-                                    String [] snow_parts = value.split(".");
-                                    if ((snow_parts != null) && (snow_parts.length == 2)) {
-                                        ret.setSnowfallLast24Hr(Integer.parseInt(snow_parts[0]));
-                                    }
-                                } else {
-                                    ret.setSnowfallLast24Hr(Integer.parseInt(value));
-                                }
-                            }
-                        }
-                        seenS = true;
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_WIND_SPEED] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_WIND_GUST: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_WIND_GUST]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setGust(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_WIND_GUST] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_TEMPERATURE: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_TEMPERATURE]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setTemperature(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_TEMPERATURE] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_RAIN_LAST_HOUR: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_LAST_HOUR]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setRainfallLast1Hr(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_LAST_HOUR] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_RAIN_LAST_24HOUR: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_LAST_24HOUR]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setRainfallLast24Hr(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_LAST_24HOUR] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_RAIN_SINCE_MIDNIGHT: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_SINCE_MIDNIGHT]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setRainfallSinceMidnight(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_SINCE_MIDNIGHT] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_HUMIDITY: // value in next *2* bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_HUMIDITY]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+3);
-                        index += 3;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setHumidity(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_HUMIDITY] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_BAROMETRIC_PRESSURE: // value in next *5* bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_BAROMETRIC_PRESSURE]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+6);
-                        index += 6;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setBarometricPressure(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_BAROMETRIC_PRESSURE] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_LUMOSITY: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_LUMOSITY]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setLuminosity(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_LUMOSITY] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_LUMOSITY_LARGE: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_LUMOSITY_LARGE]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 4;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setLuminosity(Integer.parseInt(value)+1000);
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_LUMOSITY_LARGE] = true;
-                        break;
-                    case WeatherReportParser.WEATHERREPORT_FIELD_RAIN_RAW: // value in next 3 bytes
-                        if (lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_RAW]) {
-                            stop = true;
-                            break;
-                        }
-                        value_bytes = Arrays.copyOfRange(weatherData_bytes, index+1, index+4);
-                        index += 3;
-                        if ((value_bytes[0] != ' ') && (value_bytes[0] != '.')) {
-                            // get the value
-                            String value = new String(value_bytes);
-                            ret.setRawRainCounter(Integer.parseInt(value));
-                        }
-                        lettersProcessed[WeatherReportParser.INDEX_WEATHERREPORT_FIELD_RAIN_RAW] = true;
-                        break;
-                    default:
-                        index++ ;
-                        stop = true;
-                        // found something we should not have - get out
-                        break;
-                }
-            } catch (Exception e) {
-                logger.warn(String.format("Error parsing weather data - %s>%s %s", ret.getCallsignFrom(), ret.getCallsignTo(), new String(weatherData_bytes)), e);
-                break;
+        while (index < text.length()) {
+            char field = text.charAt(index++);
+            // Unknown text (including the w software/device suffix) terminates measurements.
+            // Never search arbitrary comments for letters that resemble weather fields.
+            if ("csgtrpPhbLl#".indexOf(field) < 0 || !seen.add(field)) break;
+            int start = index;
+            while (index < text.length() && (Character.isDigit(text.charAt(index))
+                    || text.charAt(index) == '.' || text.charAt(index) == '-'
+                    || (text.charAt(start) == ' ' && text.charAt(index) == ' '))) index++;
+            String raw = text.substring(start, index);
+            int width = field == 'b' ? 5 : field == 'h' ? 2 : 3;
+            if (raw.length() == width && (raw.chars().allMatch(c -> c == '.')
+                    || raw.chars().allMatch(c -> c == ' '))) continue;
+            String pattern = field == 't' ? "(?:[0-9]{3}|-[0-9]{2})" : "[0-9]{" + width + "}";
+            if (!raw.matches(pattern)) {
+                logger.debug("Invalid weather field from {}: {}{}", report.getCallsignFrom(), field, raw);
+                continue;
+            }
+            int value = Integer.parseInt(raw);
+            switch (field) {
+                case 'c' -> report.setWindDirection(value);
+                case 's' -> report.setWindSpeed(value);
+                case 'g' -> report.setGust(value);
+                case 't' -> report.setTemperature(value);
+                case 'r' -> report.setRainfallLast1Hr(value);
+                case 'p' -> report.setRainfallLast24Hr(value);
+                case 'P' -> report.setRainfallSinceMidnight(value);
+                case 'h' -> report.setHumidity(value == 0 ? 100 : value);
+                case 'b' -> report.setBarometricPressure(value);
+                case 'L' -> report.setLuminosity(value);
+                case 'l' -> report.setLuminosity(value + 1000);
+                case '#' -> report.setRawRainCounter(value);
             }
         }
     }
 
-    private static boolean ultPacket(byte[] weatherData_bytes) {
-        String weatherData = new String(weatherData_bytes);
-        return weatherData.startsWith(WeatherReportParser.WEATHERREPORT_ULTW);
+    private static boolean parseWind(String wind, APRSWeatherReport report) {
+        if (!wind.matches("[0-9. ]{3}/[0-9. ]{3}")) return false;
+        if (wind.substring(0, 3).matches("[0-9]{3}"))
+            report.setWindDirection(Integer.parseInt(wind.substring(0, 3)));
+        if (wind.substring(4).matches("[0-9]{3}"))
+            report.setWindSpeed(Integer.parseInt(wind.substring(4)));
+        return true;
     }
-
 }
-

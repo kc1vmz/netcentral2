@@ -844,6 +844,15 @@ class OperationsWorkflowTest {
             assertThat(previousWeather).contains("ldTime (local time)", "datetime=", ">70</td>", ">50</td>",
                     ">1015.0</td>", ">10</td>", ">180</td>").doesNotContain(">75</td>");
 
+            var beforeWeather = get(b, "/api/v1/trackedStations/WX002").path("data");
+            packet(app, instance, "WX002", "_11270122c330s001g001t040r000P14.000000000000002h99b10163L000wNA");
+            await(() -> get(b, "/api/v1/weatherReports/callsigns/WX002/all").size() == 3);
+            var afterWeather = get(b, "/api/v1/trackedStations/WX002").path("data");
+            for (String field : List.of("symbol", "lat", "lon"))
+                assertThat(afterWeather.path(field)).isEqualTo(beforeWeather.path(field));
+            assertThat(afterWeather.path("types").toString()).contains("WEATHER");
+            assertThat(b.get("/stations/WX002").body()).contains("Unknown", ">1016.3</span>");
+
             assertThat(b.get("/objects/SHEL01").body()).contains("<dt>Symbol</dt>");
             assertThat(get(b, "/api/v1/live/snapshot").path("resources").toString())
                     .contains("symbolDescription", "Weather station");

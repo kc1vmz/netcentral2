@@ -34,18 +34,18 @@ public class APRSWeatherReport implements APRSPacketInterface {
     private String applicationName;
     private String time;
     private ZonedDateTime ldtime;
-    private int windDirection;
-    private int windSpeed;
-    private int gust;
-    private int temperature;
-    private int rainfallLast1Hr;
-    private int rainfallLast24Hr;
-    private int rainfallSinceMidnight;
-    private int humidity;
-    private int barometricPressure;
-    private int luminosity;
-    private int snowfallLast24Hr;
-    private int rawRainCounter;
+    private Integer windDirection;
+    private Integer windSpeed;
+    private Integer gust;
+    private Integer temperature;
+    private Integer rainfallLast1Hr;
+    private Integer rainfallLast24Hr;
+    private Integer rainfallSinceMidnight;
+    private Integer humidity;
+    private Integer barometricPressure;
+    private Integer luminosity;
+    private Integer snowfallLast24Hr;
+    private Integer rawRainCounter;
     private String lat;
     private String lon;
     private byte dti;
@@ -121,73 +121,73 @@ public class APRSWeatherReport implements APRSPacketInterface {
         this.ldtime = ldtime;
         this.prettyLdtime = PrettyZonedDateTimeFormatter.format(ldtime);
     }
-    public int getWindDirection() {
+    public Integer getWindDirection() {
         return windDirection;
     }
     public void setWindDirection(int windDirection) {
         this.windDirection = windDirection;
     }
-    public int getWindSpeed() {
+    public Integer getWindSpeed() {
         return windSpeed;
     }
     public void setWindSpeed(int windSpeed) {
         this.windSpeed = windSpeed;
     }
-    public int getGust() {
+    public Integer getGust() {
         return gust;
     }
     public void setGust(int gust) {
         this.gust = gust;
     }
-    public int getTemperature() {
+    public Integer getTemperature() {
         return temperature;
     }
     public void setTemperature(int temperature) {
         this.temperature = temperature;
     }
-    public int getRainfallLast1Hr() {
+    public Integer getRainfallLast1Hr() {
         return rainfallLast1Hr;
     }
     public void setRainfallLast1Hr(int rainfallLast1Hr) {
         this.rainfallLast1Hr = rainfallLast1Hr;
     }
-    public int getRainfallLast24Hr() {
+    public Integer getRainfallLast24Hr() {
         return rainfallLast24Hr;
     }
     public void setRainfallLast24Hr(int rainfallLast24Hr) {
         this.rainfallLast24Hr = rainfallLast24Hr;
     }
-    public int getRainfallSinceMidnight() {
+    public Integer getRainfallSinceMidnight() {
         return rainfallSinceMidnight;
     }
     public void setRainfallSinceMidnight(int rainfallSinceMidnight) {
         this.rainfallSinceMidnight = rainfallSinceMidnight;
     }
-    public int getHumidity() {
+    public Integer getHumidity() {
         return humidity;
     }
     public void setHumidity(int humidity) {
         this.humidity = humidity;
     }
-    public int getBarometricPressure() {
+    public Integer getBarometricPressure() {
         return barometricPressure;
     }
     public void setBarometricPressure(int barometricPressure) {
         this.barometricPressure = barometricPressure;
     }
-    public int getLuminosity() {
+    public Integer getLuminosity() {
         return luminosity;
     }
     public void setLuminosity(int luminosity) {
         this.luminosity = luminosity;
     }
-    public int getSnowfallLast24Hr() {
+    public Integer getSnowfallLast24Hr() {
         return snowfallLast24Hr;
     }
     public void setSnowfallLast24Hr(int snowfallLast24Hr) {
         this.snowfallLast24Hr = snowfallLast24Hr;
     }
-    public int getRawRainCounter() {
+    public Integer getRawRainCounter() {
         return rawRainCounter;
     }
     public void setRawRainCounter(int rawRainCounter) {

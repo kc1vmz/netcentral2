@@ -129,7 +129,7 @@ public class APRSPositionFactory {
             commentStr = commentStr.substring(7);  // skip DFS data
         } else if (ret.getSymbolTableCode().equals("_")) {
             // weather report has a symbol code of _
-            if ((commentStr != null) && (commentStr.length() >= 7) && (commentStr.substring(0, 4).endsWith("/"))) {
+            if ((commentStr != null) && (commentStr.length() >= 7) && (commentStr.substring(0, 7).matches("[0-9. ]{3}/[0-9. ]{3}"))) {
                 // there is really a weather report - has SSS/DDD
                 ret.setHasWeatherReport(true);
                 ret.setWeatherReport(commentStr);
