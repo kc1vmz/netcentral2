@@ -91,6 +91,21 @@ class NetWorkflowTest {
             var admin = user(app, "stripadmin");
             var reader = user(app, "stripreader");
             var jdbc = app.getBean(JdbcTemplate.class);
+            var defaults = json(admin, admin.get("/api/v1/strip-library")).path("templates");
+            assertThat(defaults.size()).isEqualTo(6);
+            var expectedDefaults = java.util.Map.of(
+                "Situation report", "SITREP/Location(X)/Situation(X)/Needs(X)//",
+                "Weather - wind", "WXWIND/Dir(X)/MPH(NNN)/Gust(NNN)//",
+                "Weather - temperature", "WXTEMP/TempF(X)/Humidity(NNN)//",
+                "Weather - precipitation", "WXPRECIP/Type(X)/Inches(X)/Period(X)//",
+                "Storm damage", "DAMAGE/Location(X)/Damage(X)/Access(Y,N)//",
+                "Operational readiness", "OPRED/Available(Y,N)/Hours(NN)/Capability(X)//");
+            for (var entry : defaults) {
+                String strip = entry.path("definition").asText();
+                assertThat(strip).isEqualTo(expectedDefaults.get(entry.path("name").asText()));
+                com.kc1vmz.netcentral.net.StripFormat.definition(strip);
+                com.kc1vmz.netcentral.net.StripFormat.wire("QS S999/" + strip);
+            }
             String definition = "BEDS/Facility(X)/Available(NN)//";
             var library = json(admin, admin.send("POST", "/api/v1/strip-library", Map.of("name","Bed availability","definition",definition,"version",0)));
             String template = library.path("templates").get(0).path("id").asText();

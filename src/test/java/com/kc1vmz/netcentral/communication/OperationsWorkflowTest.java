@@ -1164,14 +1164,16 @@ class OperationsWorkflowTest {
             assertThat(ok(b, b.send("POST", "/api/v1/callsigns/N2ABC/identityRequests", Map.of())).path("status").asText()).isEqualTo("QUEUED");
             await(() -> transport.sent.stream().anyMatch(p -> p.information().equals(":WHO-IS   :N2ABC")));
             assertThat(secondTransport.sent.stream().anyMatch(p -> p.information().equals(":WHO-IS   :N2ABC"))).isFalse();
-            assertThat(b.get("/setup/operations?section=identity").body()).contains("Identity", "WHO-IS", "WHO-15");
-            assertThat(b.raw("POST", "/setup/operations", "section=identity&identityResolver=WHO-15", "application/x-www-form-urlencoded", b.csrf()).statusCode()).isEqualTo(302);
+            assertThat(b.get("/setup/operations?section=identity").body()).contains("External Services", "Identity", "Winlink Email Provider", "WHO-IS", "WHO-15", "WLNK-1");
+            assertThat(b.raw("POST", "/setup/operations", "section=external-services&identityResolver=WHO-15&winlinkProvider=WLNK-1", "application/x-www-form-urlencoded", b.csrf()).statusCode()).isEqualTo(302);
             assertThat(ok(b, b.send("POST", url, Map.of())).path("status").asText()).isEqualTo("QUEUED");
             await(() -> secondTransport.sent.stream().anyMatch(p -> p.information().equals(":WHO-15   :K7TRT")));
             assertThat(b.send("PUT", "/api/v1/configurations", Map.of("identityResolver", "INVALID")).statusCode()).isEqualTo(400);
+            assertThat(b.send("PUT", "/api/v1/configurations", Map.of("winlinkProvider", "INVALID")).statusCode()).isEqualTo(400);
             var other = user(app, "identity-other");
             jdbc.update("UPDATE local_account SET role='ADMIN' WHERE username='identity-other'");
             other = user(app, "identity-other");
+            assertThat(other.send("PUT", "/api/v1/configurations", Map.of("winlinkProvider", "WLNK")).statusCode()).isEqualTo(403);
             assertThat(other.get("/setup/operations?section=identity").statusCode()).isEqualTo(403);
             assertThat(other.send("PUT", "/api/v1/configurations", Map.of("identityResolver", "WHO-IS")).statusCode()).isEqualTo(403);
             assertThat(other.raw("POST", "/setup/operations", "section=identity&identityResolver=WHO-IS", "application/x-www-form-urlencoded", other.csrf()).statusCode()).isEqualTo(403);
@@ -1179,11 +1181,13 @@ class OperationsWorkflowTest {
         }
         try (var app = start()) {
             assertThat(app.getBean(OperationsStore.class).setting("identityResolver")).isEqualTo("WHO-15");
+            assertThat(app.getBean(OperationsStore.class).setting("winlinkProvider")).isEqualTo("WLNK-1");
         }
     }
 
-    @Test
-    void winlinkAndNtsUseHeardRouteWithoutPersistingSecrets() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"WLNK", "WLNK-1"})
+    void winlinkAndNtsUseHeardRouteWithoutPersistingSecrets(String provider) throws Exception {
         try (var app = start()) {
             var b = user(app, "root");
             var ntsPage = b.get("/tools?section=nts");
@@ -1199,19 +1203,24 @@ class OperationsWorkflowTest {
             app.getBean(CommunicationManager.class).reconcile();
             await(() -> app.getBean(CommunicationManager.class).available(instance));
             var transport = app.getBean(CommunicationIntegrationTest.FakeFactory.class).transports.get(instance);
-            packet(app, instance, "WLNK", ">Gateway ready");
-            await(() -> !app.getBean(PacketHub.class).recent("WLNK").isEmpty());
+            ok(b, b.send("PUT", "/api/v1/configurations", Map.of("winlinkProvider", provider)));
+            packet(app, instance, provider, ">Gateway ready");
+            await(() -> !app.getBean(PacketHub.class).recent(provider).isEmpty());
             var response = ok(b,
                     b.send("POST", "/api/v1/tools/winlink/requests",
                             Map.of("callsign", "N1ABC", "password", "Secret123", "recipient", "user@example.test",
                                     "subject", "Status", "message", "All supplies ready")));
             assertThat(response.path("success").asBoolean()).isTrue();
-            command(app, instance, "WLNK", "N1ABC", "Login challenge: 123");
+            await(() -> transport.sent.stream().anyMatch(p -> p.information().startsWith(":" + String.format("%-9s", provider) + ":")));
+            ok(b, b.send("PUT", "/api/v1/configurations", Map.of("winlinkProvider", provider.equals("WLNK") ? "WLNK-1" : "WLNK")));
+            command(app, instance, provider, "N1ABC", "Login challenge: 123{abc");
             await(() -> get(b, "/api/v1/tools/winlink/requests/N1ABC").path("status").asText().equals("CHALLENGING"));
-            command(app, instance, "WLNK", "N1ABC", "Hello N1ABC");
+            command(app, instance, provider, "N1ABC", "Hello N1ABC");
             await(() -> get(b, "/api/v1/tools/winlink/requests/N1ABC").path("status").asText().equals("SENT"));
             assertThat(transport.sent.stream().map(Packet::information).toList().toString()).contains("/EX", "BYE")
                     .doesNotContain("Secret123");
+            assertThat(transport.sent.stream().filter(p -> p.information().contains("/EX") || p.information().contains("ackabc"))
+                    .map(Packet::information).toList()).allMatch(info -> info.startsWith(":" + String.format("%-9s", provider) + ":"));
             packet(app, instance, "NTSGTE", ">Gateway ready");
             await(() -> !app.getBean(PacketHub.class).recent("NTSGTE").isEmpty());
             var nts = new HashMap<String, Object>();

@@ -18,7 +18,7 @@
       const a=document.createElement('a');a.textContent=label;a.href=url;if(a.pathname===location.pathname&&(new URL(a.href).searchParams.get('section')===new URLSearchParams(location.search).get('section')||(!location.search&&((location.pathname==='/setup/operations'&&label==='Announcements')||(location.pathname==='/setup/radio'&&label==='Classification')))))a.setAttribute('aria-current','page');tabs.append(a);
     }
     if(document.querySelector('.site-header')?.dataset.systemAdministrator==='true'){
-      const identity=document.createElement('a');identity.href='/setup/operations?section=identity';identity.textContent='Identity';
+      const identity=document.createElement('a');identity.href='/setup/operations?section=external-services';identity.textContent='External Services';
       if(location.pathname==='/setup/operations'&&new URLSearchParams(location.search).get('section')==='identity')identity.setAttribute('aria-current','page');tabs.append(identity);
       const link=document.createElement('a');link.href='/setup/data';link.textContent='Data';
       if(location.pathname==='/setup/data')link.setAttribute('aria-current','page');tabs.append(link);

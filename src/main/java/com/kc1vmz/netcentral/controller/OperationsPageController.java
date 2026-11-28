@@ -254,14 +254,14 @@ public class OperationsPageController {
     }
 
     private static final Map<String, List<String>> SETTING_GROUPS = Map.of(
-            "identity", List.of("identityResolver"), "announcements", List.of("beaconSeconds"), "federation", List.of("federationEnabled", "federationUserDefinedEnabled", "federationMessagesEnabled", "federationInterrogateEnabled", "federationCallsign"),
+            "external-services", List.of("identityResolver", "winlinkProvider"), "announcements", List.of("beaconSeconds"), "federation", List.of("federationEnabled", "federationUserDefinedEnabled", "federationMessagesEnabled", "federationInterrogateEnabled", "federationCallsign"),
             "net-manager", List.of("netManagerEnabled", "netManagerCallsign", "netManagerOwner", "netManagerLatitude", "netManagerLongitude"),
             "timers", List.of("stationRetentionSeconds", "packetRetentionSeconds", "packetLimit", "reminderSeconds"));
-    private static final Map<String, String> SETTING_TITLES = Map.of("identity", "Identity", "announcements", "Announcements", "federation",
+    private static final Map<String, String> SETTING_TITLES = Map.of("external-services", "External Services", "announcements", "Announcements", "federation",
             "Federation", "net-manager", "Net Manager", "timers", "Timers");
 
     private List<String> settingKeys(String section) {
-        if (section.equals("identity") && !store.accounts().current().role().equals("SYSADMIN"))
+        if (section.equals("external-services") && !store.accounts().current().role().equals("SYSADMIN"))
             throw new AccessDeniedException("System administrator required");
         var keys = SETTING_GROUPS.get(section);
         if (keys == null)
@@ -272,6 +272,7 @@ public class OperationsPageController {
     @GetMapping("/setup/operations")
     public String settings(@RequestParam(defaultValue = "announcements") String section, Model model) {
         store.admin();
+        if (section.equals("identity")) section = "external-services";
         var keys = settingKeys(section);
         var all = store.settings();
         var selected = new LinkedHashMap<String, String>();
@@ -302,6 +303,7 @@ public class OperationsPageController {
         String mode = values.remove("communicationMode");
         String version = values.remove("routingVersion");
         values.remove("communicationInstanceIds");
+        if (section.equals("identity")) section = "external-services";
         var keys = settingKeys(section);
         if (mode != null && !section.equals("net-manager")) throw OperationsStore.bad("Setting belongs to another section");
         if (!keys.containsAll(values.keySet()))

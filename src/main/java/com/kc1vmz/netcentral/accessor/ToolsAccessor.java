@@ -20,12 +20,13 @@ public class ToolsAccessor {
     }
 
     private static final class Session {
-        final String owner, call, recipient, subject, message;
+        final String owner, call, recipient, subject, message, provider;
         char[] password;
         volatile String state = "WAITING";
         final Instant expires = Instant.now().plusSeconds(600);
 
-        Session(String owner, String call, String password, String recipient, String subject, String message) {
+        Session(String owner, String call, String password, String recipient, String subject, String message, String provider) {
+            this.provider = provider;
             this.owner = owner;
             this.call = call;
             this.password = password.toCharArray();
@@ -86,7 +87,7 @@ public class ToolsAccessor {
                 message = field(input, "message", 2000, true), password = field(input, "password", 128, true);
         if (!recipient.matches("[A-Za-z0-9@._+-]+") || ("SP " + recipient + " " + subject).length() > 67)
             throw bad("Recipient/subject too long or invalid");
-        Session session = new Session(store.accounts().current().id(), call, password, recipient, subject, message);
+        Session session = new Session(store.accounts().current().id(), call, password, recipient, subject, message, store.setting("winlinkProvider"));
         sessions.put(call, session);
         send(session, List.of("Net Central login request from " + call), null, false);
         return status(call);
@@ -144,7 +145,7 @@ public class ToolsAccessor {
         if (ack >= 0) {
             String number = body.substring(ack + 1);
             if (number.matches("[A-Za-z0-9]{1,5}"))
-                router.sendMessage("DEFAULT", session.call, "WLNK", "ack" + number, false,
+                router.sendMessage("DEFAULT", session.call, session.provider, "ack" + number, false,
                         event.received().instanceId());
             body = body.substring(0, ack);
         }
@@ -191,7 +192,7 @@ public class ToolsAccessor {
 
     private void send(Session session, List<String> lines, String receiving, boolean finish) {
         try {
-            var result = router.sendGroup("DEFAULT", session.call, "WLNK", lines, false, receiving);
+            var result = router.sendGroup("DEFAULT", session.call, session.provider, lines, false, receiving);
             if (result.isEmpty()) {
                 session.state = "NO_ROUTE";
                 session.clear();

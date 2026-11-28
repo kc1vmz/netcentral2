@@ -193,6 +193,9 @@ public class OperationsStore {
                         value = Double.toString(coordinate);
                     } catch (NumberFormatException invalid) { throw bad("Use decimal coordinates for Net Manager"); }
                 } else value = "";
+            } else if (key.equals("winlinkProvider")) {
+                if (!accounts.current().role().equals("SYSADMIN")) throw new AccessDeniedException("System administrator required");
+                if (!Set.of("WLNK", "WLNK-1").contains(value)) throw bad("Choose WLNK or WLNK-1");
             } else if (key.equals("identityResolver")) {
                 if (!accounts.current().role().equals("SYSADMIN")) throw new AccessDeniedException("System administrator required");
                 if (!Set.of("WHO-IS", "WHO-15").contains(value)) throw bad("Choose WHO-IS or WHO-15");

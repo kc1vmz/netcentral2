@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <!-- Net Central defaults, not official RRI definitions. Run once; retain user edits and removals. -->
+    <changeSet id="019-default-strips" author="netcentral">
+        <sql>
+            INSERT INTO strip_template(id,version,name,name_key,definition,updated_at)
+            SELECT RANDOM_UUID(),0,'Situation report','SITUATION REPORT','SITREP/Location(X)/Situation(X)/Needs(X)//',CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM strip_template WHERE name_key='SITUATION REPORT');
+            INSERT INTO strip_template(id,version,name,name_key,definition,updated_at)
+            SELECT RANDOM_UUID(),0,'Weather - wind','WEATHER - WIND','WXWIND/Dir(X)/MPH(NNN)/Gust(NNN)//',CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM strip_template WHERE name_key='WEATHER - WIND');
+            INSERT INTO strip_template(id,version,name,name_key,definition,updated_at)
+            SELECT RANDOM_UUID(),0,'Weather - temperature','WEATHER - TEMPERATURE','WXTEMP/TempF(X)/Humidity(NNN)//',CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM strip_template WHERE name_key='WEATHER - TEMPERATURE');
+            INSERT INTO strip_template(id,version,name,name_key,definition,updated_at)
+            SELECT RANDOM_UUID(),0,'Weather - precipitation','WEATHER - PRECIPITATION','WXPRECIP/Type(X)/Inches(X)/Period(X)//',CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM strip_template WHERE name_key='WEATHER - PRECIPITATION');
+            INSERT INTO strip_template(id,version,name,name_key,definition,updated_at)
+            SELECT RANDOM_UUID(),0,'Storm damage','STORM DAMAGE','DAMAGE/Location(X)/Damage(X)/Access(Y,N)//',CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM strip_template WHERE name_key='STORM DAMAGE');
+            INSERT INTO strip_template(id,version,name,name_key,definition,updated_at)
+            SELECT RANDOM_UUID(),0,'Operational readiness','OPERATIONAL READINESS','OPRED/Available(Y,N)/Hours(NN)/Capability(X)//',CURRENT_TIMESTAMP
+            WHERE NOT EXISTS (SELECT 1 FROM strip_template WHERE name_key='OPERATIONAL READINESS');
+        </sql>
+    </changeSet>
+</databaseChangeLog>

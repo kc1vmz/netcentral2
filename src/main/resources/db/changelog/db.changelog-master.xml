@@ -38,5 +38,9 @@
             CREATE UNIQUE INDEX strip_template_name ON strip_template(name_key);
         </sql>
     </changeSet>
+    <changeSet id="018-winlink-provider" author="netcentral"><sql>
+        INSERT INTO application_settings VALUES('operations.winlinkProvider','WLNK');
+    </sql></changeSet>
+    <include file="019-default-strips.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
 
