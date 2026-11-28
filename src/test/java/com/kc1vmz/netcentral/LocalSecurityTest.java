@@ -40,6 +40,34 @@ class LocalSecurityTest {
     Path directory;
 
     @Test
+    void swaggerDocumentsOnlyRestRoutesAndRetainsSessionSecurity() throws Exception {
+        try (var context = start()) {
+            Browser browser = new Browser(context);
+            assertThat(browser.get("/swagger-ui/index.html").statusCode()).isEqualTo(302);
+            assertThat(browser.get("/v3/api-docs").statusCode()).isEqualTo(302);
+            browser.json(browser.send("POST", "/api/v1/users/register", registration("swagger")));
+            assertThat(browser.login("swagger").statusCode()).isEqualTo(200);
+            assertThat(browser.get("/swagger-ui.html").statusCode()).isEqualTo(302);
+            assertThat(browser.get("/swagger-ui/index.html").statusCode()).isEqualTo(200);
+            assertThat(browser.get("/swagger-ui/swagger-ui-bundle.js").statusCode()).isEqualTo(200);
+            var initializer = browser.get("/swagger-ui/swagger-initializer.js");
+            assertThat(initializer.statusCode()).isEqualTo(200);
+            assertThat(initializer.body()).contains("requestInterceptor: async function", "/api/v1/csrf", "csrf.headerName");
+            var response = browser.get("/v3/api-docs");
+            assertThat(response.statusCode()).withFailMessage(response.body()).isEqualTo(200);
+            var api = browser.json(response);
+            assertThat(api.path("info").path("title").asText()).isEqualTo("Net Central REST API");
+            assertThat(api.path("paths").properties()).allMatch(entry -> entry.getKey().startsWith("/api/v1/"));
+            assertThat(api.path("paths").has("/api/v1/nets")).isTrue();
+            assertThat(api.path("paths").has("/api/v1/strip-library")).isTrue();
+            assertThat(api.path("paths").path("/api/v1/nets").path("post").path("requestBody").isMissingNode()).isFalse();
+            assertThat(api.path("components").path("securitySchemes").path("session").path("name").asText()).isEqualTo("SessionID");
+            assertThat(browser.get("/v3/api-docs.yaml").statusCode()).isEqualTo(200);
+            assertThat(browser.raw("POST", "/api/v1/nets", "{}", "application/json", null).statusCode()).isEqualTo(403);
+        }
+    }
+
+    @Test
     void concurrentFirstRegistrationsProduceExactlyOneAdministrator() throws Exception {
         try (var context = start()) {
             AccountAccessor accounts = context.getBean(AccountAccessor.class);

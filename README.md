@@ -130,3 +130,13 @@ To run the JAR file, specify:
 ## License
   
 This software is licensed under GPL v3.  For more information, see LICENSE file.  
+
+## REST API documentation
+
+After signing in, open `/swagger-ui.html` (also linked from Help). Generated OpenAPI
+is available at `/v3/api-docs` and `/v3/api-docs.yaml`. Only `/api/v1/**` REST routes
+are documented; HTML page controllers are excluded. Documentation requires login.
+Swagger UI uses your existing session and fetches the session CSRF token for each
+mutation. Try it out performs real operations with the same role and ownership checks
+as other clients. Generic JSON request bodies may need the detailed contracts in `docs/`.
+No Node.js runtime or build step is required.
