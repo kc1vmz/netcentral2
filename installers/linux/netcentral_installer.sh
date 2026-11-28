@@ -35,7 +35,7 @@ if [ "$NC_OS" = "Linux" ]; then
   fi
 
   # default environment variables
-  NC_VERSION=2.1.0
+  NC_VERSION=2.2.0
   NC_INSTALLATION_DIR=~/netcentral
   NC_DB_DIR=~/netcentral/db
   NC_TEMP_DIR=~/netcentral/tmp
